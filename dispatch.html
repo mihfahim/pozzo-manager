@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2b4f48">
+<title>Pozzo Manager – Dispatch</title>
+<meta name="description" content="Pozzo Toys Dispatch: customer packing list, product variants and quantities, and courier parcel export.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
+*{box-sizing:border-box}
+html,body{overscroll-behavior-y:contain}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr.pulling{transition:none}
+.ptr.active{opacity:1;border-bottom-width:1px}
+.ptr.ready{background:#d4e7df}
+.ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
+.ptr.ready .ptr-ic{transform:rotate(180deg)}
+@keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
+header h1{font-size:22px;color:var(--grn)}
+.embed header{display:none}
+main{max-width:920px;margin:0 auto;padding:18px 16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Top Bar */
+.headbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.kicker{color:var(--mut);font-size:14px;margin-bottom:2px}
+.headbar h2{font-size:28px;line-height:1.15}
+.head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
+.btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
+.btn.sm{min-height:36px;padding:6px 12px;border-radius:10px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:default}
+.btn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+
+/* Filter Tabs & Search */
+.controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px}
+.seg{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{min-height:40px;border:0;border-radius:999px;padding:8px 15px;background:transparent;color:var(--mut);font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.seg button.on{background:var(--grn);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+.ctrl-right{display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;min-width:220px}
+.search{width:280px;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
+
+/* Alerts & Banners */
+.flash{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--bd);color:var(--grn);border:1px solid #c6ddd4;border-radius:16px;padding:12px 15px;margin-bottom:14px;font-size:14px;font-weight:600}
+.flash.err{background:var(--badbg);color:var(--bad);border-color:#e8bfae}
+.flash.warn{background:var(--ambbg);color:var(--amb);border-color:#e5cfa8}
+
+/* Customer Name Buttons Queue */
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
+.queue-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.queue-head h3{font-size:20px}
+.queue-hint{font-size:13px;color:var(--mut)}
+.btn-grid{display:flex;flex-direction:column;gap:10px}
+.order-btn{display:flex;justify-content:space-between;align-items:center;gap:14px;width:100%;min-height:70px;padding:14px 18px;border-radius:18px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .08s ease;box-shadow:0 1px 2px rgba(45,38,24,.05)}
+.order-btn:hover{border-color:var(--grn);background:#fff}
+.order-btn:active{transform:scale(.995)}
+.order-btn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+.order-btn.packed{background:var(--sub);opacity:.88}
+.ob-left{min-width:0;flex:1}
+.ob-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cname{font-family:Georgia,"Times New Roman",serif;font-size:19px;font-weight:700;color:var(--ink);line-height:1.2}
+.oid-chip{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--bd);color:var(--grn);font-size:12px;font-weight:700;letter-spacing:.02em}
+.order-btn.packed .oid-chip{background:var(--line);color:var(--mut)}
+.st-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--ambbg);color:var(--amb);font-size:12px;font-weight:600}
+.ob-sub{color:var(--mut);font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ob-right{text-align:right;flex:none}
+.ob-pcs{font-weight:700;font-size:15px;color:var(--grn)}
+.order-btn.packed .ob-pcs{color:var(--mut)}
+.ob-cod{font-size:13px;color:var(--mut);margin-top:3px}
+
+/* Packing Window Modal */
+.modal{position:fixed;inset:0;background:rgba(30,25,15,.5);display:flex;align-items:flex-end;justify-content:center;z-index:40;padding:12px}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:26px;padding:22px 20px 22px;max-height:90vh;overflow:auto;border:1px solid var(--line);box-shadow:0 12px 32px rgba(20,18,12,.22)}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.sheet-kicker{font-size:13px;font-weight:700;color:var(--grn);margin-bottom:3px}
+.sheet h3{font-size:24px;line-height:1.15}
+.sheet-cust{color:var(--mut);font-size:14px;margin-top:5px;line-height:1.45}
+.icon-close{min-width:40px;min-height:40px;border-radius:12px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;font-size:18px;font-weight:600;cursor:pointer;flex:none}
+
+.pack-sec-head{display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px}
+.pack-sec-head span{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.pack-list{display:flex;flex-direction:column;gap:8px}
+.pack-item{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:16px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:background-color .12s ease,border-color .12s ease}
+.pack-item.checked{background:var(--bd);border-color:#9fc5b6}
+.pack-check{width:28px;height:28px;border-radius:9px;border:2px solid var(--line);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex:none}
+.pack-item.checked .pack-check{background:var(--grn);border-color:var(--grn)}
+.pack-info{min-width:0;flex:1}
+.pack-name{font-size:16px;font-weight:700;color:var(--ink);line-height:1.3}
+.pack-var{margin-top:4px;font-size:13px;color:var(--mut);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.var-pill{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--ambbg);color:var(--amb);font-weight:700;font-size:12px}
+.var-none{color:var(--mut);font-size:13px}
+.pack-qty{text-align:right;flex:none;padding-left:8px}
+.pack-qty .qnum{font-family:Georgia,"Times New Roman",serif;font-size:22px;font-weight:700;color:var(--grn);line-height:1.1}
+.pack-qty .qlbl{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase}
+
+.pack-summary{margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--sub);border:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:14px}
+.pack-summary b{color:var(--ink)}
+
+.modal-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.done-btn{width:100%;min-height:54px;font-size:17px;border-radius:16px}
+.foot-sub-acts{display:flex;gap:8px}
+.foot-sub-acts .btn{flex:1}
+
+.empty{padding:26px 8px;text-align:center;color:var(--mut);font-size:15px}
+[hidden]{display:none!important}
+
+@media (max-width:600px){
+  .ctrl-right{width:100%}
+  .search{width:100%}
+  .order-btn{padding:13px 14px}
+  .cname{font-size:17px}
+}
+</style>
+</head>
+<body>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed")</script>
+<div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
+<header><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Dispatch</h1></header>
+<main id="app"></main>
+<div id="packModal" class="modal" hidden onclick="if(event.target===this)closePackWindow()"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const tk=n=>"৳ "+Math.round(Number(n)||0).toLocaleString("en-US");
+function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
+function nowStamp(){const t=new Date(),p=n=>String(n).padStart(2,"0");return today()+" "+p(t.getHours())+":"+p(t.getMinutes())}
+const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
+
+const PACK_STORE_KEY="pt_packed_orders";
+function readLocalPacked(){
+  try{
+    const m=JSON.parse(localStorage.getItem(PACK_STORE_KEY)||"{}");
+    return m&&typeof m==="object"?m:{};
+  }catch(e){return{}}
+}
+function saveLocalPacked(id,stamp){
+  try{
+    const m=readLocalPacked();
+    const k=String(id||"").trim().toUpperCase();
+    if(!k)return;
+    if(stamp)m[k]=stamp;
+    else delete m[k];
+    const keys=Object.keys(m);
+    if(keys.length>400){keys.slice(0,keys.length-400).forEach(old=>delete m[old])}
+    localStorage.setItem(PACK_STORE_KEY,JSON.stringify(m));
+  }catch(e){}
+}
+
+function splitVariant(rawName){
+  let base=String(rawName||"").trim();
+  const vs=[];
+  const isNumOrUnit=s=>/^(?:\d+(?:[.,]\d+)?(?:\s*(?:tk\.?|taka|bdt|৳|pcs?|pc|pieces?|x))?|tk\.?|taka|bdt|৳|pcs?|pc)$/i.test(String(s||"").trim());
+  const cleanV=s=>String(s||"").trim().replace(/^(?:variant|color|colour|size|model|design|type)\s*[:=\-–]\s*/i,"").trim();
+  let changed=true;
+  while(changed&&base){
+    changed=false;
+    let m=base.match(/^(.*?)\s*\(([^()]{1,60})\)\s*$/);
+    if(m&&m[1].trim()&&!isNumOrUnit(m[2])){const cv=cleanV(m[2]);if(cv)vs.unshift(cv);base=m[1].trim();changed=true;continue}
+    m=base.match(/^(.*?)\s*\[([^\[\]]{1,60})\]\s*$/);
+    if(m&&m[1].trim()&&!isNumOrUnit(m[2])){const cv=cleanV(m[2]);if(cv)vs.unshift(cv);base=m[1].trim();changed=true}
+  }
+  if(!vs.length&&base){
+    const dm=base.match(/^(.{2,}?)\s+(?:-|–|—|\|)\s+([^-–—|\n]{1,40})$/);
+    if(dm&&!isNumOrUnit(dm[2])){const cv=cleanV(dm[2]);if(cv){vs.push(cv);base=dm[1].trim()}}
+  }
+  return {name:base||String(rawName||"").trim(),variant:vs.join(" · ")};
+}
+
+function normalizeOrders(rawList){
+  const seen={};
+  const localP=readLocalPacked();
+  const out=[];
+  (rawList||[]).forEach(o=>{
+    if(!o||!o.id)return;
+    const idUp=String(o.id).trim().toUpperCase();
+    if(seen[idUp])return;
+    seen[idUp]=true;
+    const st=o.status||"Active";
+    if(st==="Cancelled"||st==="Returned")return;
+    const items=(o.items||[]).map(it=>{
+      const sv=splitVariant(it.name);
+      return {
+        lineIndex:it.lineIndex,
+        name:it.name,
+        displayName:it.displayName||sv.name,
+        variant:it.variant||sv.variant||"",
+        qty:Math.max(0,Number(it.qty)||0),
+        price:Number(it.price)||0,
+        returned:Number(it.returned)||0
+      };
+    }).filter(it=>it.qty>0);
+    if(!items.length)return;
+    const packed=o.packed||localP[idUp]||"";
+    if(o.packed&&!localP[idUp])saveLocalPacked(o.id,o.packed);
+    out.push(Object.assign({},o,{
+      id:String(o.id).trim(),
+      status:st,
+      packed:packed,
+      items:items
+    }));
+  });
+  return out;
+}
+
+async function api(payload){
+  const c=cfg();if(!c.url||!c.key)return {ok:false,error:"nocfg"};
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),45000);
+  try{
+    const r=await fetch(c.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({key:c.key},payload)),signal:ac.signal});
+    return await r.json();
+  }catch(e){return {ok:false,error:e&&e.name==="AbortError"?"slow":"no connection"}}
+  finally{clearTimeout(t)}
+}
+
+function notifyOrderChanged(orderId){
+  try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"pozzo:order-dirty",orderId:orderId||""},"*")}catch(e){}
+  try{if(typeof BroadcastChannel!=="undefined"){const ch=new BroadcastChannel("pozzo_sync");ch.postMessage({type:"pozzo:order-dirty",orderId:orderId||""});ch.close()}}catch(e){}
+}
+
+function goTab(tab,extra){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage(Object.assign({type:"pozzo:switch-tab",tab:tab},extra||{}),"*");
+      return;
+    }
+  }catch(e){}
+  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",sticker:"stickers.html",stickers:"stickers.html"};
+  if(map[tab])window.location.href=map[tab];
+}
+
+let state={
+  loading:true,
+  filter:"topack", // 'topack' | 'packed' | 'all'
+  sortOrder:"oldest", // 'oldest' | 'newest'
+  q:"",
+  orders:[],
+  statusMsg:"",
+  isErr:false,
+  lastPackedId:"",
+  exportPrompt:null, // {count, span, ids}
+  modal:null // {order, checked:{[idx]:true}}
+};
+
+async function loadDispatch(silent){
+  if(!silent){state.loading=true;render()}
+  const c=cfg();
+  if(!c.url||!c.key){state.loading=false;state.orders=[];render();return}
+  let j=await api({action:"dispatchlist",today:today(),fresh:true});
+  if(!j.ok&&j.error!=="nocfg"){
+    // Fallback if script version is older
+    j=await api({action:"recentorders",today:today(),limit:50});
+  }
+  state.loading=false;
+  if(!j.ok){
+    if(!silent){state.statusMsg=j.error||"Could not load orders";state.isErr=true;render()}
+    return;
+  }
+  state.orders=normalizeOrders(j.orders||[]);
+  render();
+  if(state.modal&&state.modal.order){
+    const updated=state.orders.find(x=>x.id===state.modal.order.id);
+    if(updated){state.modal.order=updated;renderPackWindow()}
+  }
+}
+
+function openPackWindow(orderId){
+  const o=state.orders.find(x=>x.id===orderId);
+  if(!o)return;
+  state.modal={order:o,checked:{}};
+  renderPackWindow();
+}
+
+function closePackWindow(){
+  state.modal=null;
+  const m=$("#packModal");
+  if(m){m.hidden=true;m.innerHTML=""}
+}
+
+function togglePackCheck(idx){
+  if(!state.modal)return;
+  if(state.modal.checked[idx])delete state.modal.checked[idx];
+  else state.modal.checked[idx]=true;
+  renderPackWindow();
+}
+
+async function markOrderDone(orderId){
+  const idx=state.orders.findIndex(x=>x.id===orderId);
+  if(idx<0)return;
+  const o=state.orders[idx];
+  const stamp=nowStamp();
+  o.packed=stamp;
+  saveLocalPacked(o.id,stamp);
+  state.lastPackedId=o.id;
+  state.statusMsg="Packed "+(o.name||"customer")+" ("+o.id+") — removed from To pack list.";
+  state.isErr=false;
+  closePackWindow();
+  render();
+
+  const j=await api({action:"packorder",id:o.id,today:today()});
+  if(j&&j.ok){
+    o.packed=j.packed||stamp;
+    saveLocalPacked(o.id,o.packed);
+    notifyOrderChanged(o.id);
+  }else if(j&&j.error&&j.error!=="nocfg"&&j.error!=="no connection"&&j.error!=="slow"){
+    o.packed="";
+    saveLocalPacked(o.id,"");
+    state.lastPackedId="";
+    state.statusMsg="Could not save packed status: "+j.error;
+    state.isErr=true;
+    render();
+  }
+}
+
+async function unpackOrder(orderId){
+  const o=state.orders.find(x=>x.id===orderId);
+  if(!o)return;
+  o.packed="";
+  saveLocalPacked(o.id,"");
+  state.lastPackedId="";
+  state.statusMsg="Moved "+(o.name||"customer")+" ("+o.id+") back to To pack list.";
+  state.isErr=false;
+  closePackWindow();
+  render();
+
+  const j=await api({action:"packorder",id:o.id,undo:true,today:today()});
+  if(j&&j.ok)notifyOrderChanged(o.id);
+}
+
+function renderPackWindow(){
+  const m=$("#packModal");
+  if(!m||!state.modal||!state.modal.order)return;
+  const o=state.modal.order;
+  const items=o.items||[];
+  const totalPcs=items.reduce((s,it)=>s+(Number(it.qty)||0),0);
+  const checkedCount=items.filter((_,i)=>!!state.modal.checked[i]).length;
+  const isPacked=!!o.packed;
+
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="packCustTitle">
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-kicker num">${esc(o.id)} · ${esc(o.date||"")}${isPacked?" · Packed "+esc(o.packed):""}</div>
+        <h3 id="packCustTitle">${esc(o.name||"Customer")}</h3>
+        <div class="sheet-cust num">${o.phone?esc(o.phone):""}${o.phone2?" / "+esc(o.phone2):""}${o.address?"<br>"+esc(o.address):""}</div>
+      </div>
+      <button class="icon-close" type="button" aria-label="Close window" onclick="closePackWindow()">&times;</button>
+    </div>
+
+    <div class="pack-sec-head">
+      <span>Products to pack</span>
+      <span class="num">${items.length} item${items.length===1?"":"s"} · ${totalPcs} pc${totalPcs===1?"":"s"}</span>
+    </div>
+
+    <div class="pack-list">
+      ${items.map((it,i)=>{
+        const isCk=!!state.modal.checked[i];
+        return `<button type="button" class="pack-item ${isCk?"checked":""}" onclick="togglePackCheck(${i})">
+          <span class="pack-check" aria-hidden="true">${isCk?"&#10003;":""}</span>
+          <span class="pack-info">
+            <span class="pack-name">${esc(it.displayName||it.name)}</span>
+            <span class="pack-var">Variant: ${it.variant?`<span class="var-pill">${esc(it.variant)}</span>`:`<span class="var-none">Standard</span>`}</span>
+          </span>
+          <span class="pack-qty">
+            <span class="qnum num">&times; ${it.qty}</span>
+            <span class="qlbl">${it.qty===1?"pc":"pcs"}</span>
+          </span>
+        </button>`;
+      }).join("")}
+    </div>
+
+    <div class="pack-summary num">
+      <span>Grand total: <b>${tk(o.total)}</b></span>
+      <span>COD to collect: <b>${tk(o.cod)}</b></span>
+      ${checkedCount>0?`<span>Checked: <b>${checkedCount}/${items.length}</b></span>`:""}
+    </div>
+
+    <div class="modal-foot">
+      ${isPacked
+        ?`<button id="packDoneBtn" class="btn p done-btn" type="button" onclick="closePackWindow()">&#10003; Done</button>
+          <div class="foot-sub-acts">
+            <button class="btn" type="button" onclick="unpackOrder('${esc(o.id)}')">Move back to To pack</button>
+            <button class="btn" type="button" onclick="goTab('sales',{orderId:'${esc(o.id)}'})">Open in Sales</button>
+          </div>`
+        :`<button id="packDoneBtn" class="btn p done-btn" type="button" onclick="markOrderDone('${esc(o.id)}')">&#10003; Done</button>
+          <div class="foot-sub-acts">
+            <button class="btn" type="button" onclick="goTab('sales',{orderId:'${esc(o.id)}'})">Open in Sales</button>
+            <button class="btn" type="button" onclick="closePackWindow()">Close</button>
+          </div>`
+      }
+    </div>
+  </div>`;
+  m.hidden=false;
+}
+
+function fileDate(){const t=new Date();return String(t.getDate()).padStart(2,"0")+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()]+" "+String(t.getFullYear()).slice(-2)}
+async function exportPending(){
+  state.statusMsg="Preparing parcel entry file…";state.isErr=false;state.lastPackedId="";state.exportPrompt=null;render();
+  const j=await api({action:"list",mode:"next",today:today()});
+  if(!j.ok){state.statusMsg=j.error||"Could not get pending orders";state.isErr=true;render();return}
+  if(!j.orders.length){state.statusMsg="No unexported active orders right now.";state.isErr=false;render();return}
+  if(typeof ExcelJS==="undefined"){state.statusMsg="Excel library did not load. Check internet connection.";state.isErr=true;render();return}
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Sheet1");
+  const cols=[["Invoice",16],["Name",24],["Address",50],["Phone",15],["Amount",12],["Note",50],["Contact Name",16],["Contact Phone",15]];
+  ws.columns=cols.map(([h,w])=>({header:h,width:w}));
+  ws.getRow(1).font={bold:true};
+  ws.getColumn(4).numFmt="@";ws.getColumn(8).numFmt="@";
+  j.orders.forEach(o=>{
+    const r=ws.addRow([o.id,o.name,o.address,String(o.phone),Number(o.amount),o.note,null,o.phone2?String(o.phone2):null]);
+    r.getCell(4).numFmt="@";r.getCell(8).numFmt="@";
+  });
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  a.download="Pozzo Toys Parcel Entry "+fileDate()+".xlsx";
+  document.body.appendChild(a);a.click();a.remove();
+  const n=j.orders.length,span=j.orders[0].id+" to "+j.orders[n-1].id;
+  state.statusMsg="";
+  state.exportPrompt={count:n,span:span,ids:j.orders.map(o=>o.id)};
+  render();
+}
+
+async function confirmParcelExported(){
+  if(!state.exportPrompt)return;
+  const {count,span,ids}=state.exportPrompt;
+  state.exportPrompt=null;
+  const mk=await api({action:"mark",ids:ids,today:today()});
+  state.statusMsg=mk.ok?"Exported and marked "+count+" order(s): "+span+".":"File downloaded, but could not mark exported: "+(mk.error||"");
+  state.isErr=!mk.ok;
+  if(mk.ok)notifyOrderChanged("");
+  loadDispatch(false);
+}
+
+function dismissParcelExport(){
+  if(!state.exportPrompt)return;
+  const {count,span}=state.exportPrompt;
+  state.exportPrompt=null;
+  state.statusMsg="Parcel file downloaded for "+count+" order(s) ("+span+"). Left unmarked for next export.";
+  state.isErr=false;
+  render();
+}
+
+function filteredOrders(){
+  const ql=state.q.trim().toLowerCase();
+  let list=state.orders.filter(o=>{
+    if(state.filter==="topack"&&o.packed)return false;
+    if(state.filter==="packed"&&!o.packed)return false;
+    if(!ql)return true;
+    const itemText=(o.items||[]).map(it=>it.name+" "+it.displayName+" "+it.variant).join(" ");
+    return (o.id+" "+o.name+" "+o.phone+" "+o.address+" "+itemText).toLowerCase().includes(ql);
+  });
+  if(state.sortOrder==="newest")list=list.slice().reverse();
+  return list;
+}
+
+function render(){
+  const c=cfg();
+  const app=$("#app");
+  if(!c.url||!c.key){
+    app.innerHTML=`<div class="headbar"><div><div class="kicker">Pozzo Toys</div><h2>Dispatch</h2></div></div>
+    <div class="card"><h3>Google Sheet not connected</h3>
+      <p class="empty">Open Connection settings on the Sales page to load orders for packing and dispatch.</p>
+      <button class="btn p" type="button" onclick="goTab('sales')">Open Sales</button>
+    </div>`;
+    return;
+  }
+
+  const list=filteredOrders();
+  const toPackCount=state.orders.filter(o=>!o.packed).length;
+  const packedCount=state.orders.filter(o=>!!o.packed).length;
+  const exportCount=state.orders.filter(o=>!o.exported).length;
+
+  app.innerHTML=`<div class="headbar">
+    <div><div class="kicker">Pack &amp; dispatch queue</div><h2>Dispatch</h2></div>
+    <div class="head-actions">
+      <button class="btn p" type="button" onclick="exportPending()">Parcel file (${exportCount})</button>
+    </div>
+  </div>
+
+  ${state.exportPrompt?`<div class="flash warn">
+    <span>Downloaded parcel file for <b>${state.exportPrompt.count}</b> order(s) (${esc(state.exportPrompt.span)}). Mark as exported?</span>
+    <span style="display:flex;gap:8px">
+      <button class="btn sm p" type="button" onclick="confirmParcelExported()">&#10003; Mark exported</button>
+      <button class="btn sm" type="button" onclick="dismissParcelExport()">Leave unmarked</button>
+    </span>
+  </div>`:""}
+
+  ${state.statusMsg?`<div class="flash ${state.isErr?"err":""}">
+    <span>${esc(state.statusMsg)}</span>
+    ${state.lastPackedId&&!state.isErr?`<button class="btn sm" type="button" onclick="unpackOrder('${esc(state.lastPackedId)}')">Undo</button>`:""}
+  </div>`:""}
+
+  <div class="controls">
+    <div class="seg" role="tablist" aria-label="Packing status filter">
+      <button type="button" class="${state.filter==="topack"?"on":""}" onclick="state.filter='topack';render()">To pack (${toPackCount})</button>
+      <button type="button" class="${state.filter==="packed"?"on":""}" onclick="state.filter='packed';render()">Packed (${packedCount})</button>
+      <button type="button" class="${state.filter==="all"?"on":""}" onclick="state.filter='all';render()">All (${state.orders.length})</button>
+    </div>
+    <div class="ctrl-right">
+      <button class="btn sm" type="button" onclick="state.sortOrder=state.sortOrder==='oldest'?'newest':'oldest';render()">${state.sortOrder==="oldest"?"Oldest first":"Newest first"}</button>
+      <input class="search" type="search" placeholder="Search customer, ID, product" value="${esc(state.q)}" oninput="state.q=this.value;render()">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="queue-head">
+      <h3>${state.filter==="topack"?"Customer orders to pack":state.filter==="packed"?"Packed orders":"All active orders"}</h3>
+      <span class="queue-hint">${state.filter==="topack"?"Press a customer name to view items and pack":"Tap any order to inspect products"}</span>
+    </div>
+
+    ${state.loading&&!state.orders.length?`<div class="empty">Loading orders…</div>`
+    :list.length?`<div class="btn-grid">${list.map(o=>{
+      const pcs=(o.items||[]).reduce((s,it)=>s+(Number(it.qty)||0),0);
+      const isPacked=!!o.packed;
+      return `<button type="button" class="order-btn ${isPacked?"packed":""}" data-order-id="${esc(o.id)}" onclick="openPackWindow('${esc(o.id)}')">
+        <span class="ob-left">
+          <span class="ob-top">
+            <span class="cname">${esc(o.name||"Customer")}</span>
+            <span class="oid-chip num">${esc(o.id)}</span>
+            ${o.status==="Partial Return"?`<span class="st-chip">Partial Return</span>`:""}
+          </span>
+          <span class="ob-sub num">${esc(o.address||"No address")}${o.phone?" · "+esc(o.phone):""}${isPacked?" · Packed "+esc(o.packed):""}</span>
+        </span>
+        <span class="ob-right num">
+          <span class="ob-pcs">${pcs} pc${pcs===1?"":"s"} (${(o.items||[]).length} item${(o.items||[]).length===1?"":"s"})</span><br>
+          <span class="ob-cod">COD ${tk(o.cod)}</span>
+        </span>
+      </button>`;
+    }).join("")}</div>`
+    :`<div class="empty">${state.filter==="topack"?"All current orders are packed. New orders appear here as you enter them.":"No matching orders in this view."}</div>`}
+  </div>`;
+}
+
+window.addEventListener("message",e=>{
+  const d=e&&e.data;
+  if(d&&(d.type==="pozzo:refresh-dispatch"||d.type==="pozzo:order-dirty"))loadDispatch(true);
+});
+
+try{
+  if(typeof BroadcastChannel!=="undefined"){
+    const ch=new BroadcastChannel("pozzo_sync");
+    ch.addEventListener("message",e=>{
+      if(e&&e.data&&e.data.type==="pozzo:order-dirty")loadDispatch(true);
+    });
+  }
+}catch(e){}
+
+window.addEventListener("storage",e=>{
+  if(e&&(e.key==="pt_orders"||e.key===PACK_STORE_KEY))loadDispatch(true);
+});
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden)loadDispatch(true);
+});
+
+const _dispPoll=setInterval(()=>{
+  if(!document.hidden&&!state.modal)loadDispatch(true);
+},45000);
+if(_dispPoll&&typeof _dispPoll.unref==="function")_dispPoll.unref();
+
+(function initPTR(onRefresh){
+  if(typeof document==="undefined")return;
+  let el=typeof document.getElementById==="function"?document.getElementById("ptr"):null;
+  const tx=()=>el&&el.querySelector?el.querySelector(".ptr-tx"):null;
+  const ic=()=>el&&el.querySelector?el.querySelector(".ptr-ic"):null;
+  let sx=0,sy=0,lock="",pull=0,busy=false;
+  const THRESH=52;
+  function setVisual(h,cls,text,glyph){
+    if(!el)return;
+    el.className="ptr"+(cls?" "+cls:"");
+    if(el.style)el.style.height=h+"px";
+    const t=tx();if(t&&text)t.textContent=text;
+    const g=ic();if(g&&glyph)g.innerHTML=glyph;
+  }
+  async function triggerPullRefresh(){
+    if(busy)return;
+    busy=true;
+    setVisual(44,"active busy","Refreshing…","&#8635;");
+    const t0=Date.now();
+    try{await onRefresh()}catch(e){}
+    finally{
+      const wait=Math.max(0,260-(Date.now()-t0));
+      const tm=setTimeout(()=>{busy=false;setVisual(0,"","Pull down to refresh","&#8595;")},wait);
+      if(tm&&typeof tm.unref==="function")tm.unref();
+    }
+  }
+  window.triggerPullRefresh=triggerPullRefresh;
+  const scrollTop=()=>Math.max(window.scrollY||0,(document.documentElement&&document.documentElement.scrollTop)||0,(document.body&&document.body.scrollTop)||0);
+  document.addEventListener("touchstart",e=>{
+    if(busy||!e.touches||e.touches.length!==1)return;
+    if(scrollTop()>2){lock="up";return}
+    const tgt=e.target;
+    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])"))){lock="modal";return}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(busy||lock==="up"||lock==="h"||lock==="modal"||!e.touches||e.touches.length!==1)return;
+    const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+    if(!lock){
+      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){lock="h";return}
+      if(dy<-6){lock="up";return}
+      if(dy>8&&Math.abs(dy)>Math.abs(dx)){if(scrollTop()>2){lock="up";return}lock="v"}else return;
+    }
+    if(lock==="v"){
+      if(dy<=0){pull=0;setVisual(0,"pulling","","");return}
+      pull=Math.min(76,Math.round(dy*0.55));
+      if(e.cancelable)e.preventDefault();
+      setVisual(pull,"pulling active"+(pull>=THRESH?" ready":""),pull>=THRESH?"Release to refresh":"Pull down to refresh","&#8595;");
+    }
+  },{passive:false});
+  function onEnd(){
+    if(busy)return;
+    const goRef=(lock==="v"&&pull>=THRESH);
+    lock="";pull=0;
+    if(goRef)triggerPullRefresh();
+    else setVisual(0,"","Pull down to refresh","&#8595;");
+  }
+  document.addEventListener("touchend",onEnd,{passive:true});
+  document.addEventListener("touchcancel",onEnd,{passive:true});
+})(()=>loadDispatch(false));
+
+loadDispatch(false);
+</script>
+</body>
+</html>

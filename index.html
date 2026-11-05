@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b4f48">
+<title>Pozzo Manager</title>
+<meta name="description" content="Pozzo Toys Stock, Sale, Dashboard, Sticker, and Dispatch manager.">
+<meta property="og:title" content="Pozzo Manager">
+<meta property="og:description" content="Pozzo Toys Stock, Sale, Dashboard, Sticker, and Dispatch manager.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f1ede6;--card:#f9f6f0;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior-y:contain;background:var(--bg);font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink)}
+body{display:flex;flex-direction:column;height:100dvh}
+header{flex:none;background:#fff;text-align:center;padding:8px 10px 10px;border-bottom:3px solid var(--grn)}
+header img{display:block;margin:0 auto 6px;width:88px;max-width:30%;height:auto}
+nav{display:flex;gap:3px;max-width:640px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:1 1 0;min-height:44px;border:0;border-radius:999px;padding:10px 6px;background:transparent;color:var(--mut);font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+nav button.on{background:var(--grn);color:#fff}
+nav button:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+#pager{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;overscroll-behavior-y:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#pager::-webkit-scrollbar{display:none}
+#pager section{flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always}
+iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+@media (max-width:390px){
+  nav button{padding:10px 4px;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<header>
+  <img alt="Pozzo Toys" src="icon-192.png">
+  <nav aria-label="Primary pages">
+    <button id="t0" type="button">Stock</button>
+    <button id="t1" type="button">Sale</button>
+    <button id="t2" class="on" type="button">Dashboard</button>
+    <button id="t3" type="button">Sticker</button>
+    <button id="t4" type="button">Dispatch</button>
+  </nav>
+</header>
+<div id="pager">
+  <section><iframe id="f0" title="Stock"></iframe></section>
+  <section><iframe id="f1" title="Sale"></iframe></section>
+  <section><iframe id="f2" title="Dashboard"></iframe></section>
+  <section><iframe id="f3" title="Sticker"></iframe></section>
+  <section><iframe id="f4" title="Dispatch"></iframe></section>
+</div>
+<script>
+const pager=document.getElementById("pager");
+const tabs=[0,1,2,3,4].map(i=>document.getElementById("t"+i));
+const HASH=["#stock","#sale","#dashboard","#sticker","#dispatch"];
+const INIT_HASH={"#stock":0,"#sale":1,"#sales":1,"#orders":1,"#dashboard":2,"#sticker":3,"#stickers":3,"#dispatch":4};
+const SRC=["stock.html","orders.html","dashboard.html","stickers.html","dispatch.html"];
+const TAB_MAP={stock:0,sale:1,sales:1,orders:1,dashboard:2,sticker:3,stickers:3,dispatch:4};
+
+const h0=String(location.hash||"").toLowerCase();
+let cur=INIT_HASH[h0]!==undefined?INIT_HASH[h0]:2;
+let ready=false,stockDirty=false,stockPendingTab="",dashDirty=false,dispDirty=false;
+
+function load(i){
+  const f=document.getElementById("f"+i);
+  if(!f.getAttribute("src")){f.src=SRC[i];return false}
+  return true;
+}
+function postTo(i,msg){
+  const f=document.getElementById("f"+i);
+  try{if(f&&f.contentWindow)f.contentWindow.postMessage(msg,"*")}catch(e){}
+}
+function flushTabRefresh(i,wasLoaded){
+  if(!wasLoaded)return;
+  if(i===0&&(stockDirty||stockPendingTab)){
+    const t=stockPendingTab;stockDirty=false;stockPendingTab="";
+    postTo(0,{type:"pozzo:refresh-stock",tab:t});
+  }
+  if(i===2&&dashDirty){dashDirty=false;postTo(2,{type:"pozzo:refresh-dashboard"})}
+  if(i===4&&dispDirty){dispDirty=false;postTo(4,{type:"pozzo:refresh-dispatch"})}
+}
+
+tabs.forEach((t,k)=>t.classList.toggle("on",k===cur));
+load(cur);
+
+function snapInitial(){
+  const w=pager.clientWidth;
+  if(!w)return false;
+  const target=cur*w;
+  if(Math.abs(pager.scrollLeft-target)>2)pager.scrollLeft=target;
+  ready=true;
+  return true;
+}
+snapInitial();
+if(!ready){
+  requestAnimationFrame(snapInitial);
+  try{
+    const ro=new ResizeObserver(()=>{if(snapInitial())ro.disconnect()});
+    ro.observe(pager);
+  }catch(e){}
+}
+
+function go(i){
+  ready=true;
+  cur=i;
+  const wasLoaded=load(i);
+  tabs.forEach((t,k)=>t.classList.toggle("on",k===i));
+  pager.scrollTo({left:i*pager.clientWidth,behavior:"smooth"});
+  try{history.replaceState(null,"",HASH[i])}catch(e){}
+  flushTabRefresh(i,wasLoaded);
+}
+tabs.forEach((t,i)=>t.addEventListener("click",()=>go(i)));
+
+pager.addEventListener("scroll",()=>{
+  if(!ready&&!snapInitial())return;
+  const w=pager.clientWidth;
+  if(!w)return;
+  const i=Math.round(pager.scrollLeft/w);
+  if(i!==cur&&i>=0&&i<=4){
+    cur=i;
+    const wasLoaded=load(i);
+    tabs.forEach((t,k)=>t.classList.toggle("on",k===i));
+    try{history.replaceState(null,"",HASH[i])}catch(e){}
+    flushTabRefresh(i,wasLoaded);
+  }
+},{passive:true});
+
+window.addEventListener("resize",()=>{
+  if(pager.clientWidth)pager.scrollLeft=cur*pager.clientWidth;
+});
+
+window.addEventListener("message",e=>{
+  const d=e&&e.data;
+  if(!d||typeof d!=="object")return;
+  if(d.type==="pozzo:stock-dirty"){
+    dashDirty=true;dispDirty=true;
+    const f0=document.getElementById("f0");
+    if(e.source!==(f0&&f0.contentWindow)){
+      stockDirty=true;
+      if(d.tab)stockPendingTab=d.tab;
+      if(cur===0){const t=stockPendingTab;stockDirty=false;stockPendingTab="";postTo(0,{type:"pozzo:refresh-stock",tab:t})}
+    }
+    const f4=document.getElementById("f4");
+    if(e.source!==(f4&&f4.contentWindow)&&f4&&f4.getAttribute("src")){dispDirty=false;postTo(4,{type:"pozzo:refresh-dispatch"})}
+  }else if(d.type==="pozzo:open-stock-issues"){
+    const f=document.getElementById("f0");
+    if(!f.getAttribute("src")){
+      f.src="stock.html#issues";
+      stockDirty=false;stockPendingTab="";
+      go(0);
+    }else{
+      stockDirty=false;stockPendingTab="";
+      go(0);
+      postTo(0,{type:"pozzo:refresh-stock",tab:"issues"});
+    }
+  }else if(d.type==="pozzo:order-dirty"){
+    dashDirty=true;dispDirty=true;
+    const f1=document.getElementById("f1");
+    if(e.source!==(f1&&f1.contentWindow))postTo(1,d);
+    if(cur===2){dashDirty=false;postTo(2,{type:"pozzo:refresh-dashboard"})}
+    const f4=document.getElementById("f4");
+    if(e.source!==(f4&&f4.contentWindow)&&f4&&f4.getAttribute("src")){dispDirty=false;postTo(4,{type:"pozzo:refresh-dispatch"})}
+    else if(cur===4){dispDirty=false;postTo(4,{type:"pozzo:refresh-dispatch"})}
+  }else if(d.type==="pozzo:switch-tab"){
+    const idx=typeof d.tab==="number"?d.tab:TAB_MAP[String(d.tab||"").toLowerCase()];
+    if(idx!==undefined){
+      if(idx===0&&(d.subtab||d.filter)){
+        const f=document.getElementById("f0");
+        const hashPart=d.filter?"#"+d.filter:(d.subtab?"#"+d.subtab:"");
+        if(!f.getAttribute("src")){f.src="stock.html"+hashPart;go(0);return}
+        go(0);
+        postTo(0,{type:"pozzo:refresh-stock",tab:d.subtab||"stock",filter:d.filter||""});
+        return;
+      }
+      if(idx===1&&d.orderId){
+        const f=document.getElementById("f1");
+        if(!f.getAttribute("src")){f.src="orders.html#order="+encodeURIComponent(d.orderId);go(1);return}
+        go(1);
+        postTo(1,{type:"pozzo:open-order",orderId:d.orderId});
+        return;
+      }
+      go(idx);
+    }
+  }
+});
+
+window.addEventListener("load",()=>{
+  snapInitial();
+  const order=[1,4,0,3].filter(i=>i!==cur);
+  order.forEach((idx,step)=>setTimeout(()=>load(idx),450*(step+1)));
+});
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
+</script>
+</body>
+</html>

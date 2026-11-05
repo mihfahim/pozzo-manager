@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pozzo Manager – Stickers</title>
+<meta name="description" content="Pozzo Toys Steadfast courier label PDF reader and parcel sticker Excel generator.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2b4f48">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
+<style>
+:root{--bg:#f1ede6;--card:#f9f6f0;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--warn:#8a5a14;--bad:#a8431f}
+*{box-sizing:border-box}
+html,body{overscroll-behavior-y:contain}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:96px}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr.pulling{transition:none}
+.ptr.active{opacity:1;border-bottom-width:1px}
+.ptr.ready{background:#d4e7df}
+.ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
+.ptr.ready .ptr-ic{transform:rotate(180deg)}
+@keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto}
+header h1{font-size:24px;color:var(--grn)}
+header p{margin:4px 0 0;font-size:14px;color:var(--mut)}
+.embed header{display:none}
+main{max-width:640px;margin:auto;padding:16px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;padding:16px;border-radius:18px;border:1px solid var(--grn);background:var(--grn);color:#fff;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+.btn.alt{background:var(--in);color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.55;cursor:default}
+#sum{margin:14px 0;font-size:16px;line-height:1.6;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(60,50,30,.08)}
+.card.flag{border-left:6px solid #c99a4b}.card.err{border-left:6px solid var(--bad)}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:17px;margin-bottom:4px}
+.top small{color:var(--mut);font-weight:400;font-size:14px}
+.top label{font-weight:500;font-size:15px;display:flex;align-items:center;gap:8px}
+.top input[type=checkbox]{width:22px;height:22px;accent-color:var(--grn)}
+.card input[type=text],.card textarea{width:100%;padding:14px 16px;margin:6px 0;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
+.card textarea{resize:none;overflow:hidden;line-height:1.45;display:block}
+.note{font-size:15px;margin:8px 0;padding:10px 12px;border-radius:14px}
+.note.w{background:#f6ece0;color:#6b4a1b}.note.b{background:#f6e4dc;color:var(--bad);font-weight:600}
+.card img{width:100%;border:1px solid var(--line);border-radius:16px;margin-top:6px;background:#fff}
+.lnk{background:none;border:0;color:var(--grn);text-decoration:underline;font-size:15px;padding:6px 0;cursor:pointer}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px 14px;display:flex;justify-content:center}
+.bar .btn{max-width:616px}
+#msg{font-size:15px;margin-top:10px;color:var(--grn);line-height:1.5}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed")</script>
+<div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
+<header><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Stickers</h1><p>Steadfast labels &rarr; Parcel tag Excel</p></header>
+<main>
+  <input id="f" type="file" accept="application/pdf" multiple hidden>
+  <button class="btn" onclick="f.click()">Choose label PDF</button>
+  <div id="sum">No labels loaded.</div>
+  <div id="list"></div>
+  <button class="btn alt" id="clr" onclick="clearAll()" hidden>Clear all</button>
+  <div id="msg"></div>
+</main>
+<div class="bar"><button class="btn" id="gen" onclick="generate()" disabled>Download Excel</button></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let P=[];
+let pages=0;
+const BN=/[\u0980-\u09FF]/;
+
+f.onchange=async e=>{
+  for(const file of e.target.files) await readPdf(file);
+  f.value="";render();
+};
+
+async function readPdf(file){
+  const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  for(let n=1;n<=doc.numPages;n++){
+    pages++;
+    const pg=await doc.getPage(n);
+    const tc=await pg.getTextContent();
+    const rows=[];
+    tc.items.filter(i=>i.str.trim()).forEach(i=>{
+      const y=i.transform[5],x=i.transform[4];
+      let r=rows.find(r=>Math.abs(r.y-y)<4);
+      if(!r){r={y,items:[]};rows.push(r)}
+      r.items.push({x,s:i.str,h:i.height||12,w:i.width||0});
+    });
+    rows.sort((a,b)=>b.y-a.y);
+    const joinItems=its=>{
+      its.sort((a,b)=>a.x-b.x);
+      let out="",prev=null;
+      its.forEach(it=>{
+        if(prev){
+          const gap=it.x-(prev.x+prev.w);
+          const need=!/\s$/.test(out)&&!/^\s/.test(it.s)&&(prev.w===0||gap>0.1*Math.max(prev.h,it.h));
+          out+=(need?" ":"")+it.s;
+        }else out=it.s;
+        prev=it;
+      });
+      return out.replace(/\s+/g," ").trim();
+    };
+    const lines=rows.map(r=>joinItems(r.items));
+    const p=parse(lines,file.name,n);
+    if(BN.test(p.name+p.addr)){msg.style.color="#14202e";msg.textContent="Reading Bangla from page "+n+" (first run downloads language data)...";await ocrFix(p,pg,rows);msg.textContent=""}
+    await makeCrop(p,pg,rows);
+    P.push(p);
+  }
+  mark();
+}
+
+async function makeCrop(p,pg,rows){
+  try{
+    const has=(r,re)=>r.items.some(i=>re.test(i.s.trim()));
+    const ri=rows.findIndex(r=>has(r,/^NAME$/)),ci=rows.findIndex(r=>has(r,/^CASH/));
+    const ii=rows.findIndex(r=>has(r,/^INVOICE$/)),wi=rows.findIndex(r=>has(r,/^WEIGHT$/));
+    if(ri<0||ci<0)throw new Error("layout");
+    const vp=pg.getViewport({scale:3});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+    await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    const H=r=>Math.max(...r.items.map(i=>i.h));
+    const bi=rows.findIndex(r=>/^(\d\s*){8,}$/.test(r.items.map(i=>i.s).join(" ").trim()));
+    const cut=(a,z,up,dn,x0)=>{
+      const l=Math.max(0,vp.convertToViewportPoint((x0===undefined?rows[a].items[0].x:x0)-14,0)[0]);
+      const t=Math.max(0,vp.convertToViewportPoint(0,rows[a].y+H(rows[a])*up)[1]);
+      const b=Math.min(c.height,vp.convertToViewportPoint(0,rows[z].y-H(rows[z])*dn)[1]);
+      const w=c.width-l-4,h=b-t;
+      if(h<30)throw new Error("size");
+      const o=document.createElement("canvas");o.width=w;o.height=h;
+      const g=o.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(c,l,t,w,h,0,0,w,h);
+      return o;
+    };
+    const parts=[];
+    if(bi>=0&&bi<ri-1){
+      const mx=Math.min(...rows.slice(bi,ri).map(r=>r.items[0].x));
+      try{parts.push(cut(bi,ri-1,.85,.4,mx))}catch(e){}
+    }else if(ii>=0&&wi>ii){try{parts.push(cut(ii,wi,1.1,.4))}catch(e){}}
+    else if(bi>=0){try{parts.push(cut(bi,bi,1.1,.5))}catch(e){}}
+    parts.push(cut(ri,ci,1.1,.9));
+    const W2=Math.max(...parts.map(o=>o.width)),gap=8;
+    const out=document.createElement("canvas");out.width=W2;out.height=parts.reduce((s,o)=>s+o.height+gap,-gap);
+    const g=out.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,out.width,out.height);
+    let y=0;parts.forEach(o=>{g.drawImage(o,0,y);y+=o.height+gap});
+    p.crop=out.toDataURL("image/jpeg",.88);
+  }catch(e){p.crop=await snap(pg)}
+}
+
+function boost(src){
+  const k=1.6,o=document.createElement("canvas");o.width=Math.round(src.width*k);o.height=Math.round(src.height*k);
+  const g=o.getContext("2d");g.imageSmoothingEnabled=true;g.imageSmoothingQuality="high";
+  g.fillStyle="#fff";g.fillRect(0,0,o.width,o.height);g.drawImage(src,0,0,o.width,o.height);
+  const im=g.getImageData(0,0,o.width,o.height),d=im.data;
+  for(let i=0;i<d.length;i+=4){const v=(d[i]+d[i+1]+d[i+2])/3,t=Math.max(0,Math.min(255,(v-70)/(185-70)*255));d[i]=d[i+1]=d[i+2]=t}
+  g.putImageData(im,0,0);return o;
+}
+let W,Wn,Wb;
+async function ocrFix(p,pg,rows){
+  try{
+    const has=(r,re)=>r.items.some(i=>re.test(i.s.trim()));
+    const ri=rows.findIndex(r=>has(r,/^NAME$/)),ai=rows.findIndex(r=>has(r,/^ADDRESS$/));
+    const ei=rows.findIndex((r,k)=>k>ai&&has(r,/^(NOTE|AREA|ITEM|CASH)/));
+    if(ri<0||ai<0)throw new Error("layout");
+    const vp=pg.getViewport({scale:3});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+    await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    const H=r=>Math.max(...r.items.map(i=>i.h));
+    const X=r=>(r.items[1]?r.items[1].x:r.items[0].x+60)-4;
+    const strip=(a,b,up=.9,dn=.35)=>{
+      const x1=X(rows[a]),y1=rows[a].y+H(rows[a])*up,y2=rows[b].y-H(rows[b])*dn;
+      const l=vp.convertToViewportPoint(x1,0)[0],t=vp.convertToViewportPoint(0,y1)[1],bt=vp.convertToViewportPoint(0,y2)[1];
+      const w=c.width-l-8,h=bt-t,o=document.createElement("canvas");
+      o.width=w;o.height=h;const g=o.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);
+      g.drawImage(c,l,t,w,h,0,0,w,h);
+      const q=document.createElement("canvas"),m=30;q.width=w+2*m;q.height=h+2*m;
+      const k=q.getContext("2d");k.fillStyle="#fff";k.fillRect(0,0,q.width,q.height);k.drawImage(o,m,m);return q;
+    };
+    const last=ei<0?ai:ei-1;
+    if(!W)W=await Tesseract.createWorker("ben+eng");
+    const rd=async(o,w)=>((await w.recognize(o)).data.text||"").replace(/\s+/g," ").trim();
+    if(BN.test(p.addr)){
+      const pure=!/[A-Za-z0-9]/.test(p.addr);
+      let w=W;
+      if(pure){if(!Wb)Wb=await Tesseract.createWorker("ben");w=Wb}
+      const sA=strip(ai,last);
+      let ad=await rd(sA,w);
+      const bad=t=>t.split(/\s+/).filter(x=>/\u09CD$/.test(x.replace(/[,.:;\u0964]+$/,""))).length;
+      if(bad(ad)>0){const ad2=await rd(boost(sA),w);if(BN.test(ad2)&&bad(ad2)<bad(ad))ad=ad2}
+      p.dbg={tl:p.addr,ocr:ad};
+      if(BN.test(ad)){p.addr=ad;const sus=ad.match(/[A-Za-z]{3,}/g);if(pure&&sus)p.suspect=sus}else p.addrFail=true;
+    }
+    if(BN.test(p.name)){
+      const o=strip(ri,ri,1.4,.7);
+      let nm=await rd(o,W);
+      if(!BN.test(nm)){
+        if(!Wn){Wn=await Tesseract.createWorker("ben+eng");await Wn.setParameters({tessedit_pageseg_mode:"7"})}
+        nm=await rd(o,Wn);
+      }
+      if(BN.test(nm))p.name=nm;else{p.name="";p.nameFail=true}
+    }
+    p.ocr=true;
+  }catch(e){p.ocrFail=true}
+}
+
+function parse(lines,file,n){
+  const t=lines.join("\n");
+  const g=(re)=>{const m=t.match(re);return m?m[1].trim():""};
+  const p={file,page:n,flags:[],inc:true};
+  p.sf=g(/SF-ID\s*(\d{6,})/);
+  if(!p.sf){const bl=lines.find(l=>/^(\d\s*){8,}$/.test(l));if(bl)p.sf=bl.replace(/\s/g,"")}
+  p.name=(lines.find(l=>/^NAME\b/.test(l))||"").replace(/^NAME\s*/,"");
+  p.phone=g(/PHONE\s*(\+?[\d\s-]{10,})/).replace(/[\s-]/g,"").replace(/^\+?88/,"");
+  const a=lines.findIndex(l=>/^ADDRESS\b/.test(l));
+  const e=lines.findIndex((l,i)=>i>a&&/^(NOTE|AREA|ITEM|CASH ON DELIVERY)\b/.test(l));
+  p.addr=a<0?"":lines.slice(a,e<0?a+3:e).join(" ").replace(/^ADDRESS\s*/,"").replace(/\bDh\.(?!\w)/g,"Dhaka").trim();
+  const c=t.match(/CASH ON DELIVERY\s*\D*?([\d,]+)/);
+  p.cod=c?parseInt(c[1].replace(/,/g,""),10):null;
+  const d=t.match(/Printed:\s*(\d{2})\/(\d{2})\/(\d{2})/);
+  p.date=d?{d:+d[1],m:+d[2],y:d[3]}:null;
+  if(!p.sf||!p.name||!p.phone||p.cod===null||!p.addr){p.err=true;p.flags.push(["b","Could not read all fields. Fill in or exclude."]);p.inc=false}
+  if(!p.date)p.flags.push(["w","No print date found."]);
+  return p;
+}
+
+async function snap(pg){
+  const v=pg.getViewport({scale:1});
+  const s=Math.min(1,560/v.width)*1.2;
+  const vp=pg.getViewport({scale:s});
+  const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+  await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  return c.toDataURL("image/jpeg",.7);
+}
+
+function mark(){
+  P.forEach(p=>{p.flags=p.flags.filter(f=>!f[2]);});
+  P.forEach((p,i)=>{
+    const add=(k,s)=>p.flags.push([k,s,1]);
+    if(p.nameFail) add("b","Name could not be read. Type it from the picture.");
+    if(p.suspect) add("b","Check these words, they look misread: "+p.suspect.join(", "));
+    if(p.addrFail) add("b","Address could not be read. The text below may be wrong. Fix it from the picture.");
+    if(BN.test(p.name+p.addr)) add("w",p.ocr?"Bangla was read from the label picture by OCR. Check it against the picture.":"Bangla could not be read automatically. The PDF text is wrong. Type it from the picture.");
+    if(/[…]|\.\.\.$/.test(p.name+p.addr)) add("w","Label text is cut off (…). Complete it from the original order.");
+    if(p.cod===0) add("w","COD is ৳0. Fully prepaid, or a return or exchange?");
+    const same=P.filter((q,j)=>j!==i&&q.sf&&q.sf===p.sf);
+    if(same.length) add("b","Duplicate SF-ID in this session.");
+    const likely=P.filter((q,j)=>j!==i&&q.sf!==p.sf&&q.name&&q.name===p.name&&q.phone===p.phone&&q.cod===p.cod);
+    if(likely.length) add("b","Same name, phone and COD as "+likely.map(q=>q.sf).join(", ")+". Likely duplicate booking.");
+    if(p.dupDecided===undefined) p.dupDecided=false;
+    if((same.length||likely.length)&&!p.dupDecided){p.inc=false;p.dupDecided=true}
+  });
+}
+
+function render(){
+  const L=document.getElementById("list");L.innerHTML="";
+  P.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="card"+(p.err?" err":p.flags.length?" flag":"");
+    const fl=p.flags.map(f=>`<div class="note ${f[0]}">${f[1]}</div>`).join("");
+    d.innerHTML=`<div class="top"><span>${p.sf||"No SF-ID"} <small>(page ${p.page})</small></span>
+      <label><input type="checkbox" ${p.inc?"checked":""} onchange="P[${i}].inc=this.checked;stat()"> Include</label></div>
+      ${fl}
+      <input type="text" value="${esc(p.sf)}" oninput="P[${i}].sf=this.value.replace(/\\D/g,'')" inputmode="numeric" placeholder="SF-ID">
+      <input type="text" value="${esc(p.name)}" oninput="P[${i}].name=this.value" placeholder="Customer name">
+      <input type="text" value="${esc(p.phone)}" oninput="P[${i}].phone=this.value" inputmode="tel" placeholder="Phone">
+      <textarea rows="2" oninput="P[${i}].addr=this.value;grow(this)" placeholder="Address">${esc(p.addr)}</textarea>
+      <input type="text" value="${p.cod===null?"":p.cod}" oninput="P[${i}].cod=this.value===''?null:+this.value.replace(/[^\\d]/g,'')" inputmode="numeric" placeholder="COD amount">
+      ${p.crop?`<img src="${p.crop}" alt="Label">`:""}
+      ${p.img?`<button class="lnk" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden">Show label</button><img src="${p.img}" hidden>`:""}`;
+    L.appendChild(d);
+  });
+  document.querySelectorAll(".card textarea").forEach(grow);
+  document.getElementById("clr").hidden=!P.length;
+  stat();
+}
+const grow=t=>{t.style.height="auto";t.style.height=t.scrollHeight+4+"px"};
+const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+
+function stat(){
+  const inc=P.filter(p=>p.inc).length;
+  const flagged=P.filter(p=>p.flags.length).length;
+  sum.innerHTML=P.length?`<b>${pages}</b> label pages read, <b>${P.length}</b> parcels found, <b>${inc}</b> included.${flagged?` <span class="w">${flagged} need a look.</span>`:""}`:"No labels loaded.";
+  gen.disabled=!inc;
+}
+function clearAll(){P=[];pages=0;msg.textContent="";render()}
+
+async function generate(){
+  msg.textContent="";
+  const inc=P.filter(p=>p.inc);
+  const bad=inc.filter(p=>!p.sf||!p.name||!p.phone||p.cod===null||!p.addr);
+  if(bad.length){msg.style.color="#b3261e";msg.textContent="Some included parcels have empty fields.";return}
+  const groups={};
+  inc.forEach(p=>{const k=p.date?`${p.date.d} ${MONTHS[p.date.m-1]} ${p.date.y}`:"Unknown date";(groups[k]=groups[k]||[]).push(p)});
+  const done=[],files=[];
+  for(const [k,rows] of Object.entries(groups)){
+    let serial=1;
+    try{serial=(+localStorage.getItem("pt_"+k)||0)+1}catch(e){}
+    const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Sheet1");
+    const W=[23,15,17,16,50];
+    ws.columns=["Parcel ID","COD Amount","Customer Name","Phone Number","Delivery Address"].map((h,i)=>({header:h,width:W[i]}));
+    rows.forEach(p=>ws.addRow([`Parcel ID:${p.sf}`,`COD: ৳${p.cod.toLocaleString("en-US")}`,p.name,p.phone,p.addr]));
+    ws.eachRow((r,n)=>{
+      const ad=n===1?"":String(r.getCell(5).value||"");
+      const per=BN.test(ad)?36:52,lines=Math.max(1,Math.ceil(ad.length/per));
+      r.height=n===1?26:22+(lines-1)*18;
+      r.eachCell(c=>{
+        c.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+        c.numFmt="@";
+        if(n===1){c.font={name:"Segoe UI",bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF001B36"}}}
+        else c.font={name:"Segoe UI"};
+      });
+    });
+    const name=`Parcel tag ${k} PZ ${String(serial).padStart(2,"0")}.xlsx`;
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    files.push({name,blob,k,serial});
+    done.push(`${name} (${rows.length} parcels)`);
+  }
+  const keep=()=>files.forEach(f=>{try{localStorage.setItem("pt_"+f.k,f.serial)}catch(e){}});
+  files.forEach(f=>{const a=document.createElement("a");a.href=URL.createObjectURL(f.blob);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});
+  keep();
+  msg.style.color="#1b6e3c";msg.textContent="Saved: "+done.join("; ")+". To share it, open it from your Downloads or Files app.";
+}
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
+
+(function initPTR(onRefresh){
+  if(typeof document==="undefined")return;
+  let el=typeof document.getElementById==="function"?document.getElementById("ptr"):null;
+  const tx=()=>el&&el.querySelector?el.querySelector(".ptr-tx"):null;
+  const ic=()=>el&&el.querySelector?el.querySelector(".ptr-ic"):null;
+  let sx=0,sy=0,lock="",pull=0,busy=false;
+  const THRESH=52;
+  function setVisual(h,cls,text,glyph){
+    if(!el)return;
+    el.className="ptr"+(cls?" "+cls:"");
+    if(el.style)el.style.height=h+"px";
+    const t=tx();if(t&&text)t.textContent=text;
+    const g=ic();if(g&&glyph)g.innerHTML=glyph;
+  }
+  async function triggerPullRefresh(){
+    if(busy)return;
+    busy=true;
+    setVisual(44,"active busy","Refreshing…","&#8635;");
+    const t0=Date.now();
+    try{await onRefresh()}catch(e){}
+    finally{
+      const wait=Math.max(0,260-(Date.now()-t0));
+      const tm=setTimeout(()=>{busy=false;setVisual(0,"","Pull down to refresh","&#8595;")},wait);
+      if(tm&&typeof tm.unref==="function")tm.unref();
+    }
+  }
+  window.triggerPullRefresh=triggerPullRefresh;
+  const scrollTop=()=>Math.max(window.scrollY||0,(document.documentElement&&document.documentElement.scrollTop)||0,(document.body&&document.body.scrollTop)||0);
+  document.addEventListener("touchstart",e=>{
+    if(busy||!e.touches||e.touches.length!==1)return;
+    if(scrollTop()>2){lock="up";return}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(busy||lock==="up"||lock==="h"||!e.touches||e.touches.length!==1)return;
+    const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+    if(!lock){
+      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){lock="h";return}
+      if(dy<-6){lock="up";return}
+      if(dy>8&&Math.abs(dy)>Math.abs(dx)){if(scrollTop()>2){lock="up";return}lock="v"}else return;
+    }
+    if(lock==="v"){
+      if(dy<=0){pull=0;setVisual(0,"pulling","","");return}
+      pull=Math.min(76,Math.round(dy*0.55));
+      if(e.cancelable)e.preventDefault();
+      setVisual(pull,"pulling active"+(pull>=THRESH?" ready":""),pull>=THRESH?"Release to refresh":"Pull down to refresh","&#8595;");
+    }
+  },{passive:false});
+  function onEnd(){
+    if(busy)return;
+    const goRef=(lock==="v"&&pull>=THRESH);
+    lock="";pull=0;
+    if(goRef)triggerPullRefresh();
+    else setVisual(0,"","Pull down to refresh","&#8595;");
+  }
+  document.addEventListener("touchend",onEnd,{passive:true});
+  document.addEventListener("touchcancel",onEnd,{passive:true});
+})(()=>{
+  mark();
+  render();
+  msg.style.color="#2b4f48";
+  msg.textContent=P.length?"Labels refreshed.":"Up to date.";
+});
+</script>
+</body>
+</html>

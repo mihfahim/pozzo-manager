@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2b4f48">
+<title>Pozzo Manager – Dashboard</title>
+<meta name="description" content="Pozzo Toys Dashboard: stock value at cost and sale, low and out of stock alerts, period sales, purchases, gross profit, expenses, and net profit.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
+*{box-sizing:border-box}
+html,body{overscroll-behavior-y:contain}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr.pulling{transition:none}
+.ptr.active{opacity:1;border-bottom-width:1px}
+.ptr.ready{background:#d4e7df}
+.ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
+.ptr.ready .ptr-ic{transform:rotate(180deg)}
+@keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
+header h1{font-size:22px;color:var(--grn)}
+.embed header{display:none}
+main{max-width:1080px;margin:0 auto;padding:18px 16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Header & Period Selector */
+.headbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.kicker{color:var(--mut);font-size:14px;margin-bottom:3px}
+.headbar h2{font-size:28px;line-height:1.15}
+.head-right{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;flex-wrap:nowrap;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{min-height:40px;border:0;border-radius:999px;padding:8px 13px;background:transparent;color:var(--mut);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.seg button.on{background:var(--grn);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+.custom-range{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:14px}
+.custom-range label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
+.custom-range input[type="date"]{min-height:42px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--in);font:inherit;font-size:14px;color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:pointer;transition:background-color .15s ease}
+.btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
+.btn.sm{min-height:36px;padding:6px 12px;border-radius:10px;font-size:13px}
+.btn.w{background:var(--badbg);border-color:#e8bfae;color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+
+/* KPI Grids */
+.sec-label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:4px 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
+.kpi.profit{background:var(--bd);border-color:#c6ddd4}
+.kpi.loss{background:var(--badbg);border-color:#e8bfae}
+.kpi .lbl{color:var(--mut);font-size:14px;margin-bottom:6px}
+.kpi.profit .lbl{color:var(--grn)}
+.kpi.loss .lbl{color:var(--bad)}
+.kpi .val{font-family:Georgia,"Times New Roman",serif;font-size:28px;font-weight:700;line-height:1.12}
+.kpi.profit .val{color:var(--grn)}
+.kpi.loss .val{color:var(--bad)}
+.kpi .sub{color:var(--mut);font-size:13px;margin-top:6px;line-height:1.35}
+
+/* Current Stock Valuation & Low/Out Alert Buttons */
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:16px}
+.card-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.card h3{font-size:21px}
+.stock-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.sstat{background:var(--in);border:1px solid var(--line);border-radius:16px;padding:14px}
+.sstat .lbl{font-size:13px;color:var(--mut);margin-bottom:4px}
+.sstat .val{font-family:Georgia,"Times New Roman",serif;font-size:24px;font-weight:700;line-height:1.15}
+.sstat .sub{font-size:13px;color:var(--mut);margin-top:4px}
+
+.alert-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.abtn{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:74px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--in);font:inherit;color:var(--ink);text-align:left;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
+.abtn.warn{background:var(--ambbg);border-color:#e5cfa8}
+.abtn.bad{background:var(--badbg);border-color:#e8bfae}
+.abtn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+.abtn .atitle{font-weight:700;font-size:16px}
+.abtn.warn .atitle{color:var(--amb)}
+.abtn.bad .atitle{color:var(--bad)}
+.abtn .asub{font-size:13px;color:var(--mut);margin-top:3px}
+.abtn .aright{text-align:right;flex:none}
+.abtn .aval{font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:700}
+.abtn.warn .aval{color:var(--amb)}
+.abtn.bad .aval{color:var(--bad)}
+.abtn .act{font-size:12px;font-weight:600;color:var(--mut);margin-top:3px}
+
+/* Main Columns */
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+.pl-table{border-top:1px solid var(--line);margin-bottom:16px}
+.pl-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.pl-row.mut{color:var(--mut)}
+.pl-row.sub{font-weight:700}
+.pl-row.net{border-bottom:0;padding-top:14px;font-size:18px;font-weight:700}
+.pl-row.net .amt{font-family:Georgia,"Times New Roman",serif;font-size:24px}
+.pl-row.net.pos .amt{color:var(--grn)}
+.pl-row.net.neg .amt{color:var(--bad)}
+
+.cat-list{margin-top:10px;border-top:1px solid var(--line)}
+.cat-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.cat-row:last-child{border-bottom:0}
+.exp-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.exp-item:last-child{border-bottom:0}
+.exp-item .ename{font-weight:600;font-size:15px}
+.exp-item .emeta{font-size:13px;color:var(--mut);margin-top:2px}
+.exp-item .eright{display:flex;align-items:center;gap:10px;flex:none}
+.exp-item .eamt{font-weight:700;font-size:15px;color:var(--bad)}
+
+/* Orders & Workspace */
+.list{border-top:1px solid var(--line)}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:56px;padding:12px 0;border-bottom:1px solid var(--line);width:100%;background:transparent;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.item:last-child{border-bottom:0}
+.item .main{min-width:0;flex:1}
+.item .title{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .meta{color:var(--mut);font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .side{text-align:right;flex:none}
+.item .amt{font-weight:700;font-size:15px}
+.st-ok{color:var(--grn);font-weight:600}
+.st-warn{color:var(--amb);font-weight:600}
+.st-bad{color:var(--bad);font-weight:600}
+
+.navgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.navtile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;min-height:72px;padding:13px 15px;border-radius:16px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.navtile b{font-size:15px}
+.navtile span{color:var(--mut);font-size:13px;margin-top:4px}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(30,25,15,.46);display:flex;align-items:flex-end;justify-content:center;z-index:30;padding:12px}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:26px;padding:22px 20px 24px;max-height:90vh;overflow:auto;border:1px solid var(--line)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.sheet h3{font-size:23px}
+.sheet .sub{color:var(--mut);margin:0 0 14px;font-size:14px;line-height:1.45}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.field input,.field select{width:100%;min-height:46px;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:16px;color:var(--ink)}
+.cat-picks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.cat-picks button{min-height:38px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.cat-picks button.on{background:var(--grn);border-color:var(--grn);color:#fff}
+.new-cat-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.new-cat-row input{flex:1}
+.acts{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.acts .btn{flex:1}
+.err{color:var(--bad);font-size:14px;margin:0 0 10px;font-weight:600}
+.flash{background:var(--bd);color:var(--grn);border:1px solid #c6ddd4;border-radius:16px;padding:11px 15px;margin-bottom:14px;font-size:14px;font-weight:600}
+.notice{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:16px}
+.notice h3{font-size:20px;margin-bottom:6px}
+.notice p{margin:0 0 12px;color:var(--mut);font-size:15px;line-height:1.5}
+.empty{padding:18px 0;color:var(--mut);font-size:14px}
+.skel{height:18px;background:var(--sub);border-radius:8px;margin:10px 0}
+[hidden]{display:none!important}
+
+@media (max-width:880px){
+  .kpis,.stock-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols{grid-template-columns:1fr}
+}
+@media (max-width:540px){
+  .kpis,.stock-stats,.alert-btns,.navgrid{grid-template-columns:1fr}
+  .kpi .val{font-size:25px}
+}
+</style>
+</head>
+<body>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed")</script>
+<div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
+<header><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
+<main id="app"></main>
+<div id="modal" class="modal" hidden onclick="if(event.target===this)closeModal()"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const num=v=>{const n=parseFloat(String(v).replace(/[,৳\s]|tk/gi,""));return isNaN(n)?0:n};
+const tk=n=>{
+  const v=Math.round(Number(n)||0);
+  return (v<0?"−৳ ":"৳ ")+Math.abs(v).toLocaleString("en-US");
+};
+const pad=n=>String(n).padStart(2,"0");
+const fmtDate=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+function today(){return fmtDate(new Date())}
+function monthBounds(y,m){
+  const start=new Date(y,m-1,1);
+  const end=new Date(y,m,0);
+  return {from:fmtDate(start),to:fmtDate(end)};
+}
+function niceDate(s){
+  const p=String(s||"").split("-");
+  if(p.length!==3)return String(s||"");
+  const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return Number(p[2])+" "+(M[Number(p[1])-1]||p[1])+" "+p[0];
+}
+const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
+const localCats=()=>{try{const a=JSON.parse(localStorage.getItem("pt_exp_cats")||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}};
+const saveLocalCats=arr=>{try{localStorage.setItem("pt_exp_cats",JSON.stringify(arr))}catch(e){}};
+
+async function api(payload){
+  const c=cfg();if(!c.url||!c.key)return {ok:false,error:"nocfg"};
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),45000);
+  try{
+    const r=await fetch(c.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({key:c.key},payload)),signal:ac.signal});
+    return await r.json();
+  }catch(e){return {ok:false,error:e&&e.name==="AbortError"?"slow":"no connection"}}
+  finally{clearTimeout(t)}
+}
+
+function goTab(tab,extra){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage(Object.assign({type:"pozzo:switch-tab",tab:tab},extra||{}),"*");
+      return;
+    }
+  }catch(e){}
+  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",sticker:"stickers.html",stickers:"stickers.html"};
+  if(map[tab])window.location.href=map[tab];
+}
+
+const DEFAULT_CATS=["Meta Ads Cost","Packaging","Transportation","Courier & COD Fee","Rent & Utilities","Salary","Other"];
+const tdNow=today();
+const curMonthInit=monthBounds(Number(tdNow.slice(0,4)),Number(tdNow.slice(5,7)));
+
+let state={
+  rangeMode:"month", // default: This month
+  customFrom:curMonthInit.from,
+  customTo:tdNow,
+  loading:true,
+  error:"",
+  flash:"",
+  data:null,
+  confirmDelExpId:"",
+  modal:null // null | {type:'low'|'out'|'purchases'|'expense', ...}
+};
+
+function activeDates(){
+  const td=today();
+  const y=Number(td.slice(0,4)),m=Number(td.slice(5,7)),day=Number(td.slice(8,10));
+  if(state.rangeMode==="month"){
+    return Object.assign(monthBounds(y,m),{label:"This month"});
+  }
+  if(state.rangeMode==="last_month"){
+    const pm=m===1?12:m-1,py=m===1?y-1:y;
+    return Object.assign(monthBounds(py,pm),{label:"Last month"});
+  }
+  if(state.rangeMode==="today"){
+    return {from:td,to:td,label:"Today"};
+  }
+  if(state.rangeMode==="week"){
+    const start=new Date(y,m-1,day-6);
+    return {from:fmtDate(start),to:td,label:"Last 7 days"};
+  }
+  if(state.rangeMode==="all"){
+    return {from:"2020-01-01",to:td,range:"all",label:"All time"};
+  }
+  const f=state.customFrom||curMonthInit.from;
+  const t=state.customTo||td;
+  return f<=t?{from:f,to:t,label:"Custom range"}:{from:t,to:f,label:"Custom range"};
+}
+
+function allCategories(){
+  const serverCats=(state.data&&Array.isArray(state.data.categories))?state.data.categories:[];
+  const merged=DEFAULT_CATS.concat(serverCats,localCats());
+  const seen={},out=[];
+  merged.forEach(c=>{
+    const s=String(c||"").trim();
+    if(!s)return;
+    const k=s.toLowerCase();
+    if(!seen[k]){seen[k]=true;out.push(s)}
+  });
+  return out;
+}
+
+async function loadDashboard(fresh){
+  state.loading=true;state.error="";
+  render();
+  const c=cfg();
+  if(!c.url||!c.key){state.loading=false;state.error="nocfg";render();return}
+  const r=activeDates();
+  const j=await api({action:"dashboard",from:r.from,to:r.to,range:r.range||"",today:today(),fresh:!!fresh});
+  state.loading=false;
+  if(!j.ok){state.error=j.error||"Could not load dashboard data";render();return}
+  state.data=j;
+  if(Array.isArray(j.categories)){
+    const customOnly=j.categories.filter(x=>!DEFAULT_CATS.some(d=>d.toLowerCase()===x.toLowerCase()));
+    if(customOnly.length)saveLocalCats(customOnly);
+  }
+  render();
+}
+
+function setRange(mode){
+  state.rangeMode=mode;
+  state.flash="";
+  if(mode!=="custom")loadDashboard(false);
+  else render();
+}
+
+function applyCustomRange(){
+  const f=$("#cfrom")?$("#cfrom").value:state.customFrom;
+  const t=$("#cto")?$("#cto").value:state.customTo;
+  if(!f||!t)return;
+  state.customFrom=f<=t?f:t;
+  state.customTo=f<=t?t:f;
+  loadDashboard(false);
+}
+
+function statusClass(st){
+  if(st==="Cancelled"||st==="Returned")return "st-bad";
+  if(st==="Partial Return")return "st-warn";
+  return "st-ok";
+}
+
+function render(){
+  const app=$("#app");
+  if(state.error==="nocfg"){
+    app.innerHTML=`<div class="headbar"><div><div class="kicker">Pozzo Toys</div><h2>Dashboard</h2></div></div>
+    <div class="notice"><h3>Connect your Google Sheet</h3>
+      <p>Open Sales and enter your Web app link and secret key under Connection settings to view stock value, sales, purchases, expenses, and profit here.</p>
+      <button class="btn p" type="button" onclick="goTab('sales')">Open Connection settings</button>
+    </div>`;
+    return;
+  }
+
+  const r=activeDates();
+  const d=state.data;
+  const s=d&&d.stock?d.stock:{
+    totalItems:0,totalUnits:0,valueCost:0,valueSale:0,
+    lowCount:0,lowUnits:0,lowCostValue:0,lowSaleValue:0,lowItems:[],
+    outCount:0,outRestockCost:0,outUnitSaleValue:0,outItems:[],
+    issues:0,tocheck:0
+  };
+  const p=d&&d.period?d.period:{
+    salesValue:0,billedSales:0,customerDelivery:0,
+    salesCount:0,soldUnits:0,returnedCount:0,cancelledCount:0,
+    purchaseValue:0,purchaseUnits:0,purchaseCount:0,
+    cogs:0,grossProfit:0,grossMarginPct:0,
+    otherExpenses:0,returnLossCost:0,sellerDeliveryCost:0,
+    netProfit:0,netMarginPct:0,
+    expenseBreakdown:[],expenses:[],purchases:[]
+  };
+  const ords=d&&Array.isArray(d.recentOrders)?d.recentOrders:[];
+  const awaitingDispatch=d&&typeof d.awaitingDispatch==="number"?d.awaitingDispatch:0;
+  const awaitingPack=d&&typeof d.awaitingPack==="number"?d.awaitingPack:awaitingDispatch;
+  const dash="&mdash;";
+  const loadingInit=state.loading&&!d;
+
+  const netCls=loadingInit?"":(p.netProfit>=0?"profit":"loss");
+  const extraLosses=(p.returnLossCost||0)+(p.sellerDeliveryCost||0);
+  const potentialStockMargin=(s.valueSale||0)-(s.valueCost||0);
+  const topCat=p.expenseBreakdown&&p.expenseBreakdown.length?p.expenseBreakdown[0]:null;
+
+  app.innerHTML=`<div class="headbar">
+    <div>
+      <div class="kicker num">Pozzo Toys · ${esc(r.label)} (${esc(niceDate(r.from))} – ${esc(niceDate(r.to))})</div>
+      <h2>Dashboard</h2>
+    </div>
+    <div class="head-right">
+      <div class="seg" role="tablist" aria-label="Date range">
+        ${[
+          ["month","This month"],
+          ["last_month","Last month"],
+          ["today","Today"],
+          ["week","Last 7d"],
+          ["all","All time"],
+          ["custom","Custom"]
+        ].map(([k,lbl])=>`<button type="button" class="${state.rangeMode===k?"on":""}" onclick="setRange('${k}')">${lbl}</button>`).join("")}
+      </div>
+      <button class="btn p" type="button" onclick="openExpenseModal()">+ Add expense</button>
+    </div>
+  </div>
+
+  ${state.rangeMode==="custom"?`<div class="custom-range">
+    <div><label for="cfrom">From date</label><input id="cfrom" type="date" value="${esc(state.customFrom)}" oninput="state.customFrom=this.value" onchange="state.customFrom=this.value"></div>
+    <div><label for="cto">To date</label><input id="cto" type="date" value="${esc(state.customTo)}" oninput="state.customTo=this.value" onchange="state.customTo=this.value"></div>
+    <button class="btn p" type="button" onclick="applyCustomRange()">Apply range</button>
+  </div>`:""}
+
+  ${state.flash?`<div class="flash">${esc(state.flash)}</div>`:""}
+  ${state.error?`<div class="notice"><h3>Could not reach Google Sheet</h3><p>${esc(state.error)}</p><button class="btn" type="button" onclick="loadDashboard(true)">Try again</button></div>`:""}
+
+  <div class="sec-label">Selected range · ${esc(r.label)}</div>
+  <section class="kpis" aria-label="Selected period summary">
+    <div class="kpi">
+      <div class="lbl">Sales value</div>
+      <div class="val num">${loadingInit?dash:tk(p.salesValue)}</div>
+      <div class="sub num">Billed ${tk(p.billedSales)} incl. delivery</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">No. of sales</div>
+      <div class="val num">${loadingInit?dash:p.salesCount}</div>
+      <div class="sub num">${p.soldUnits} units sold${p.returnedCount||p.cancelledCount?` · ${p.returnedCount} ret · ${p.cancelledCount} can`:""}</div>
+    </div>
+    <div class="kpi" style="cursor:pointer" onclick="openPurchasesModal()" title="View stock bought in this period">
+      <div class="lbl">Purchases (stock bought)</div>
+      <div class="val num">${loadingInit?dash:tk(p.purchaseValue)}</div>
+      <div class="sub num">${p.purchaseUnits} units · ${p.purchaseCount} batch${p.purchaseCount===1?"":"es"}</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Gross profit</div>
+      <div class="val num">${loadingInit?dash:tk(p.grossProfit)}</div>
+      <div class="sub num">${p.grossMarginPct}% margin · Item cost ${tk(p.cogs)}</div>
+    </div>
+    <div class="kpi">
+      <div class="lbl">Other expenses</div>
+      <div class="val num">${loadingInit?dash:tk(p.otherExpenses)}</div>
+      <div class="sub num">${topCat?`Top: ${esc(topCat.category)} (${tk(topCat.amount)})`:"Meta ads, packaging, transport & more"}</div>
+    </div>
+    <div class="kpi ${netCls}">
+      <div class="lbl">Net profit</div>
+      <div class="val num">${loadingInit?dash:tk(p.netProfit)}</div>
+      <div class="sub num">${p.netMarginPct}% net margin · After all expenses</div>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Current stock valuation and alerts">
+    <div class="card-head">
+      <h3>Current stock &amp; alerts</h3>
+      <button class="btn sm" type="button" onclick="goTab('stock')">Open Stock &rarr;</button>
+    </div>
+    <div class="stock-stats">
+      <div class="sstat">
+        <div class="lbl">Total items in stock</div>
+        <div class="val num">${loadingInit?dash:s.totalUnits+" pcs"}</div>
+        <div class="sub num">${s.totalItems} active products</div>
+      </div>
+      <div class="sstat">
+        <div class="lbl">Stock value at cost</div>
+        <div class="val num">${loadingInit?dash:tk(s.valueCost)}</div>
+        <div class="sub num">Total buying cost of current stock</div>
+      </div>
+      <div class="sstat">
+        <div class="lbl">Stock value at sale</div>
+        <div class="val num">${loadingInit?dash:tk(s.valueSale)}</div>
+        <div class="sub num">Est. margin ${tk(potentialStockMargin)}</div>
+      </div>
+    </div>
+
+    <div class="alert-btns">
+      <button class="abtn ${s.lowCount?"warn":""}" type="button" onclick="openStockListModal('low')">
+        <div>
+          <div class="atitle num">Low stock · ${s.lowCount} item${s.lowCount===1?"":"s"}</div>
+          <div class="asub num">${s.lowUnits} pcs left · Tap to inspect list</div>
+        </div>
+        <div class="aright">
+          <div class="aval num">Cost ${tk(s.lowCostValue)}</div>
+          <div class="act num">Sale ${tk(s.lowSaleValue)}</div>
+        </div>
+      </button>
+
+      <button class="abtn ${s.outCount?"bad":""}" type="button" onclick="openStockListModal('out')">
+        <div>
+          <div class="atitle num">Out of stock · ${s.outCount} item${s.outCount===1?"":"s"}</div>
+          <div class="asub num">0 pcs in stock · Tap to view &amp; restock</div>
+        </div>
+        <div class="aright">
+          <div class="aval num">Restock ${tk(s.outRestockCost)}</div>
+          <div class="act num">Stock val ৳ 0 · Unit sale ${tk(s.outUnitSaleValue)}</div>
+        </div>
+      </button>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="card" aria-label="Profit breakdown and other expenses">
+      <div class="card-head">
+        <h3>Profit &amp; other expenses</h3>
+        <button class="btn p sm" type="button" onclick="openExpenseModal()">+ Add expense</button>
+      </div>
+
+      <div class="pl-table">
+        <div class="pl-row"><span>Total sales value (${esc(r.label)})</span><span class="num">${tk(p.salesValue)}</span></div>
+        <div class="pl-row mut"><span>Cost of goods sold (COGS)</span><span class="num">&minus; ${tk(p.cogs)}</span></div>
+        <div class="pl-row sub"><span>Gross profit</span><span class="num">${tk(p.grossProfit)}</span></div>
+        <div class="pl-row mut"><span>Other expenses (${p.expenses.length})</span><span class="num">&minus; ${tk(p.otherExpenses)}</span></div>
+        ${extraLosses>0?`<div class="pl-row mut"><span>Damaged return loss (${tk(p.returnLossCost)}) &amp; seller delivery (${tk(p.sellerDeliveryCost)})</span><span class="num">&minus; ${tk(extraLosses)}</span></div>`:""}
+        <div class="pl-row net ${p.netProfit>=0?"pos":"neg"}"><span>Net profit</span><span class="amt num">${tk(p.netProfit)}</span></div>
+      </div>
+
+      ${p.expenseBreakdown.length?`<div style="margin-bottom:14px">
+        <div class="sec-label" style="margin-bottom:6px">Expenses by category</div>
+        <div class="cat-list">${p.expenseBreakdown.map(b=>`<div class="cat-row">
+          <span><b>${esc(b.category)}</b></span>
+          <span class="num">${tk(b.amount)} (${b.pct}%)</span>
+        </div>`).join("")}</div>
+      </div>`:""}
+
+      <div class="card-head" style="margin-top:8px;margin-bottom:6px">
+        <span class="sec-label" style="margin:0">Expense entries (${p.expenses.length})</span>
+      </div>
+      ${p.expenses.length?`<div class="list">${p.expenses.map(ex=>{
+        const isConfirming=state.confirmDelExpId===ex.id;
+        return `<div class="exp-item">
+          <div class="main">
+            <div class="ename">${esc(ex.category)}</div>
+            <div class="emeta num">${esc(niceDate(ex.date))}${ex.note?" · "+esc(ex.note):""}</div>
+          </div>
+          <div class="eright">
+            <span class="eamt num">&minus; ${tk(ex.amount)}</span>
+            ${isConfirming
+              ?`<button class="btn w sm" type="button" onclick="confirmDeleteExpense('${esc(ex.id)}')">Confirm?</button>`
+              :`<button class="btn sm" type="button" onclick="askDeleteExpense('${esc(ex.id)}')">Delete</button>`}
+          </div>
+        </div>`;
+      }).join("")}</div>`
+      :`<div class="empty">No expenses recorded in ${esc(r.label.toLowerCase())}. Tap <b>+ Add expense</b> to log Meta ads, packaging, transport, or custom categories.</div>`}
+    </section>
+
+    <div>
+      <section class="card" aria-label="Recent orders">
+        <div class="card-head">
+          <h3>Recent orders</h3>
+          <button class="btn sm" type="button" onclick="goTab('sales')">All orders</button>
+        </div>
+        ${state.loading&&!ords.length?`<div class="skel"></div><div class="skel"></div><div class="skel"></div>`
+        :ords.length?`<div class="list">${ords.slice(0,7).map(o=>`<button class="item" type="button" onclick="goTab('sales',{orderId:'${esc(o.id)}'})">
+          <div class="main">
+            <div class="title num">${esc(o.id)} · ${esc(o.name||"Customer")}</div>
+            <div class="meta num">${esc(o.date)} · ${esc(o.phone||"")} · <span class="${statusClass(o.status)}">${esc(o.status||"Active")}</span>${o.exported?" · Exported":" · Ready"}</div>
+          </div>
+          <div class="side">
+            <div class="amt num">${tk(o.total)}</div>
+            <div class="meta num">COD ${tk(o.cod)}</div>
+          </div>
+        </button>`).join("")}</div>`
+        :`<div class="empty">No recent orders in this month or last month.</div>`}
+      </section>
+
+      <section class="card" aria-label="Workspace shortcuts">
+        <div class="card-head"><h3>Workspace</h3></div>
+        <div class="navgrid">
+          <button class="navtile" type="button" onclick="goTab('stock')">
+            <b>Stock</b>
+            <span class="num">${s.issues} issues · ${s.tocheck} to check</span>
+          </button>
+          <button class="navtile" type="button" onclick="goTab('sale')">
+            <b>Sale</b>
+            <span>New order, cancel &amp; return</span>
+          </button>
+          <button class="navtile" type="button" onclick="goTab('sticker')">
+            <b>Sticker</b>
+            <span>Read courier label PDFs</span>
+          </button>
+          <button class="navtile" type="button" onclick="goTab('dispatch')">
+            <b>Dispatch</b>
+            <span class="num">${awaitingPack} to pack · ${awaitingDispatch} parcel file</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
+
+/* ---------- Modals: Add Expense & Custom Categories, Low/Out Stock Lists, Purchases ---------- */
+function closeModal(){
+  state.modal=null;
+  const m=$("#modal");
+  if(m){m.hidden=true;m.innerHTML=""}
+}
+
+function openExpenseModal(){
+  const cats=allCategories();
+  state.modal={
+    type:"expense",
+    date:today(),
+    category:cats[0]||"Meta Ads Cost",
+    amount:"",
+    note:"",
+    showNewCat:false,
+    newCatName:"",
+    err:"",
+    saving:false
+  };
+  renderExpenseModal();
+}
+
+function renderExpenseModal(){
+  const st=state.modal;
+  if(!st||st.type!=="expense")return;
+  const cats=allCategories();
+  const m=$("#modal");
+  m.hidden=false;
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="expTitle">
+    <div class="sheet-head">
+      <h3 id="expTitle">Add other expense</h3>
+      <button class="btn sm" type="button" onclick="closeModal()">Close</button>
+    </div>
+    <p class="sub">Log Meta ads cost, packaging, transportation, or add your own custom category.</p>
+    ${st.err?`<p class="err">${esc(st.err)}</p>`:""}
+
+    <div class="field">
+      <label>Category</label>
+      <div class="cat-picks">
+        ${cats.map(c=>`<button type="button" class="${st.category===c?"on":""}" onclick="pickExpenseCat('${esc(c)}')">${esc(c)}</button>`).join("")}
+        <button type="button" onclick="toggleNewCategory()">${st.showNewCat?"Cancel new":"+ My category"}</button>
+      </div>
+      ${st.showNewCat?`<div class="new-cat-row">
+        <input id="newCatInp" placeholder="e.g. Facebook Boost, Gift Box" value="${esc(st.newCatName)}" oninput="state.modal.newCatName=this.value">
+        <button class="btn p sm" type="button" onclick="saveCustomCategory()">Add</button>
+      </div>`:""}
+    </div>
+
+    <div class="field">
+      <label for="expAmt">Amount (৳)</label>
+      <input id="expAmt" inputmode="decimal" type="number" min="1" step="any" placeholder="e.g. 500" value="${esc(st.amount)}" oninput="state.modal.amount=this.value">
+    </div>
+
+    <div class="field">
+      <label for="expDate">Date</label>
+      <input id="expDate" type="date" value="${esc(st.date)}" oninput="state.modal.date=this.value">
+    </div>
+
+    <div class="field">
+      <label for="expNote">Note (optional)</label>
+      <input id="expNote" placeholder="e.g. 3-day toy ad campaign, 200 cartons" value="${esc(st.note)}" oninput="state.modal.note=this.value">
+    </div>
+
+    <div class="acts">
+      <button class="btn" type="button" onclick="closeModal()">Cancel</button>
+      <button class="btn p" id="saveExpBtn" type="button" onclick="submitExpense()" ${st.saving?"disabled":""}>${st.saving?"Saving…":"Save expense"}</button>
+    </div>
+  </div>`;
+}
+
+function pickExpenseCat(cat){
+  if(!state.modal||state.modal.type!=="expense")return;
+  state.modal.category=cat;
+  renderExpenseModal();
+}
+
+function toggleNewCategory(){
+  if(!state.modal||state.modal.type!=="expense")return;
+  state.modal.showNewCat=!state.modal.showNewCat;
+  state.modal.err="";
+  renderExpenseModal();
+}
+
+async function saveCustomCategory(){
+  if(!state.modal||state.modal.type!=="expense")return;
+  const inp=$("#newCatInp");
+  const raw=((inp&&inp.value)||state.modal.newCatName||"").trim();
+  if(!raw){
+    state.modal.err="Type a category name first.";
+    renderExpenseModal();
+    return;
+  }
+  const lc=localCats();
+  if(!lc.some(x=>x.toLowerCase()===raw.toLowerCase())){
+    lc.push(raw);
+    saveLocalCats(lc);
+  }
+  state.modal.category=raw;
+  state.modal.showNewCat=false;
+  state.modal.newCatName="";
+  state.modal.err="";
+  renderExpenseModal();
+  // Persist to Google Apps Script in background
+  const j=await api({action:"addexpensecategory",name:raw});
+  if(j&&j.ok&&state.data&&Array.isArray(j.categories)){
+    state.data.categories=j.categories;
+  }
+}
+
+async function submitExpense(){
+  if(!state.modal||state.modal.type!=="expense"||state.modal.saving)return;
+  const amtEl=$("#expAmt"),dtEl=$("#expDate"),ntEl=$("#expNote");
+  const amt=num((amtEl&&amtEl.value)||state.modal.amount);
+  const dt=(dtEl&&dtEl.value)||state.modal.date||today();
+  const nt=(ntEl&&ntEl.value)||state.modal.note||"";
+  const cat=state.modal.category||"Other";
+  if(!(amt>0)){
+    state.modal.err="Enter an expense amount above 0.";
+    renderExpenseModal();
+    return;
+  }
+  state.modal.amount=amt;
+  state.modal.date=dt;
+  state.modal.note=nt;
+  state.modal.saving=true;
+  state.modal.err="";
+  renderExpenseModal();
+
+  const j=await api({action:"addexpense",date:dt,category:cat,amount:amt,note:nt,today:today()});
+  if(!j.ok){
+    state.modal.saving=false;
+    state.modal.err=j.error||"Could not save expense.";
+    renderExpenseModal();
+    return;
+  }
+  closeModal();
+  state.flash="Saved expense: "+cat+" ("+tk(amt)+")";
+  await loadDashboard(true);
+}
+
+function askDeleteExpense(id){
+  state.confirmDelExpId=(state.confirmDelExpId===id)?"":id;
+  render();
+}
+
+async function confirmDeleteExpense(id){
+  state.confirmDelExpId="";
+  const j=await api({action:"deleteexpense",id:id,today:today()});
+  if(!j.ok){
+    state.error=j.error||"Could not delete expense.";
+    render();
+    return;
+  }
+  state.flash="Expense entry removed.";
+  await loadDashboard(true);
+}
+
+function openStockListModal(kind){
+  const s=state.data&&state.data.stock?state.data.stock:{lowItems:[],outItems:[],lowCount:0,lowUnits:0,lowCostValue:0,lowSaleValue:0,outCount:0,outRestockCost:0,outUnitSaleValue:0};
+  const isOut=kind==="out";
+  const items=isOut?(s.outItems||[]):(s.lowItems||[]);
+  const m=$("#modal");
+  m.hidden=false;
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="stkModalTitle">
+    <div class="sheet-head">
+      <h3 id="stkModalTitle">${isOut?"Out of stock products":"Low stock products"} (${items.length})</h3>
+      <button class="btn sm" type="button" onclick="closeModal()">Close</button>
+    </div>
+    <p class="sub num">${isOut
+      ?`Estimated restock cost to reach low-stock targets: <b>${tk(s.outRestockCost)}</b> · Sum of unit sale prices: <b>${tk(s.outUnitSaleValue)}</b>`
+      :`Total remaining units: <b>${s.lowUnits} pcs</b> · Value at cost: <b>${tk(s.lowCostValue)}</b> · Value at sale: <b>${tk(s.lowSaleValue)}</b>`
+    }</p>
+    ${items.length?`<div class="list">${items.map(it=>`<div class="item" style="cursor:default">
+      <div class="main">
+        <div class="title num">${esc(it.id)} · ${esc(it.name)}</div>
+        <div class="meta num">${isOut
+          ?`Stock: <b>${it.stock}</b> · Target min: ${it.low||1} · Unit cost ${tk(it.cost)} · Sale ${tk(it.price)}`
+          :`Stock: <b>${it.stock}</b> (min ${it.low}) · Unit cost ${tk(it.cost)} · Sale ${tk(it.price)}`
+        }</div>
+      </div>
+      <div class="side">
+        <div class="amt num">${isOut?"Restock "+tk(it.restockCost):"Cost "+tk(it.valueCost)}</div>
+        <div class="meta num">${isOut?"Unit sale "+tk(it.price):"Sale "+tk(it.valueSale)}</div>
+      </div>
+    </div>`).join("")}</div>`
+    :`<div class="empty">${isOut?"Great news — no products are out of stock right now.":"No products are running low right now."}</div>`}
+    <div class="acts">
+      <button class="btn" type="button" onclick="closeModal()">Close</button>
+      <button class="btn p" type="button" onclick="closeModal();goTab('stock')">Go to Stock &rarr;</button>
+    </div>
+  </div>`;
+}
+
+function openPurchasesModal(){
+  const p=state.data&&state.data.period?state.data.period:{purchaseValue:0,purchaseUnits:0,purchaseCount:0,purchases:[]};
+  const r=activeDates();
+  const items=p.purchases||[];
+  const m=$("#modal");
+  m.hidden=false;
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="purModalTitle">
+    <div class="sheet-head">
+      <h3 id="purModalTitle">Stock bought · ${esc(r.label)}</h3>
+      <button class="btn sm" type="button" onclick="closeModal()">Close</button>
+    </div>
+    <p class="sub num">Total bought: <b>${tk(p.purchaseValue)}</b> (${p.purchaseUnits} pcs across ${p.purchaseCount} purchase${p.purchaseCount===1?"":"s"})</p>
+    ${items.length?`<div class="list">${items.map(x=>`<div class="item" style="cursor:default">
+      <div class="main">
+        <div class="title num">${esc(x.product)} &times;${x.qty}</div>
+        <div class="meta num">${esc(niceDate(x.date))} · ${esc(x.id)}${x.supplier?" · "+esc(x.supplier):""}</div>
+      </div>
+      <div class="side">
+        <div class="amt num">${tk(x.total)}</div>
+      </div>
+    </div>`).join("")}</div>`
+    :`<div class="empty">No stock purchases recorded in ${esc(r.label.toLowerCase())}.</div>`}
+    <div class="acts">
+      <button class="btn" type="button" onclick="closeModal()">Close</button>
+      <button class="btn p" type="button" onclick="closeModal();goTab('stock')">Add purchase in Stock &rarr;</button>
+    </div>
+  </div>`;
+}
+
+window.addEventListener("message",e=>{
+  if(e&&e.data&&e.data.type==="pozzo:refresh-dashboard")loadDashboard(true);
+});
+
+(function initPTR(onRefresh){
+  if(typeof document==="undefined")return;
+  let el=typeof document.getElementById==="function"?document.getElementById("ptr"):null;
+  const tx=()=>el&&el.querySelector?el.querySelector(".ptr-tx"):null;
+  const ic=()=>el&&el.querySelector?el.querySelector(".ptr-ic"):null;
+  let sx=0,sy=0,lock="",pull=0,busy=false;
+  const THRESH=52;
+  function setVisual(h,cls,text,glyph){
+    if(!el)return;
+    el.className="ptr"+(cls?" "+cls:"");
+    if(el.style)el.style.height=h+"px";
+    const t=tx();if(t&&text)t.textContent=text;
+    const g=ic();if(g&&glyph)g.innerHTML=glyph;
+  }
+  async function triggerPullRefresh(){
+    if(busy)return;
+    busy=true;
+    setVisual(44,"active busy","Refreshing…","&#8635;");
+    const t0=Date.now();
+    try{await onRefresh()}catch(e){}
+    finally{
+      const wait=Math.max(0,260-(Date.now()-t0));
+      const tm=setTimeout(()=>{busy=false;setVisual(0,"","Pull down to refresh","&#8595;")},wait);
+      if(tm&&typeof tm.unref==="function")tm.unref();
+    }
+  }
+  window.triggerPullRefresh=triggerPullRefresh;
+  const scrollTop=()=>Math.max(window.scrollY||0,(document.documentElement&&document.documentElement.scrollTop)||0,(document.body&&document.body.scrollTop)||0);
+  document.addEventListener("touchstart",e=>{
+    if(busy||!e.touches||e.touches.length!==1)return;
+    if(scrollTop()>2){lock="up";return}
+    const tgt=e.target;
+    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])"))){lock="modal";return}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(busy||lock==="up"||lock==="h"||lock==="modal"||!e.touches||e.touches.length!==1)return;
+    const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+    if(!lock){
+      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){lock="h";return}
+      if(dy<-6){lock="up";return}
+      if(dy>8&&Math.abs(dy)>Math.abs(dx)){if(scrollTop()>2){lock="up";return}lock="v"}else return;
+    }
+    if(lock==="v"){
+      if(dy<=0){pull=0;setVisual(0,"pulling","","");return}
+      pull=Math.min(76,Math.round(dy*0.55));
+      if(e.cancelable)e.preventDefault();
+      setVisual(pull,"pulling active"+(pull>=THRESH?" ready":""),pull>=THRESH?"Release to refresh":"Pull down to refresh","&#8595;");
+    }
+  },{passive:false});
+  function onEnd(){
+    if(busy)return;
+    const goRef=(lock==="v"&&pull>=THRESH);
+    lock="";pull=0;
+    if(goRef)triggerPullRefresh();
+    else setVisual(0,"","Pull down to refresh","&#8595;");
+  }
+  document.addEventListener("touchend",onEnd,{passive:true});
+  document.addEventListener("touchcancel",onEnd,{passive:true});
+})(()=>loadDashboard(true));
+
+loadDashboard(false);
+</script>
+</body>
+</html>

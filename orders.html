@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2b4f48">
+<title>Pozzo Manager – Sales</title>
+<meta name="description" content="Pozzo Toys Sales, Order Entry, Cancel, Return, Cash Memo, and Parcel Export.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--amb:#8a5a14}
+*{box-sizing:border-box}
+html,body{overscroll-behavior-y:contain}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:96px}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr.pulling{transition:none}
+.ptr.active{opacity:1;border-bottom-width:1px}
+.ptr.ready{background:#d4e7df}
+.ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
+.ptr.ready .ptr-ic{transform:rotate(180deg)}
+@keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header img{display:block;margin:0 auto 4px;width:110px;max-width:42%;height:auto}
+header h1{font-size:24px;color:var(--grn)}
+.embed header{display:none}
+main{max-width:640px;margin:auto;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.top small{color:var(--mut);font-size:15px}
+.top h2{font-size:30px;margin:2px 0 14px}
+.badge{padding:8px 14px;border-radius:999px;background:var(--bd);color:var(--grn);font-size:14px;font-weight:600;white-space:nowrap}
+.badge.warn{background:#f6ece0;color:var(--amb)}
+.badge.bad{background:#f6e4dc;color:var(--bad)}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--bd);color:var(--grn);font-size:12px;font-weight:600;margin-left:6px;vertical-align:middle}
+.tag.warn{background:#f6ece0;color:var(--amb)}
+.tag.bad{background:#f6e4dc;color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(60,50,30,.08)}
+.card h3{font-size:24px;margin-bottom:6px}
+.hint{color:var(--mut);font-size:15px;margin:0 0 12px;line-height:1.45}
+label{display:block;font-size:15px;margin:12px 0 6px}
+input,textarea{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
+textarea{resize:vertical;line-height:1.5}
+.row{display:flex;gap:12px;align-items:stretch}.row>*{flex:1;min-width:0}
+.pr{background:var(--sub);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px}
+.pr .h{display:flex;justify-content:space-between;align-items:center;color:var(--mut);margin-bottom:10px;gap:8px}
+.pr .h button{border:0;background:none;color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.pr .grid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin-top:6px;align-items:end}
+.pr .grid label{margin:8px 0 6px;color:var(--mut)}
+.sub{padding:14px 0;font-weight:600}
+.btn{display:flex;gap:8px;align-items:center;justify-content:center;width:100%;padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:17px;font-weight:600;color:var(--ink);cursor:pointer}
+.btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
+.btn.w{background:#f6e4dc;border-color:#e8bfae;color:var(--bad)}
+.btn.sm{padding:10px 14px;border-radius:14px;font-size:14px;width:auto}
+.btn:disabled{opacity:.6;cursor:default}
+.stepper{display:flex;gap:8px;align-items:center;margin-top:8px}
+.stepper button{width:48px;height:48px;flex:none;border-radius:16px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:22px;font-weight:700;color:var(--ink);cursor:pointer}
+.stepper input{text-align:center;font-weight:700;padding:12px}
+.sum{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:17px;gap:12px}
+.sum.m{color:var(--mut)}
+.sum input{width:45%;text-align:right}
+.sum.g{border-top:1px solid var(--line);margin-top:6px;padding-top:14px;font-size:20px;font-weight:700}
+.sum.g span:last-child{font-size:30px;font-family:Georgia,serif}
+pre{white-space:pre-wrap;background:#ede6db;border-radius:18px;padding:16px;font:inherit;color:var(--mut);margin:0;line-height:1.6}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:12px;padding:12px 16px 14px;background:var(--card);border-top:1px solid var(--line);z-index:10}
+.bar .btn{flex:1}.bar .btn:first-child{flex:.9}.bar .btn.p{flex:1.1}
+.warn{background:#f6ece0;border:1px solid #e8d5b8;border-radius:16px;padding:12px 14px;margin-bottom:12px;font-size:15px;color:#6b4a1b;line-height:1.45}
+.warn.bad{background:#f6e4dc;border-color:#e8bfae;color:var(--bad);font-weight:600}
+.err{color:var(--bad);font-size:15px;margin:0 0 12px}
+.ok{background:var(--bd);color:var(--grn);border-radius:16px;padding:12px 14px;margin-bottom:14px;line-height:1.45}
+.so{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);font-size:15px}
+.so .meta{flex:1;min-width:0}
+.ver{text-align:center;color:var(--mut);font-size:13px;margin:6px 0 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed")</script>
+<div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
+<header><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
+<main id="app"></main>
+<div class="bar" id="bar" hidden>
+  <button class="btn" id="barL" onclick="home()">&larr; Start over</button>
+  <button class="btn p" id="barR" onclick="saveOrder()">&#10003; Confirm &amp; save</button>
+</div>
+
+<script>
+const VER="v4";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const num=v=>{const n=parseFloat(String(v).replace(/,/g,""));return isNaN(n)?0:n};
+const tk=n=>"৳ "+Math.round(n).toLocaleString("en-US");
+const en=s=>s.replace(/[০-৯]/g,d=>"০১২৩৪৫৬৭৮৯".indexOf(d));
+function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
+const MON3=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function normalizeOrderId(raw){
+  let id=String(raw||"").trim().toUpperCase().replace(/\s+/g,"");
+  if(!id)return "";
+  if(/^\d+$/.test(id)){
+    const t=new Date();
+    id="PZ"+String(t.getFullYear()).slice(-2)+MON3[t.getMonth()]+"-"+("000"+id).slice(-3);
+  }
+  return id;
+}
+
+let O=null,DETAIL=null,RSTATE=null,RECENT_LIST=null,flash="",pvSeq=0;
+let orders=[];
+try{orders=JSON.parse(localStorage.getItem("pt_orders")||"[]")}catch(e){}
+const persist=()=>{try{localStorage.setItem("pt_orders",JSON.stringify(orders));return true}catch(e){return false}};
+const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
+const setCfg=c=>{try{localStorage.setItem("pt_cfg",JSON.stringify(c))}catch(e){}};
+
+function postStockDirty(tabName){
+  try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"pozzo:stock-dirty",tab:tabName||""},"*")}catch(e){}
+}
+function postOrderDirty(orderId){
+  try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"pozzo:order-dirty",orderId:orderId||""},"*")}catch(e){}
+  try{if(typeof BroadcastChannel!=="undefined"){const ch=new BroadcastChannel("pozzo_sync");ch.postMessage({type:"pozzo:order-dirty",orderId:orderId||""});ch.close()}}catch(e){}
+}
+function openStockIssues(){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:"pozzo:open-stock-issues"},"*");
+      return;
+    }
+  }catch(e){}
+  window.location.href="stock.html#issues";
+}
+function syncLocalOrder(ord){
+  if(!ord||!ord.id)return;
+  const i=orders.findIndex(x=>String(x.id).toUpperCase()===String(ord.id).toUpperCase());
+  if(i>=0){
+    orders[i]=Object.assign({},orders[i],{
+      status:ord.status||"Active",
+      items:ord.items||orders[i].items,
+      sub:ord.sub,
+      discount:ord.discount,
+      delivery:ord.delivery,
+      advance:ord.advance,
+      total:ord.total
+    });
+    persist();
+  }
+}
+window.addEventListener("message",e=>{
+  const d=e&&e.data;
+  if(!d||typeof d!=="object")return;
+  if(d.type==="pozzo:open-order"&&d.orderId){
+    loadOrderDetail(d.orderId);
+  }else if(d.type==="pozzo:order-dirty"&&DETAIL&&DETAIL.order){
+    if(!d.orderId||d.orderId===DETAIL.order.id)loadOrderDetail(DETAIL.order.id);
+  }
+});
+
+let CHAIN=Promise.resolve();
+function callScript(payload){
+  const run=CHAIN.then(()=>callRaw(payload));
+  CHAIN=run.catch(()=>{});
+  return run;
+}
+async function callRaw(payload){
+  const c=cfg();if(!c.url||!c.key)return {ok:false,error:"nocfg"};
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),45000);
+  try{
+    const r=await fetch(c.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({key:c.key},payload)),signal:ac.signal});
+    return await r.json();
+  }catch(e){return {ok:false,error:e&&e.name==="AbortError"?"slow":"no connection"}}
+  finally{clearTimeout(t)}
+}
+const stockQ=()=>{try{return JSON.parse(localStorage.getItem("pt_stockq")||"[]")}catch(e){return[]}};
+const setStockQ=q=>{try{localStorage.setItem("pt_stockq",JSON.stringify(q))}catch(e){}};
+async function stockPost(order){
+  const j=await callScript({action:"stockpost",order:order});
+  if(!j.ok&&j.error!=="nocfg"){const q=stockQ();if(!q.some(x=>x.id===order.id)){q.push(order);setStockQ(q)}}
+  if(j.ok)postStockDirty("");
+  return j;
+}
+let RETRYING=false;
+async function retryStock(){
+  if(RETRYING)return;
+  RETRYING=true;
+  try{
+    for(const o of stockQ().slice()){
+      const j=await callScript({action:"stockpost",order:o});
+      if(j.ok){setStockQ(stockQ().filter(x=>x.id!==o.id));postStockDirty("")}
+    }
+  }finally{RETRYING=false}
+}
+const stockMsg=j=>j.ok?(j.skipped?"":" Stock: "+j.matched+" matched"+(j.issues?", "+j.issues+" to look at in the Stock tab":"")+"."):" The stock update is waiting and will be retried.";
+const errText=e=>e==="nocfg"?"The Google Sheet is not connected. Open Connection settings on the home screen.":e==="no connection"?"Could not reach the Google Sheet. Check your internet and try again.":e==="slow"?"Google is slow to answer. If you were saving an order, open the sheet and check before saving again. An order that is already saved is never saved twice.":e;
+
+/* ---------- reading the message ---------- */
+const CUR="(?:৳|tk\\.?|taka|bdt)";
+function moneyLine(l){
+  let m=l.match(new RegExp("^(\\d[\\d,]*(?:\\.\\d+)?)\\s*"+CUR+"?\\s*(total|cod|cash\\s*on\\s*delivery)\\s*\\.?$","i"));
+  if(m)return {label:m[2],val:num(m[1])};
+  m=l.match(new RegExp("^(.*?)[\\s:=\\-–]*"+CUR+"?\\s*(\\d[\\d,]*(?:\\.\\d+)?)\\s*(?:"+CUR+"|\\/-)?\\s*\\.?$","i"));
+  if(m&&m[1].trim())return {label:m[1].trim(),val:num(m[2])};
+  return null;
+}
+const isTotalLine=l=>/^(grand\s*)?total\b/i.test(l)||/^\d[\d,]*\s*(?:tk\.?|taka|৳|bdt)?\s*total\b/i.test(l);
+const LAB="customer\\s*name|customer|name|নাম|phone\\s*number|phone\\s*no\\.?|phone|phn|ph|mobile\\s*number|mobile\\s*no\\.?|mobile|mob|cell|contact\\s*number|contact\\s*no\\.?|contact|number|nmbr|num|ফোন|মোবাইল|যোগাযোগ|address|addr|add|ঠিকানা|গ্রাম|village|thana|থানা|upazila|upazilla|উপজেলা|district|জেলা|area";
+const MID="phone\\s*number|phone|mobile|address|ঠিকানা|ফোন|মোবাইল|গ্রাম|থানা|জেলা|উপজেলা|thana|district|upazila|upazilla";
+const startRe=new RegExp("^(?:"+LAB+")\\s*(?:[:：]|[-–]\\s)","i");
+const midRe=()=>new RegExp("(?<=\\s)(?:"+MID+")\\s*[:：]","gi");
+const loneRe=new RegExp("^(?:"+LAB+")\\s*[:：\\-–]?$","i");
+const kindOf=s=>{s=s.toLowerCase();return /^(customer|name|নাম)/.test(s)?"n":/^(ph|mob|cell|contact|number|nmbr|num|ফোন|মোবাইল|যোগাযোগ)/.test(s)?"p":"a"};
+const rankOf=s=>{s=s.toLowerCase();return /^(thana|থানা|upazil|উপজেলা)/.test(s)?1:/^(district|জেলা)/.test(s)?2:0};
+const tidy=s=>s.replace(/[;,\s]+$/,"").replace(/(\d)\.$/,"$1").trim();
+
+function splitItemVariant(rawName){
+  let base=String(rawName||"").trim();
+  const vs=[];
+  const isNumOrUnit=s=>/^(?:\d+(?:[.,]\d+)?(?:\s*(?:tk\.?|taka|bdt|৳|pcs?|pc|pieces?|x))?|tk\.?|taka|bdt|৳|pcs?|pc)$/i.test(String(s||"").trim());
+  const cleanV=s=>String(s||"").trim().replace(/^(?:variant|color|colour|size|model|design|type)\s*[:=\-–]\s*/i,"").trim();
+  let changed=true;
+  while(changed&&base){
+    changed=false;
+    let m=base.match(/^(.*?)\s*\(([^()]{1,60})\)\s*$/);
+    if(m&&m[1].trim()&&!isNumOrUnit(m[2])){const cv=cleanV(m[2]);if(cv)vs.unshift(cv);base=m[1].trim();changed=true;continue}
+    m=base.match(/^(.*?)\s*\[([^\[\]]{1,60})\]\s*$/);
+    if(m&&m[1].trim()&&!isNumOrUnit(m[2])){const cv=cleanV(m[2]);if(cv)vs.unshift(cv);base=m[1].trim();changed=true}
+  }
+  if(!vs.length&&base){
+    const dm=base.match(/^(.{2,}?)\s+(?:-|–|—|\|)\s+([^-–—|\n]{1,40})$/);
+    if(dm&&!isNumOrUnit(dm[2])){const cv=cleanV(dm[2]);if(cv){vs.push(cv);base=dm[1].trim()}}
+  }
+  return {name:base||String(rawName||"").trim(),variant:vs.join(" · ")};
+}
+
+function parseMsg(raw){
+  const L=raw.replace(/\r/g,"").split("\n").map(l=>l.trim());
+  const oi=L.findIndex(l=>/^order\s*confirm/i.test(l));
+  const start=oi>=0?oi+1:0;
+  let di=L.findIndex((l,i)=>i>=start&&/^(delivery\s*detail\w*|customer\s*detail\w*|address)\s*:?\s*$/i.test(l));
+  let top,cus;
+  if(di>=0){top=L.slice(start,di);cus=L.slice(di+1)}
+  else{
+    let t=-1;L.forEach((l,i)=>{if(i>=start&&isTotalLine(en(l)))t=i});
+    if(t>=0){top=L.slice(start,t+1);cus=L.slice(t+1)}else{top=L.slice(start);cus=[]}
+  }
+  top=top.filter(Boolean);cus=cus.filter(Boolean);
+  const r={raw,items:[],delivery:0,discount:0,msgTotal:null,cod:null,advance:null,unread:[],notes:[]};
+  top.forEach(l0=>{
+    const l=en(l0);
+    if(/^(products?|items?|order)[\s.:]*$/i.test(l))return;
+    if(/^\d[\d,]*\s*(?:tk\.?|taka|৳|bdt)?\s*\.?$/i.test(l))return;
+    const varLine=l.match(/^(?:variant|color|colour|size|model|design|type)\s*[:=\-–]\s*(.+)$/i);
+    if(varLine&&varLine[1].trim()&&r.items.length){
+      const prev=r.items[r.items.length-1];
+      prev.variant=prev.variant?(prev.variant+" · "+varLine[1].trim()):varLine[1].trim();
+      return;
+    }
+    if(/^(free\s*delivery|delivery\s*free)\b/i.test(l)){r.delivery=0;return}
+    const kw=l.match(/^(delivery(?:\s*(?:charge|fee))?|discount|(?:grand\s*)?total)\b[^\d]*(\d[\d,]*(?:\.\d+)?)/i)||l.match(/^(cod|cash\s*on\s*delivery|advance(?:\s*(?:paid|payment|amount))?|paid(?:\s*amount)?)\s*(?:tk\.?|taka|bdt|৳)?\s*[:=\-–]?\s*(?:tk\.?|taka|bdt|৳)?\s*(\d[\d,]*(?:\.\d+)?)/i);
+    if(kw){
+      const k=kw[1].toLowerCase(),v=num(kw[2]);
+      if(k.startsWith("delivery"))r.delivery=v;
+      else if(k.includes("total"))r.msgTotal=v;
+      else if(k==="discount")r.discount=v;
+      else if(k==="cod"||k.startsWith("cash"))r.cod=v;
+      else r.advance=v;
+      return;
+    }
+    const mm=l.match(/^(.*?)\s*(\d+)\s*[*x×]\s*(\d[\d,]*)\s*(?:=\s*(\d[\d,]*))?\s*(?:tk\.?|taka|৳)?\s*\.?$/i);
+    if(mm&&mm[1].trim()){
+      const a=parseInt(mm[2],10),b=num(mm[3]);
+      const qty=Math.min(a,b),unit=Math.max(a,b);
+      if(mm[4]&&Math.abs(qty*unit-num(mm[4]))>0.5)r.notes.push(mm[1].trim()+": "+qty+" × "+unit+" is not "+num(mm[4])+". Check it.");
+      let rawName=mm[1].trim();
+      const pc=rawName.match(/^(.*?)\s*(\d+)\s*pcs?\.?$/i);
+      if(pc&&parseInt(pc[2],10)===qty&&pc[1].trim())rawName=pc[1].trim();
+      const sp=splitItemVariant(rawName);
+      r.items.push({name:sp.name,variant:sp.variant,qty,price:unit});return;
+    }
+    const m=moneyLine(l);
+    if(!m){r.unread.push(l0);return}
+    const label=m.label,val=m.val;
+    if(/^delivery/i.test(label))r.delivery=val;
+    else if(/^(grand\s*)?total/i.test(label))r.msgTotal=val;
+    else if(/^(cod|cash\s*on\s*delivery|collect)\s*$/i.test(label))r.cod=val;
+    else if(/^discount/i.test(label))r.discount=val;
+    else if(/^(advance|paid)(\s+(paid|payment|amount))?\s*$/i.test(label))r.advance=val;
+    else{
+      let rawName=label,qty=1,q;
+      if(q=rawName.match(/^(.*?)\s*[x×]\s*(\d+)\s*$/i)){rawName=q[1].trim();qty=parseInt(q[2],10)||1}
+      const sp=splitItemVariant(rawName);
+      r.items.push({name:sp.name,variant:sp.variant,qty,price:val});
+    }
+  });
+  if(r.msgTotal!=null&&r.items.some(i=>i.qty>1)){
+    const unit=r.items.reduce((s,i)=>s+i.qty*i.price,0),line=r.items.reduce((s,i)=>s+i.price,0);
+    if(line+r.delivery-r.discount===r.msgTotal&&unit+r.delivery-r.discount!==r.msgTotal){
+      r.items.forEach(i=>{i.price=i.price/i.qty});r.notes.push("Prices in the message were treated as line totals for items with a quantity above 1.");
+    }
+  }
+  const hasAdv=r.advance!=null||r.cod!=null;
+  if(r.msgTotal===0)r.notes.push("The total in the message is 0. This looks like an advance payment. Check it.");
+  else if(r.msgTotal!=null&&!r.discount&&!hasAdv){
+    const d=r.items.reduce((s,i)=>s+i.qty*i.price,0)+r.delivery-r.msgTotal;
+    if(d>0){r.discount=d;r.notes.push("A discount of "+tk(d)+" was worked out from the total. Check it.")}
+  }
+  if(r.msgTotal>0){
+    const full=r.items.reduce((s,i)=>s+i.qty*i.price,0)-r.discount+r.delivery;
+    if(r.advance==null&&r.cod!=null&&r.cod<=r.msgTotal){r.advance=r.msgTotal-r.cod;r.notes.push("The advance of "+tk(r.advance)+" was worked out as total − COD. Check it.")}
+    else if(r.advance!=null&&r.cod!=null&&Math.abs(r.msgTotal-r.advance-r.cod)>=0.5&&Math.abs(full-r.msgTotal-r.advance)>=0.5)r.notes.push("Total − advance is "+tk(r.msgTotal-r.advance)+", but the message COD is "+tk(r.cod)+". Check it.");
+    if(r.advance!=null&&Math.abs(full-r.msgTotal)>=0.5&&Math.abs(full-(r.msgTotal+r.advance))<0.5){r.afterAdvance=true;r.notes.push("The message Total looks like the amount left after the advance. The full order value is "+tk(full)+". Check it.")}
+  }
+  const phRe=/(?:\+?88)?01[3-9]\d{8}/,strip=p=>p.replace(/^\+?88/,"");
+  let name="",phone="";
+  const addr=[],segs=[];
+  cus.forEach(l0=>{
+    if(loneRe.test(l0))return;
+    let nm;
+    if(!name&&!startRe.test(l0)&&(nm=l0.match(/^(?:customer\s*name|name|নাম)\s+(.+)$/i))){name=nm[1].trim();return}
+    let rest=l0,k="",rank=0;
+    const m=l0.match(startRe);
+    if(m){k=kindOf(m[0]);rank=rankOf(m[0]);rest=l0.slice(m[0].length)}
+    const ms=[...rest.matchAll(midRe())];
+    if(!ms.length){segs.push({k,v:rest.trim(),rank});return}
+    const first=rest.slice(0,ms[0].index).trim();
+    if(first||m)segs.push({k,v:first,rank});
+    ms.forEach((x,j)=>{const end=j+1<ms.length?ms[j+1].index:rest.length;segs.push({k:kindOf(x[0]),v:rest.slice(x.index+x[0].length,end).trim(),rank:rankOf(x[0])})});
+  });
+  segs.forEach(({k,v:l,rank})=>{
+    if(!l)return;
+    const flat=en(l).replace(/[\s\-]/g,""),pm=flat.match(phRe);
+    if(k==="p"||(!k&&pm&&flat.replace(pm[0],"").length<=14)){
+      if(pm&&!phone)phone=strip(pm[0]);
+      else if(pm){if(!r.phone2)r.phone2=strip(pm[0]);r.notes.push("A second phone number was found: "+strip(pm[0])+". It was put in the second phone field.")}
+      else r.notes.push("Could not read this as a phone number: "+l);
+      return;
+    }
+    if(k==="n"){name=l;return}
+    if(k==="a"){addr.push({v:l,rank,i:addr.length});return}
+    if(!name)name=l;else addr.push({v:l,rank:0,i:addr.length});
+  });
+  if(!phone){const f=en(cus.join(" ")).replace(/[\s\-]/g,"").match(phRe);if(f){phone=strip(f[0]);r.notes.push("Phone number was found inside the address text.")}}
+  if(!cus.length)r.notes.push("No customer details found after the order lines.");
+  addr.sort((a,b)=>a.rank-b.rank||a.i-b.i);
+  r.name=name;r.phone=phone;r.address=addr.map(a=>tidy(a.v)).filter(Boolean).join(", ").replace(/\s{2,}/g," ");
+  return r;
+}
+
+/* ---------- shared bar configuration ---------- */
+function setBar(show,leftLabel,leftFn,rightLabel,rightFn,rightDisabled){
+  const bar=$("#bar"),l=$("#barL"),r=$("#barR");
+  if(!show){bar.hidden=true;return}
+  l.textContent=leftLabel;l.onclick=leftFn;
+  r.textContent=rightLabel;r.onclick=rightFn;r.disabled=!!rightDisabled;
+  bar.hidden=false;
+}
+function resetBar(){setBar(false,"← Start over",home,"✓ Confirm & save",saveOrder,false)}
+const statusTag=st=>{
+  if(!st||st==="Active")return "";
+  if(st==="Partial Return")return `<span class="tag warn">${esc(st)}</span>`;
+  return `<span class="tag bad">${esc(st)}</span>`;
+};
+const statusBadgeClass=st=>st==="Cancelled"||st==="Returned"?"badge bad":st==="Partial Return"?"badge warn":"badge";
+
+/* ---------- home screen ---------- */
+function clearList(){
+  if(!confirm("Clear the list saved on this device?\n\nThe Google Sheet and your connection settings are not touched."))return;
+  orders=[];persist();flash="The list on this device was cleared.";home();
+}
+function saveCfg(){
+  const c=cfg();c.url=$("#cu").value.trim();c.key=$("#ck").value.trim();setCfg(c);
+  flash="Settings saved.";home();
+}
+function renderRecentBox(){
+  const box=$("#recentBox");if(!box)return;
+  if(RECENT_LIST===null){box.innerHTML="";return}
+  if(!RECENT_LIST.length){box.innerHTML=`<p class="hint" style="margin:12px 0 0">No orders found in this month or last month.</p>`;return}
+  box.innerHTML=`<div style="margin-top:12px">${RECENT_LIST.map(o=>`<div class="so">
+    <div class="meta"><b>${esc(o.id)}</b>${statusTag(o.status)} · ${esc(o.name||"-")}<br>
+      <small style="color:var(--mut)">${esc(o.date)} · ${tk(o.total)}${o.items&&o.items.length?" · "+esc(o.items.map(i=>i.name+" ×"+i.qty).join(", ")):""}</small></div>
+    <button class="btn sm" type="button" onclick="loadOrderDetail('${esc(o.id)}')">Open</button>
+  </div>`).join("")}</div>`;
+}
+async function toggleRecentOrders(){
+  const m=$("#rmsg"),btn=$("#recentBtn");
+  if(RECENT_LIST!==null){RECENT_LIST=null;btn.textContent="Browse recent orders from sheet";renderRecentBox();return}
+  m.textContent="Loading recent orders from sheet…";
+  btn.disabled=true;
+  const j=await callScript({action:"recentorders",today:today(),limit:25});
+  btn.disabled=false;
+  if(!j.ok){m.textContent=errText(j.error);return}
+  m.textContent="";
+  RECENT_LIST=j.orders||[];
+  btn.textContent="Hide recent orders ("+RECENT_LIST.length+")";
+  renderRecentBox();
+}
+function openOrderById(){
+  const m=$("#rmsg");m.textContent="";
+  const id=normalizeOrderId($("#rid").value);
+  if(!id){m.textContent="Type the order ID, like PZ26OCT-014 or 14.";return}
+  loadOrderDetail(id);
+}
+function home(){
+  retryStock();
+  O=null;DETAIL=null;RSTATE=null;pvSeq++;resetBar();
+  const c=cfg(),last=orders.slice(-8).reverse();
+  $("#app").innerHTML=`${flash?`<div class="ok">${esc(flash)}</div>`:""}
+  <div class="top"><div><small>New order</small><h2>Paste the message</h2></div></div>
+  <div class="card"><label for="msg" style="margin-top:0">Order confirmation message</label>
+    <textarea id="msg" rows="12" placeholder="Order Confirmed&#10;Product 500&#10;Delivery Charge 80&#10;Total 580&#10;&#10;Delivery details&#10;Name&#10;01XXXXXXXXX&#10;Address"></textarea>
+    <p id="perr" class="err" style="margin-top:10px"></p>
+    <button class="btn p" type="button" onclick="readMsg()">Read message</button></div>
+
+  <div class="card"><h3>Manage order · Cancel, Return &amp; Memo</h3>
+    <p class="hint">Look up any order by ID to cancel it, return items, or rebuild its cash memo.</p>
+    <input id="rid" placeholder="Order ID (e.g. PZ26OCT-014 or 14)" onkeydown="if(event.key==='Enter')openOrderById()">
+    <div class="row" style="margin-top:10px">
+      <button class="btn p" type="button" onclick="openOrderById()">Open order</button>
+      <button class="btn" type="button" onclick="regenMemo()">Make memo</button>
+    </div>
+    <button class="btn" id="recentBtn" type="button" style="margin-top:10px" onclick="toggleRecentOrders()">${RECENT_LIST?"Hide recent orders ("+RECENT_LIST.length+")":"Browse recent orders from sheet"}</button>
+    <p id="rmsg" class="hint" style="margin-top:10px"></p>
+    <div id="recentBox"></div>
+  </div>
+
+  <div class="card"><h3>Parcel entry file</h3>
+    <p class="hint">Built from the monthly sheets. Cancelled and fully returned orders are skipped automatically.</p>
+    <button class="btn p" type="button" onclick="parcelNext()">Generate next parcel file</button>
+    <label>Month for the range</label><input type="month" id="pm" value="${today().slice(0,7)}">
+    <div class="row" style="margin-top:6px"><div><label>From ID or number</label><input id="pf" placeholder="e.g. 5"></div><div><label>To ID or number</label><input id="pt" placeholder="e.g. 20"></div></div>
+    <button class="btn" type="button" style="margin-top:12px" onclick="parcelRange()">Generate range</button>
+    <p id="pmsg" class="hint" style="margin-top:12px"></p></div>
+
+  <div class="card"><h3>Google Sheet</h3>
+    <p class="hint">${c.url?"Connected. Each saved order is added to that month's Pozzo Sales Tracker sheet in Google Drive.":"Not connected yet. Connect it before saving orders."}</p>
+    ${c.last?`<a class="btn" style="text-decoration:none;margin-bottom:12px" href="${esc(c.last)}" target="_blank" rel="noopener">Open the latest sheet</a>`:""}
+    <details ${c.url?"":"open"}><summary style="font-size:16px;padding:6px 0">Connection settings</summary>
+      <label>Web app link</label><input id="cu" value="${esc(c.url||"")}" placeholder="https://script.google.com/macros/s/.../exec">
+      <label>Secret key</label><input id="ck" type="password" value="${esc(c.key||"")}">
+      <button class="btn" type="button" style="margin-top:12px" onclick="saveCfg()">Save settings</button></details></div>
+
+  <div class="card"><h3>Saved on this device (${orders.length})</h3>
+    <p class="hint">The sheet has every order from every device. This is only what was saved on this device.</p>
+    ${last.map(o=>`<div class="so">
+      <div class="meta"><b>${esc(o.id)}</b>${statusTag(o.status)} · ${esc(o.name)}<br><small style="color:var(--mut)">${esc(o.date)} · ${tk(o.total)}</small></div>
+      <button class="btn sm" type="button" onclick="loadOrderDetail('${esc(o.id)}')">Manage</button>
+    </div>`).join("")}
+    ${orders.length?`<button class="btn" type="button" style="margin-top:12px" onclick="backup()">Download backup (Excel)</button><button class="btn" type="button" style="margin-top:10px" onclick="clearList()">Clear this list</button>`:""}</div>
+  <p class="ver">Pozzo Manager · Sales ${VER}</p>`;
+  renderRecentBox();
+  flash="";
+}
+
+/* ---------- order detail, cancel & return ---------- */
+async function loadOrderDetail(rawId, flashNote){
+  const id=normalizeOrderId(rawId);
+  if(!id)return;
+  const rmsg=$("#rmsg");
+  if(rmsg)rmsg.textContent="Opening "+id+"…";
+  const j=await callScript({action:"getorder",id:id,today:today()});
+  if(!j.ok){
+    if(rmsg){rmsg.textContent=errText(j.error);return}
+    flash="Could not load "+id+": "+errText(j.error);
+    home();
+    return;
+  }
+  DETAIL={
+    order:j.order,
+    openReturnIssues:j.openReturnIssues||[],
+    resolvedReturnIssues:j.resolvedReturnIssues||[]
+  };
+  syncLocalOrder(j.order);
+  if(RECENT_LIST){
+    const idx=RECENT_LIST.findIndex(x=>x.id===j.order.id);
+    if(idx>=0)RECENT_LIST[idx]=j.order;
+  }
+  renderOrderDetail(flashNote||"");
+}
+
+function renderOrderDetail(flashNote){
+  if(!DETAIL||!DETAIL.order){home();return}
+  O=null;RSTATE=null;resetBar();window.scrollTo(0,0);
+  const o=DETAIL.order;
+  const openRet=DETAIL.openReturnIssues||[];
+  const resRet=DETAIL.resolvedReturnIssues||[];
+  const keptTotal=o.items.reduce((s,it)=>s+(Number(it.qty)||0),0);
+  const canCancel=o.status==="Active"&&keptTotal>0;
+  const canReturn=o.status!=="Cancelled"&&keptTotal>0;
+
+  $("#app").innerHTML=`<div class="top"><div><small>Order details</small><h2>${esc(o.id)}</h2></div><span class="${statusBadgeClass(o.status)}">${esc(o.status||"Active")}</span></div>
+  ${flashNote?`<div class="ok">${esc(flashNote)}</div>`:""}
+  <p id="derr" class="err"></p>
+  ${o.status==="Cancelled"?`<div class="warn bad">This order was cancelled. All stock deductions were returned and all calculations were reversed to ৳ 0.</div>`:""}
+  ${o.status==="Partial Return"||o.status==="Returned"?`<div class="warn">Status: <b>${esc(o.status)}</b>${o.sellerDelivery>0?" · Delivery paid by seller: "+tk(o.sellerDelivery):""}${o.returnLoss>0?" · Damaged return loss (at cost): "+tk(o.returnLoss):""}</div>`:""}
+
+  <div class="card"><h3>Customer &amp; delivery</h3>
+    <div class="sum"><span>Name</span><b>${esc(o.name||"-")}</b></div>
+    <div class="sum"><span>Phone</span><span>${esc(o.phone||"-")}${o.phone2?" / "+esc(o.phone2):""}</span></div>
+    <div class="sum"><span>Address</span><span style="text-align:right;max-width:65%">${esc(o.address||"-")}</span></div>
+    <div class="sum m"><span>Order date</span><span>${esc(o.date)}</span></div>
+    <div class="sum m"><span>Parcel export</span><span>${o.exported?"Exported ("+esc(o.exported)+")":"Not exported yet"}</span></div>
+  </div>
+
+  <div class="card"><h3>Products</h3>
+    ${o.items.map(it=>`<div class="pr">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div style="font-weight:600;font-size:17px">${esc(it.name)}${it.returned>0?`<span class="tag warn">Returned: ${it.returned}</span>`:""}</div>
+          <div class="hint" style="margin:4px 0 0">${tk(it.price)} × ${it.qty} active</div>
+        </div>
+        <div style="font-weight:700;font-size:18px;font-family:Georgia,serif">${tk(it.qty*it.price)}</div>
+      </div>
+    </div>`).join("")}
+  </div>
+
+  <div class="card"><h3>Order calculations</h3>
+    <div class="sum m"><span>Product subtotal</span><span>${tk(o.sub)}</span></div>
+    <div class="sum m"><span>Discount</span><span>${tk(o.discount)}</span></div>
+    <div class="sum m"><span>Customer delivery charge</span><span>${tk(o.delivery)}</span></div>
+    <div class="sum g"><span>Grand total</span><span>${tk(o.total)}</span></div>
+    <div class="sum m"><span>Advance paid</span><span>${tk(o.advance)}</span></div>
+    <div class="sum g"><span>COD to collect</span><span>${tk(o.cod)}</span></div>
+    ${o.sellerDelivery>0?`<div class="sum" style="color:var(--amb);border-top:1px dashed var(--line);margin-top:8px;padding-top:10px"><span>Delivery paid by me (seller)</span><b>${tk(o.sellerDelivery)}</b></div>`:""}
+    ${o.returnLoss>0?`<div class="sum" style="color:var(--bad)"><span>Damaged return loss (by cost)</span><b>${tk(o.returnLoss)}</b></div>`:""}
+  </div>
+
+  ${(o.returnNote||openRet.length||resRet.length)?`<div class="card"><h3>Return &amp; inspection log</h3>
+    ${o.returnNote?`<div style="margin-bottom:10px">${o.returnNote.split(" | ").map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:14px">${esc(n)}</div>`).join("")}</div>`:""}
+    ${openRet.length?`<div class="warn" style="margin-bottom:10px"><b>Waiting for inspection in Stock → Issues (${openRet.length}):</b><br>
+      ${openRet.map(r=>`• ${esc(r.item)} ×${r.qty} (${esc(r.id)})`).join("<br>")}</div>`:""}
+    ${resRet.length?`<div class="ok" style="margin-bottom:10px"><b>Inspected returns (${resRet.length}):</b><br>
+      ${resRet.map(r=>`• ${esc(r.item)} ×${r.qty}: ${esc(r.resolution)}`).join("<br>")}</div>`:""}
+    <button class="btn" type="button" onclick="openStockIssues()">Open Stock → Issues</button>
+  </div>`:""}
+
+  <div class="card"><h3>Order actions</h3>
+    ${canReturn?`<button class="btn p" type="button" style="margin-bottom:10px" onclick="openReturnScreen()">Return items…</button>`:""}
+    ${canCancel?`<button class="btn w" type="button" id="cancelBtn" style="margin-bottom:10px" onclick="doCancelOrder()">Cancel order (return all to stock)</button>`:""}
+    ${o.status==="Partial Return"||o.status==="Returned"?`<p class="hint" style="margin:0 0 10px">Orders with returned items cannot be cancelled.</p>`:""}
+    ${o.status!=="Cancelled"?`<button class="btn" type="button" style="margin-bottom:10px" onclick="openDetailMemo()">Cash memo</button>`:""}
+    <button class="btn" type="button" onclick="home()">&larr; Back to home</button>
+  </div>`;
+}
+
+async function doCancelOrder(){
+  if(!DETAIL||!DETAIL.order)return;
+  const o=DETAIL.order;
+  if(!confirm("Cancel "+o.id+"?\n\nAll deducted products from this order will return to stock, and all order totals (subtotal, discount, delivery, advance, COD) will be reversed to ৳0.\n\nThis cannot be undone."))return;
+  const errEl=$("#derr");if(errEl)errEl.textContent="";
+  const btn=$("#cancelBtn");if(btn){btn.disabled=true;btn.textContent="Cancelling order…"}
+  const j=await callScript({action:"cancelorder",id:o.id,today:today()});
+  if(!j.ok){
+    if(btn){btn.disabled=false;btn.textContent="Cancel order (return all to stock)"}
+    if(errEl)errEl.textContent=errText(j.error);
+    return;
+  }
+  postStockDirty("stock");
+  const msg="Order "+j.id+" cancelled. All calculations set to ৳ 0."+(j.restored&&j.restored.length?" Returned to stock: "+j.restored.join(", ")+".":"");
+  await loadOrderDetail(o.id,msg);
+}
+
+function openDetailMemo(){
+  if(!DETAIL||!DETAIL.order)return;
+  const o=DETAIL.order;
+  const activeItems=o.items.filter(l=>l.qty>0).map(l=>({name:l.name,qty:l.qty,price:l.price}));
+  if(!activeItems.length){
+    const errEl=$("#derr");if(errEl)errEl.textContent="No active items left on this order for a cash memo.";
+    return;
+  }
+  showMemo({id:o.id,date:o.date,name:o.name,phone:o.phone,address:o.address,items:activeItems,discount:o.discount,delivery:o.delivery,advance:o.advance},"Cash memo for "+o.id);
+}
+
+/* ---------- order return window (styled like confirm window) ---------- */
+function computeReturnPreview(order,lines,sellerDelivery){
+  const clamped=lines.map(l=>{
+    const avail=Math.max(0,Math.floor(Number(l.avail)||0));
+    const retQty=Math.max(0,Math.min(avail,Math.floor(Number(l.retQty)||0)));
+    return {retQty:retQty,keptQty:avail-retQty,price:Number(l.price)||0};
+  });
+  const returnedUnits=clamped.reduce((s,x)=>s+x.retQty,0);
+  const keptUnits=clamped.reduce((s,x)=>s+x.keptQty,0);
+  const returnedSub=clamped.reduce((s,x)=>s+x.retQty*x.price,0);
+  const newSub=clamped.reduce((s,x)=>s+x.keptQty*x.price,0);
+  const isFull=keptUnits<=0;
+  const newDiscount=isFull?0:Math.min(Number(order.discount)||0,newSub);
+  const sellerDel=Math.max(0,Math.round((Number(sellerDelivery)||0)*100)/100);
+  const newDelivery=Math.max(0,Math.round(((Number(order.delivery)||0)-sellerDel)*100)/100);
+  const newTotal=Math.max(0,newSub-newDiscount+newDelivery);
+  const newCod=Math.max(0,newTotal-(Number(order.advance)||0));
+  return {clamped,returnedUnits,keptUnits,returnedSub,newSub,isFull,newDiscount,sellerDel,newDelivery,newTotal,newCod};
+}
+
+function openReturnScreen(){
+  if(!DETAIL||!DETAIL.order)return;
+  const o=DETAIL.order;
+  const lines=o.items.filter(l=>l.qty>0).map(l=>({
+    lineIndex:l.lineIndex,
+    name:l.name,
+    price:Number(l.price)||0,
+    avail:Number(l.qty)||0,
+    alreadyReturned:Number(l.returned)||0,
+    retQty:0
+  }));
+  if(!lines.length){
+    const errEl=$("#derr");if(errEl)errEl.textContent="All items on this order have already been returned.";
+    return;
+  }
+  RSTATE={order:o,lines:lines,sellerDelivery:0,note:""};
+  renderReturnScreen();
+}
+
+function setRetQty(i,v){
+  if(!RSTATE||!RSTATE.lines[i])return;
+  const avail=RSTATE.lines[i].avail;
+  const q=Math.max(0,Math.min(avail,Math.floor(num(v))));
+  RSTATE.lines[i].retQty=q;
+  const inp=$("#rq"+i);if(inp)inp.value=q;
+  const btn=$("#rall"+i);if(btn)btn.textContent=q===avail?"Clear":"All ("+avail+")";
+  calcReturn();
+}
+function stepRetQty(i,delta){
+  if(!RSTATE||!RSTATE.lines[i])return;
+  setRetQty(i,(RSTATE.lines[i].retQty||0)+delta);
+}
+function typeRetQty(i,val){
+  if(!RSTATE||!RSTATE.lines[i])return;
+  const avail=RSTATE.lines[i].avail;
+  const raw=Math.floor(num(val));
+  const clamped=Math.max(0,Math.min(avail,raw));
+  RSTATE.lines[i].retQty=clamped;
+  if(raw>avail||raw<0){const inp=$("#rq"+i);if(inp)inp.value=clamped}
+  const btn=$("#rall"+i);if(btn)btn.textContent=clamped===avail?"Clear":"All ("+avail+")";
+  calcReturn();
+}
+
+function renderReturnScreen(){
+  if(!RSTATE){home();return}
+  const o=RSTATE.order;
+  window.scrollTo(0,0);
+  $("#app").innerHTML=`<div class="top"><div><small>Order return · ${esc(o.id)}</small><h2>Select returned items</h2></div><span class="badge" id="rbadge">Select items</span></div>
+  <p id="err" class="err"></p>
+  <div id="rwarn" class="warn" hidden></div>
+
+  <div class="card"><h3>Order</h3>
+    <div class="sum"><span>Customer</span><b>${esc(o.name)}</b></div>
+    <div class="sum m"><span>Phone</span><span>${esc(o.phone)}</span></div>
+    <div class="sum m"><span>Original delivery charge</span><span>${tk(o.delivery)}</span></div>
+  </div>
+
+  <div class="card"><h3>Products returned</h3>
+    <p class="hint">Select which items and how many pieces came back.</p>
+    ${RSTATE.lines.map((l,i)=>`<div class="pr">
+      <div class="h">
+        <span>Product ${i+1} · In order: ${l.avail}${l.alreadyReturned?" (prev returned "+l.alreadyReturned+")":""}</span>
+        <button type="button" id="rall${i}" onclick="setRetQty(${i},RSTATE.lines[${i}].retQty===RSTATE.lines[${i}].avail?0:RSTATE.lines[${i}].avail)">All (${l.avail})</button>
+      </div>
+      <div style="font-weight:600;font-size:17px">${esc(l.name)}</div>
+      <div class="hint" style="margin:2px 0 8px">Unit price: ${tk(l.price)}</div>
+      <label style="margin-top:4px">Returned quantity (max ${l.avail})</label>
+      <div class="stepper">
+        <button type="button" onclick="stepRetQty(${i},-1)">&minus;</button>
+        <input id="rq${i}" inputmode="numeric" value="${l.retQty}" oninput="typeRetQty(${i},this.value)">
+        <button type="button" onclick="stepRetQty(${i},1)">+</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:15px;color:var(--mut)">
+        <span>Keeping: <b id="rk${i}" style="color:var(--ink)">${l.avail-l.retQty}</b></span>
+        <span>Returned value: <b id="rv${i}" style="color:var(--bad)">${tk(l.retQty*l.price)}</b></span>
+      </div>
+    </div>`).join("")}
+  </div>
+
+  <div class="card"><h3>Delivery &amp; updated totals</h3>
+    <p class="hint">Enter the part of the delivery charge that has to be paid by you. It is deducted from the customer delivery charge.</p>
+    <div class="sum m"><span>Customer delivery before return</span><span>${tk(o.delivery)}</span></div>
+    <label for="rsdel">Delivery charge paid by me (seller)</label>
+    <div class="row">
+      <input id="rsdel" inputmode="numeric" value="${RSTATE.sellerDelivery}" oninput="RSTATE.sellerDelivery=Math.max(0,num(this.value));calcReturn()">
+      ${o.delivery>0?`<button type="button" class="btn" style="flex:0 0 auto;width:auto" onclick="RSTATE.sellerDelivery=${o.delivery};$('#rsdel').value=${o.delivery};calcReturn()">Full (${tk(o.delivery)})</button>`:""}
+    </div>
+    <label for="rnote">Note (optional)</label>
+    <input id="rnote" value="${esc(RSTATE.note)}" placeholder="e.g. Box opened, customer changed mind" oninput="RSTATE.note=this.value">
+
+    <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)">
+      <div class="sum m"><span>Current product subtotal</span><span>${tk(o.sub)}</span></div>
+      <div class="sum m"><span>Returned items deduction</span><span id="rretv" style="color:var(--bad)"></span></div>
+      <div class="sum"><span>New product subtotal</span><b id="rst"></b></div>
+      <div class="sum m"><span>Discount</span><span id="rdisc"></span></div>
+      <div class="sum m"><span>New customer delivery</span><span id="rcdel"></span></div>
+      <div class="sum m"><span>Delivery paid by me</span><span id="rsdview"></span></div>
+      <div class="sum g"><span>New grand total</span><span id="rgt"></span></div>
+      <div class="sum m"><span>Advance paid</span><span>${tk(o.advance)}</span></div>
+      <div class="sum g"><span>New COD amount</span><span id="rcod"></span></div>
+    </div>
+
+    <div class="warn" style="margin-top:12px;margin-bottom:0">
+      <b>Items do not return to stock immediately:</b> Saving opens an inspection issue in <b>Stock &rarr; Issues</b> where you mark each item <b>Good</b> (goes back to stock) or <b>Bad</b> (calculated as loss by cost).
+    </div>
+  </div>`;
+
+  setBar(true,"← Back",()=>renderOrderDetail(),"✓ Confirm return",submitReturnOrder,false);
+  calcReturn();
+}
+
+function calcReturn(){
+  if(!RSTATE)return;
+  const o=RSTATE.order;
+  const p=computeReturnPreview(o,RSTATE.lines,RSTATE.sellerDelivery);
+  p.clamped.forEach((c,i)=>{
+    const k=$("#rk"+i),v=$("#rv"+i);
+    if(k)k.textContent=c.keptQty;
+    if(v)v.textContent=c.retQty>0?"− "+tk(c.retQty*c.price):tk(0);
+  });
+  $("#rretv").textContent=p.returnedSub>0?"− "+tk(p.returnedSub):tk(0);
+  $("#rst").textContent=tk(p.newSub);
+  $("#rdisc").textContent=tk(p.newDiscount)+(p.isFull&&o.discount>0?" (reversed on full return)":"");
+  $("#rcdel").textContent=tk(p.newDelivery);
+  $("#rsdview").textContent=tk(p.sellerDel);
+  $("#rgt").textContent=tk(p.newTotal);
+  $("#rcod").textContent=tk(p.newCod);
+
+  const b=$("#rbadge"),w=$("#rwarn");
+  if(p.returnedUnits===0){
+    b.textContent="Select items";b.className="badge";
+  }else if(p.isFull){
+    b.textContent="Full return · "+p.returnedUnits+" pcs";b.className="badge bad";
+  }else{
+    b.textContent="Partial return · "+p.returnedUnits+" pcs";b.className="badge warn";
+  }
+  if(p.sellerDel>o.delivery){
+    w.hidden=false;
+    w.textContent="Delivery paid by you ("+tk(p.sellerDel)+") is more than the customer delivery charge ("+tk(o.delivery)+"). Customer delivery on this order will become ৳ 0.";
+  }else{
+    w.hidden=true;
+  }
+}
+
+async function submitReturnOrder(){
+  if(!RSTATE)return;
+  const err=$("#err");err.textContent="";
+  const bad=m=>{err.textContent=m;window.scrollTo(0,0)};
+  const picked=RSTATE.lines.filter(l=>l.retQty>0).map(l=>({lineIndex:l.lineIndex,name:l.name,qty:l.retQty}));
+  if(!picked.length)return bad("Select at least 1 returned product quantity above 0.");
+  const o=RSTATE.order;
+  const sellerDel=Math.max(0,num(RSTATE.sellerDelivery));
+  const btn=$("#barR");btn.disabled=true;btn.textContent="Saving return…";
+  const j=await callScript({
+    action:"returnorder",
+    id:o.id,
+    today:today(),
+    items:picked,
+    sellerDelivery:sellerDel,
+    note:RSTATE.note||""
+  });
+  if(!j.ok){
+    btn.disabled=false;btn.textContent="✓ Confirm return";
+    return bad(errText(j.error));
+  }
+  postStockDirty("issues");
+  syncLocalOrder(j.order);
+  RSTATE=null;resetBar();window.scrollTo(0,0);
+  $("#app").innerHTML=`<div class="top"><div><small>Return recorded</small><h2>${esc(j.id)}</h2></div><span class="${statusBadgeClass(j.status)}">${esc(j.status)}</span></div>
+  <div class="ok">Return saved. <b>${j.issuesOpened}</b> inspection issue${j.issuesOpened===1?" was":"s were"} opened in <b>Stock &rarr; Issues</b>.<br>Returned items stay out of sellable stock until you inspect their condition (Good or Bad).</div>
+  <div class="card"><h3>Updated summary</h3>
+    <div class="sum"><span>Order status</span><b>${esc(j.status)}</b></div>
+    <div class="sum m"><span>New product subtotal</span><span>${tk(j.newSub)}</span></div>
+    <div class="sum m"><span>Discount</span><span>${tk(j.newDiscount)}</span></div>
+    <div class="sum m"><span>New customer delivery</span><span>${tk(j.newDelivery)}</span></div>
+    <div class="sum m"><span>Cumulative seller delivery cost</span><span>${tk(j.sellerDelivery)}</span></div>
+    <div class="sum g"><span>New grand total</span><span>${tk(j.newTotal)}</span></div>
+  </div>
+  <div class="card"><h3>Next step: inspect condition</h3>
+    <p class="hint">Mark each returned item <b>Good</b> to put it back in stock, or <b>Bad</b> to record its cost as a loss.</p>
+    <button class="btn p" type="button" style="margin-bottom:10px" onclick="openStockIssues()">Inspect condition in Stock &rarr;</button>
+    <button class="btn" type="button" style="margin-bottom:10px" onclick="loadOrderDetail('${esc(j.id)}')">View updated order</button>
+    <button class="btn" type="button" onclick="home()">Done</button>
+  </div>`;
+}
+
+/* ---------- new order review screen ---------- */
+function readMsg(){
+  const t=$("#msg").value.trim();
+  if(!t){$("#perr").textContent="Paste a message first.";return}
+  const r=parseMsg(t);
+  if(!r.items.length){$("#perr").textContent="No products found between \"Order Confirmed\" and \"Delivery details\".";return}
+  O=Object.assign(r,{date:today(),id:"",idPreview:"",idAuto:true});O.advance=O.advance||0;
+  review();previewId();
+}
+async function previewId(){
+  const my=++pvSeq;
+  const j=await callScript({action:"nextid",date:O.date});
+  const e=$("#oid");
+  if(my!==pvSeq||!O||!e)return;
+  if(j.ok&&O.idAuto){O.idPreview=j.id;O.id=j.id;e.value=j.id}
+  else if(!j.ok&&j.error==="nocfg")e.placeholder="Connect the sheet first";
+}
+function idTyped(v){v=v.trim();O.id=v;O.idAuto=(v===""||v===O.idPreview)}
+function review(){
+  window.scrollTo(0,0);
+  $("#app").innerHTML=`<div class="top"><div><small>Review before saving</small><h2>Check every field</h2></div><span class="badge" id="badge"></span></div>
+  <p id="err" class="err"></p>
+  <div id="warnbox" class="warn bad" hidden></div>
+  ${O.notes.length||O.unread.length?`<div class="warn">${O.notes.map(esc).join("<br>")}${O.unread.length?(O.notes.length?"<br>":"")+"Lines not understood: "+O.unread.map(esc).join(" | "):""}</div>`:""}
+  <div class="card"><h3>Order</h3><p class="hint">The ID shown is a preview. The sheet sets the final ID when you save, so two devices never get the same one. Type your own ID only if you need to.</p>
+    <div class="row"><div><label>Order ID</label><input id="oid" placeholder="Set when saved" value="${esc(O.id)}" oninput="idTyped(this.value)"></div>
+    <div><label>Date</label><input type="date" value="${O.date}" oninput="O.date=this.value;if(O.idAuto&&this.value)previewId()"></div></div></div>
+  <div class="card"><h3>Customer details</h3>
+    <label>Customer name</label><input value="${esc(O.name)}" oninput="O.name=this.value">
+    <label>Phone number</label><input inputmode="tel" value="${esc(O.phone)}" oninput="O.phone=this.value.trim()">
+    <label>Second phone number (optional)</label><input inputmode="tel" value="${esc(O.phone2||"")}" oninput="O.phone2=this.value.trim()">
+    <label>Full delivery address</label><textarea rows="3" id="addr" oninput="O.address=this.value;grow(this)">${esc(O.address)}</textarea></div>
+  <div class="card"><h3>Products</h3><div id="items" style="margin-top:14px"></div>
+    <button class="btn" type="button" onclick="addItem()">+ Add product</button></div>
+  <div class="card"><h3>Order summary</h3><p class="hint">Grand total = product subtotal − discount + delivery charge</p>
+    <div class="sum m"><span>Product subtotal</span><span id="st"></span></div>
+    <div class="sum"><span>Discount</span><input inputmode="numeric" value="${O.discount}" oninput="O.discount=num(this.value);calc()"></div>
+    <div class="sum"><span>Delivery charge</span><input inputmode="numeric" value="${O.delivery}" oninput="O.delivery=num(this.value);calc()"></div>
+    <div class="sum g"><span>Grand total</span><span id="gt"></span></div>
+    <div class="sum"><span>Advance paid</span><input inputmode="numeric" value="${O.advance||0}" oninput="O.advance=num(this.value);calc()"></div>
+    <div class="sum g"><span>COD to collect</span><span id="cod"></span></div>
+    <div class="sum m"><span>Total from message</span><span id="mt"></span></div>
+    ${O.cod!=null?`<div class="sum m"><span>COD from message</span><span>${tk(O.cod)}</span></div>`:""}</div>
+  <div class="card"><h3>Cash memo preview</h3><p class="hint">Preview only. The final order ID is set when you save. Download the memo after saving.</p>
+    <img id="pvmemo" alt="" style="width:100%;border:1px solid var(--line);border-radius:12px;min-height:80px"></div>
+  <div class="card"><h3 style="margin-bottom:14px">Original message</h3><pre>${esc(O.raw)}</pre></div>`;
+  setBar(true,"← Start over",home,"✓ Confirm & save",saveOrder,false);
+  items();grow($("#addr"));calc();
+}
+function grow(t){t.style.height="auto";t.style.height=(t.scrollHeight+4)+"px"}
+function items(){
+  $("#items").innerHTML=O.items.map((it,i)=>`<div class="pr"><div class="h"><span>Product ${i+1}</span><button type="button" onclick="rmItem(${i})">Remove</button></div>
+    <input value="${esc(it.name)}" oninput="O.items[${i}].name=this.value" placeholder="Product name">
+    <label style="margin:10px 0 6px;color:var(--mut);font-size:14px">Variant (color / size — optional)</label>
+    <input value="${esc(it.variant||"")}" oninput="O.items[${i}].variant=this.value" placeholder="e.g. Yellow, Pink, Large">
+    <div class="grid"><div><label>Qty</label><input inputmode="numeric" value="${it.qty}" oninput="O.items[${i}].qty=num(this.value);calc()"></div>
+    <div><label>Unit price</label><input inputmode="numeric" value="${it.price}" oninput="O.items[${i}].price=num(this.value);calc()"></div>
+    <div><label>Subtotal</label><div class="sub" id="s${i}"></div></div></div></div>`).join("");
+}
+function addItem(){O.items.push({name:"",variant:"",qty:1,price:0});items();calc()}
+function rmItem(i){O.items.splice(i,1);items();calc()}
+function totalsIssue(){
+  const a=[];
+  if(O.advance>O.total)a.push("The advance ("+tk(O.advance)+") is more than the grand total ("+tk(O.total)+"). COD will show 0.");
+  if(O.msgTotal===0)a.push("The total in the message is 0. Is this an advance payment? Check before saving.");
+  else if(O.msgTotal!=null){
+    const exp=O.msgTotal+(O.afterAdvance?O.advance:0);
+    if(Math.abs(O.total-exp)>=0.5)a.push("The totals do not match. Products + delivery − discount = "+tk(O.total)+", but the message says "+tk(exp)+(O.afterAdvance?" (message total + advance)":"")+".");
+  }
+  return a.join(" ");
+}
+function calc(){
+  O.items.forEach((it,i)=>{const e=$("#s"+i);if(e)e.textContent=tk(it.qty*it.price)});
+  O.sub=O.items.reduce((s,i)=>s+i.qty*i.price,0);
+  O.total=O.sub-O.discount+O.delivery;
+  O.advance=O.advance||0;
+  $("#st").textContent=tk(O.sub);$("#gt").textContent=tk(O.total);
+  $("#cod").textContent=tk(Math.max(0,O.total-O.advance));
+  $("#mt").textContent=O.msgTotal==null?"not in message":tk(O.msgTotal);
+  const b=$("#badge"),w=$("#warnbox"),issue=totalsIssue();
+  const exp=O.msgTotal==null?null:O.msgTotal+(O.afterAdvance?O.advance:0);
+  if(!issue){b.textContent=O.msgTotal==null?"No total to check":"Totals match";b.className="badge"}
+  else{b.textContent=O.msgTotal===0?"Total is 0":(exp!=null&&Math.abs(O.total-exp)>=0.5?"Differs by "+tk(Math.abs(O.total-exp)):"Check advance");b.className="badge bad"}
+  w.hidden=!issue;w.textContent=issue;
+  memoPreview();
+}
+function fullItemName(it){
+  const base=String(it.name||"").trim();
+  const v=String(it.variant||"").trim();
+  if(!v)return base;
+  if(base.toLowerCase().indexOf("("+v.toLowerCase()+")")>-1)return base;
+  return base+" ("+v+")";
+}
+async function saveOrder(){
+  const e=$("#err");e.textContent="";
+  const bad=m=>{e.textContent=m;window.scrollTo(0,0)};
+  if(!O.name)return bad("Customer name is empty.");
+  if(!/^01[3-9]\d{8}$/.test(O.phone))return bad("Phone number should be 11 digits starting with 01.");
+  if(O.phone2&&!/^01[3-9]\d{8}$/.test(O.phone2))return bad("Second phone number should be 11 digits starting with 01, or empty.");
+  if(!O.address)return bad("Address is empty.");
+  if(!O.items.length||O.items.some(i=>!i.name||i.qty<=0))return bad("Check the products: every item needs a name and a quantity.");
+  if(!O.idAuto&&/^\d+$/.test(O.id)){
+    if(!O.idPreview)return bad("Type the full order ID, like PZ26OCT-020.");
+    O.id=O.idPreview.split("-")[0]+"-"+("000"+O.id).slice(-3);
+    const f=$("#oid");if(f)f.value=O.id;
+  }
+  const issue=totalsIssue();
+  if(issue&&!confirm(issue+"\n\nSave anyway?"))return;
+  const btn=$("#barR");btn.disabled=true;btn.textContent="Saving…";
+  const finalItems=O.items.map(i=>({name:fullItemName(i),qty:i.qty,price:i.price}));
+  const payload={id:O.idAuto?"":O.id,date:O.date,name:O.name,phone:O.phone,phone2:O.phone2||"",address:O.address,items:finalItems,discount:O.discount,delivery:O.delivery,advance:O.advance||0,total:O.total,message:O.raw,force:false};
+  let j=await callScript({action:"add",order:payload});
+  if(!j.ok&&j.error==="duplicate"){
+    if(confirm("This looks like a duplicate of "+j.duplicateOf+" (same phone, date and total). Save anyway?")){payload.force=true;j=await callScript({action:"add",order:payload})}
+    else{btn.disabled=false;btn.textContent="✓ Confirm & save";return}
+  }
+  if(!j.ok){btn.disabled=false;btn.textContent="✓ Confirm & save";return bad("Not saved. "+errText(j.error))}
+  orders.push({id:j.id,date:O.date,name:O.name,phone:O.phone,phone2:O.phone2||"",address:O.address,items:finalItems,sub:O.sub,discount:O.discount,delivery:O.delivery,advance:O.advance||0,total:O.total,msgTotal:O.msgTotal,status:"Active"});
+  persist();
+  postOrderDirty(j.id);
+  if(j.url){const c=cfg();c.last=j.url;setCfg(c)}
+  const stockOrder={id:j.id,date:O.date,items:finalItems};
+  const memoData={id:j.id,date:O.date,name:O.name,phone:O.phone,address:O.address,items:finalItems,discount:O.discount,delivery:O.delivery,advance:O.advance||0};
+  const note="Saved "+j.id+" for "+O.name+". Added to the Google Sheet."+(j.dup?" (This order was already in the sheet.)":"");
+  showMemo(memoData,note,true);
+  stockPost(stockOrder).then(sp=>{
+    const el=document.getElementById("stockline");
+    if(el&&MEMO&&MEMO.order.id===j.id)el.textContent=(stockMsg(sp).trim()||"Stock was already updated for this order.");
+  });
+}
+
+/* ---------- cash memo (drawn on a canvas, never stored) ---------- */
+const SHOP={name:"POZZO TOYS",fb:"Facebook: Pozzo Toys",phone:"01712-666868"};
+let MEMO=null,LOGO=null,pvT=null;
+function memoDate(d){const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?(+m[3])+" "+MN[+m[2]-1]+" "+m[1]:String(d)}
+async function memoLogo(){
+  if(LOGO)return LOGO;
+  const el=document.querySelector("header img");if(!el)return null;
+  const im=new Image();im.src=el.src;
+  try{await im.decode()}catch(e){return null}
+  LOGO=im;return im;
+}
+async function drawMemo(o,noLogo){
+  const W=800,P=44,IN=W-2*P;
+  const SANS='"Segoe UI","Noto Sans Bengali","Noto Sans",system-ui,sans-serif';
+  const BLUE="#1F6FA8",DEEP="#0F3F66",INK="#1C1B1F",MUT="#5F6368",LINE="#E3E5E8",CHIP="#DEEFFB",SOFT="#F5FAFE",COD="#E9F4FC",CODB="#BFDDF2";
+  const items=o.items||[];
+  const sub=items.reduce((s,i)=>s+i.qty*i.price,0);
+  const disc=o.discount||0,del=o.delivery||0,adv=o.advance||0;
+  const total=sub-disc+del,cod=Math.max(0,total-adv);
+  const logo=noLogo?null:await memoLogo();
+  const cv=document.createElement("canvas"),cx=cv.getContext("2d");
+  const num=n=>Math.round(n).toLocaleString("en-US");
+  const wrap=(text,font,maxW)=>{
+    cx.font=font;const lines=[];
+    String(text).split("\n").forEach(par=>{
+      let cur="";
+      par.split(" ").forEach(w=>{
+        const t=cur?cur+" "+w:w;
+        if(cx.measureText(t).width<=maxW){cur=t;return}
+        if(cur){lines.push(cur);cur=""}
+        if(cx.measureText(w).width<=maxW){cur=w;return}
+        let piece="";
+        for(const ch of w){if(cx.measureText(piece+ch).width>maxW){lines.push(piece);piece=ch}else piece+=ch}
+        cur=piece;
+      });
+      lines.push(cur);
+    });
+    return lines;
+  };
+  function run(draw){
+    const T=(txt,x,yy,font,color,align)=>{if(!draw)return;cx.font=font;cx.fillStyle=color;cx.textAlign=align||"left";cx.textBaseline="alphabetic";cx.fillText(txt,x,yy)};
+    const RR=(x,yy,w,h,r,fill,stroke)=>{
+      if(!draw)return;
+      cx.beginPath();
+      if(cx.roundRect)cx.roundRect(x,yy,w,h,r);else cx.rect(x,yy,w,h);
+      if(fill){cx.fillStyle=fill;cx.fill()}
+      if(stroke){cx.strokeStyle=stroke;cx.lineWidth=2;cx.stroke()}
+    };
+    const HR=yy=>{if(draw){cx.fillStyle=LINE;cx.fillRect(P,yy,IN,1)}};
+    let y=30;
+    if(logo&&logo.naturalWidth){
+      const sc=Math.min(180/logo.naturalWidth,110/logo.naturalHeight),lw=logo.naturalWidth*sc,lh=logo.naturalHeight*sc;
+      if(draw)cx.drawImage(logo,(W-lw)/2,y,lw,lh);
+      y+=lh+14;
+    }else{y+=30;T(SHOP.name,W/2,y,"600 32px "+SANS,BLUE,"center");y+=16}
+    y+=16;T(SHOP.fb+" · "+SHOP.phone,W/2,y,"400 20px "+SANS,MUT,"center");
+    y+=40;
+    T("Cash memo",P,y+22,"600 32px "+SANS,BLUE);
+    cx.font="600 22px "+SANS;const cw=cx.measureText(o.id).width+36;
+    RR(W-P-cw,y-6,cw,40,20,CHIP);
+    T(o.id,W-P-cw/2,y+22,"600 22px "+SANS,DEEP,"center");
+    y+=64;T(memoDate(o.date),W-P,y,"400 20px "+SANS,MUT,"right");
+    y+=30;
+    const addr=wrap(o.address||"-","400 22px "+SANS,IN-48);
+    const ch=26+34+34+addr.length*30+14;
+    RR(P,y,IN,ch,22,SOFT);
+    let cy=y+40;
+    T(o.name||"-",P+24,cy,"600 25px "+SANS,INK);cy+=36;
+    T(o.phone||"-",P+24,cy,"400 22px "+SANS,MUT);cy+=34;
+    addr.forEach(ln=>{T(ln,P+24,cy,"400 22px "+SANS,MUT);cy+=30});
+    y+=ch+30;
+    items.forEach(it=>{
+      const qp=num(it.price)+" × "+it.qty,amt=num(it.price*it.qty);
+      cx.font="400 21px "+SANS;const qw=cx.measureText(qp).width;
+      const ls=wrap(it.name,"400 22px "+SANS,IN-130-qw-30);
+      ls.forEach((ln,i)=>T(ln,P+2,y+i*30,"400 22px "+SANS,INK));
+      T(qp,W-P-120,y,"400 21px "+SANS,MUT,"right");
+      T(amt,W-P-2,y,"500 22px "+SANS,INK,"right");
+      y+=ls.length*30+10;HR(y-8);y+=14;
+    });
+    y+=4;
+    const row=(k,v,big)=>{
+      T(k,P+2,y,big?"600 26px "+SANS:"400 22px "+SANS,big?INK:MUT);
+      T(v,W-P-2,y,big?"600 26px "+SANS:"400 22px "+SANS,INK,"right");
+      y+=big?46:38;
+    };
+    row("Product value",num(sub));
+    if(disc>0)row("Discount","− "+num(disc));
+    row("Delivery",del>0?num(del):"Free");
+    row("Total",num(total),true);
+    if(adv>0)row("Advance paid","− "+num(adv));
+    y+=6;const bh=cod>0?104:116;
+    RR(P,y,IN,bh,28,COD,CODB);
+    if(cod>0){
+      T("COD amount due",P+28,y+62,"600 24px "+SANS,DEEP);
+      T("৳"+num(cod),W-P-28,y+68,"600 48px "+SANS,BLUE,"right");
+    }else{
+      T("Paid in full",W/2,y+54,"600 36px "+SANS,BLUE,"center");
+      T("No cash to collect",W/2,y+92,"400 20px "+SANS,MUT,"center");
+    }
+    y+=bh+46;
+    T("Thank you for shopping with Pozzo Toys",W/2,y,"400 20px "+SANS,MUT,"center");
+    return y+44;
+  }
+  const H=run(false);
+  cv.width=W;cv.height=H;
+  cx.fillStyle="#FFFFFF";cx.fillRect(0,0,W,H);
+  run(true);
+  try{cv.toDataURL("image/png")}catch(e){if(!noLogo)return drawMemo(o,true)}
+  return cv;
+}
+function memoPreview(){
+  clearTimeout(pvT);
+  pvT=setTimeout(async()=>{
+    if(!O)return;const el=$("#pvmemo");if(!el)return;
+    try{
+      const cv=await drawMemo({id:O.id||"(set when saved)",date:O.date,name:O.name,phone:O.phone,address:O.address,items:O.items.filter(i=>i.name),discount:O.discount,delivery:O.delivery,advance:O.advance});
+      if(O&&$("#pvmemo"))$("#pvmemo").src=cv.toDataURL("image/png");
+    }catch(e){}
+  },350);
+}
+async function showMemo(order,msg,stockPending){
+  O=null;pvSeq++;resetBar();window.scrollTo(0,0);
+  MEMO={order:order,cv:null};
+  $("#app").innerHTML=`${msg?`<div class="ok">${esc(msg)}</div>`:""}
+  ${stockPending?`<p id="stockline" class="hint" style="margin:0 4px 12px">Updating stock…</p>`:""}
+  <div class="card"><h3>Cash memo</h3><p class="hint">The memo is not stored. You can rebuild it any time from the order ID.</p>
+    <img id="memoimg" alt="Cash memo" style="width:100%;border:1px solid var(--line);border-radius:12px;min-height:120px">
+    <div class="row" style="margin-top:14px"><button class="btn p" type="button" onclick="memoPng()">Download PNG</button><button class="btn p" type="button" onclick="memoPdf()">Download PDF</button></div>
+    <button class="btn" type="button" style="margin-top:12px" onclick="memoShare()">Share</button>
+    <p id="mmsg" class="hint" style="margin-top:10px"></p></div>
+  <button class="btn" type="button" onclick="home()">Done</button>`;
+  try{MEMO.cv=await drawMemo(order);$("#memoimg").src=MEMO.cv.toDataURL("image/png")}
+  catch(e){const m=$("#mmsg");if(m)m.textContent="Could not draw the memo: "+e.message}
+}
+const memoName=ext=>"Pozzo Toys Memo "+MEMO.order.id+"."+ext;
+function memoSave(blob,name){
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+const memoBlob=()=>new Promise(r=>MEMO.cv.toBlob(r,"image/png"));
+async function memoPng(){
+  if(!MEMO||!MEMO.cv)return;
+  memoSave(await memoBlob(),memoName("png"));
+}
+async function memoPdf(){
+  if(!MEMO||!MEMO.cv)return;
+  const m=$("#mmsg");
+  if(!window.jspdf){m.textContent="The PDF library did not load. Check your internet connection and try again.";return}
+  const w=148,h=w*MEMO.cv.height/MEMO.cv.width;
+  const pdf=new window.jspdf.jsPDF({unit:"mm",format:[w,Math.max(h,100)]});
+  pdf.addImage(MEMO.cv.toDataURL("image/png"),"PNG",0,0,w,h);
+  memoSave(pdf.output("blob"),memoName("pdf"));
+}
+async function memoShare(){
+  if(!MEMO||!MEMO.cv)return;
+  const m=$("#mmsg"),f=new File([await memoBlob()],memoName("png"),{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+    try{await navigator.share({files:[f],title:"Cash memo "+MEMO.order.id})}catch(e){}
+  }else m.textContent="Sharing is not available here. Use Download PNG, then send the file."
+}
+async function regenMemo(){
+  const m=$("#rmsg");m.textContent="";
+  const id=normalizeOrderId($("#rid").value);
+  if(!id){m.textContent="Type the order ID.";return}
+  m.textContent="Looking it up…";
+  const j=await callScript({action:"memo",id:id,today:today()});
+  if(!j.ok){m.textContent=errText(j.error);return}
+  showMemo(j.order,"Rebuilt from the sheet: "+j.order.id);
+}
+
+/* ---------- parcel entry file ---------- */
+function fileDate(){const t=new Date();return String(t.getDate()).padStart(2,"0")+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()]+" "+String(t.getFullYear()).slice(-2)}
+async function parcelExcel(list){
+  if(typeof ExcelJS==="undefined")throw new Error("The Excel library did not load. Check your internet connection and try again.");
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Sheet1");
+  const cols=[["Invoice",16],["Name",24],["Address",50],["Phone",15],["Amount",12],["Note",50],["Contact Name",16],["Contact Phone",15]];
+  ws.columns=cols.map(([h,w])=>({header:h,width:w}));
+  ws.getRow(1).font={bold:true};
+  ws.getColumn(4).numFmt="@";ws.getColumn(8).numFmt="@";
+  list.forEach(o=>{
+    const r=ws.addRow([o.id,o.name,o.address,String(o.phone),Number(o.amount),o.note,null,o.phone2?String(o.phone2):null]);
+    r.getCell(4).numFmt="@";r.getCell(8).numFmt="@";
+  });
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  a.download="Pozzo Toys Parcel Entry "+fileDate()+".xlsx";document.body.appendChild(a);a.click();a.remove();
+}
+const pmsg=t=>{const m=$("#pmsg");if(m)m.textContent=t};
+async function parcelNext(){
+  pmsg("Getting orders from the sheet…");
+  const j=await callScript({action:"list",mode:"next",today:today()});
+  if(!j.ok)return pmsg("Could not get orders: "+errText(j.error));
+  if(!j.orders.length)return pmsg("No new orders to export.");
+  try{await parcelExcel(j.orders)}catch(e){return pmsg(e.message)}
+  const n=j.orders.length,span=j.orders[0].id+" to "+j.orders[n-1].id;
+  pmsg("The parcel file was made for "+n+" order"+(n>1?"s":"")+" ("+span+"). They are not marked as exported yet.");
+  if(!confirm("Did the parcel file download?\n\nOK = yes, mark these "+n+" order"+(n>1?"s":"")+" as exported.\nCancel = not yet. They stay unmarked and appear again next time.")){
+    return pmsg("Not marked. The "+n+" order"+(n>1?"s":"")+" ("+span+") will be included again the next time you generate the file.");
+  }
+  const mk=await callScript({action:"mark",ids:j.orders.map(o=>o.id),today:today()});
+  pmsg("Generated and marked "+n+" order"+(n>1?"s":"")+": "+span+"."+(mk.ok?"":" Warning: they could not be marked as exported ("+mk.error+"), so the next file may include them again."));
+}
+async function parcelRange(){
+  const f=$("#pf").value.trim(),t=$("#pt").value.trim();
+  if(!f||!t)return pmsg("Enter both a From and a To.");
+  pmsg("Getting orders from the sheet…");
+  const j=await callScript({action:"list",mode:"range",from:f,to:t,month:$("#pm").value||today().slice(0,7)});
+  if(!j.ok)return pmsg("Could not get orders: "+errText(j.error));
+  if(!j.orders.length)return pmsg("No orders in that range.");
+  try{await parcelExcel(j.orders)}catch(e){return pmsg(e.message)}
+  pmsg("Generated "+j.orders.length+" order"+(j.orders.length>1?"s":"")+": "+j.orders[0].id+" to "+j.orders[j.orders.length-1].id+". The next-file marker was not changed.");
+}
+
+/* ---------- backup of this device's orders ---------- */
+async function backup(){
+  if(typeof ExcelJS==="undefined"){alert("The Excel library did not load. Check your internet connection and try again.");return}
+  const wb=new ExcelJS.Workbook(),A=wb.addWorksheet("Orders"),I=wb.addWorksheet("Items");
+  const head=(ws,cols)=>{ws.columns=cols.map(([h,w])=>({header:h,width:w}));ws.getRow(1).font={bold:true};ws.views=[{state:"frozen",ySplit:1}]};
+  head(A,[["Order ID",14],["Date",12],["Customer name",24],["Phone",15],["Second phone",15],["Address",50],["Items",50],["Product subtotal",16],["Discount",10],["Delivery charge",15],["Grand total",13],["Status",14],["Message total",14]]);
+  head(I,[["Order ID",14],["Date",12],["Product",34],["Qty",8],["Unit price",12],["Subtotal",12]]);
+  orders.forEach(o=>{
+    const r=A.addRow([o.id,o.date,o.name,String(o.phone),o.phone2?String(o.phone2):null,o.address,o.items.map(i=>i.name+" x"+i.qty).join("; "),o.sub==null?"":o.sub,o.discount,o.delivery,o.total,o.status||"Active",o.msgTotal==null?"":o.msgTotal]);
+    r.getCell(4).numFmt="@";r.getCell(5).numFmt="@";
+    o.items.forEach(i=>I.addRow([o.id,o.date,i.name,i.qty,i.price,i.qty*i.price]));
+  });
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  a.download="Pozzo orders backup "+today()+".xlsx";document.body.appendChild(a);a.click();a.remove();
+}
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
+function bootOrderFromHash(){
+  const m=String(typeof location!=="undefined"?location.hash:"").match(/^#order=(.+)$/);
+  if(m&&m[1]){loadOrderDetail(decodeURIComponent(m[1]));return true}
+  return false;
+}
+window.addEventListener("hashchange",()=>{bootOrderFromHash()});
+if(!bootOrderFromHash())home();
+
+(function initPTR(onRefresh){
+  if(typeof document==="undefined")return;
+  let el=typeof document.getElementById==="function"?document.getElementById("ptr"):null;
+  const tx=()=>el&&el.querySelector?el.querySelector(".ptr-tx"):null;
+  const ic=()=>el&&el.querySelector?el.querySelector(".ptr-ic"):null;
+  let sx=0,sy=0,lock="",pull=0,busy=false;
+  const THRESH=52;
+  function setVisual(h,cls,text,glyph){
+    if(!el)return;
+    el.className="ptr"+(cls?" "+cls:"");
+    if(el.style)el.style.height=h+"px";
+    const t=tx();if(t&&text)t.textContent=text;
+    const g=ic();if(g&&glyph)g.innerHTML=glyph;
+  }
+  async function triggerPullRefresh(){
+    if(busy)return;
+    busy=true;
+    setVisual(44,"active busy","Refreshing…","&#8635;");
+    const t0=Date.now();
+    try{await onRefresh()}catch(e){}
+    finally{
+      const wait=Math.max(0,260-(Date.now()-t0));
+      const tm=setTimeout(()=>{busy=false;setVisual(0,"","Pull down to refresh","&#8595;")},wait);
+      if(tm&&typeof tm.unref==="function")tm.unref();
+    }
+  }
+  window.triggerPullRefresh=triggerPullRefresh;
+  const scrollTop=()=>Math.max(window.scrollY||0,(document.documentElement&&document.documentElement.scrollTop)||0,(document.body&&document.body.scrollTop)||0);
+  document.addEventListener("touchstart",e=>{
+    if(busy||!e.touches||e.touches.length!==1)return;
+    if(scrollTop()>2){lock="up";return}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(busy||lock==="up"||lock==="h"||!e.touches||e.touches.length!==1)return;
+    const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+    if(!lock){
+      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){lock="h";return}
+      if(dy<-6){lock="up";return}
+      if(dy>8&&Math.abs(dy)>Math.abs(dx)){if(scrollTop()>2){lock="up";return}lock="v"}else return;
+    }
+    if(lock==="v"){
+      if(dy<=0){pull=0;setVisual(0,"pulling","","");return}
+      pull=Math.min(76,Math.round(dy*0.55));
+      if(e.cancelable)e.preventDefault();
+      setVisual(pull,"pulling active"+(pull>=THRESH?" ready":""),pull>=THRESH?"Release to refresh":"Pull down to refresh","&#8595;");
+    }
+  },{passive:false});
+  function onEnd(){
+    if(busy)return;
+    const goRef=(lock==="v"&&pull>=THRESH);
+    lock="";pull=0;
+    if(goRef)triggerPullRefresh();
+    else setVisual(0,"","Pull down to refresh","&#8595;");
+  }
+  document.addEventListener("touchend",onEnd,{passive:true});
+  document.addEventListener("touchcancel",onEnd,{passive:true});
+})(async ()=>{
+  if(DETAIL&&DETAIL.order){
+    await loadOrderDetail(DETAIL.order.id,"Order refreshed from sheet.");
+    return;
+  }
+  if(O||RSTATE)return;
+  await retryStock();
+  if(RECENT_LIST!==null){
+    const j=await callScript({action:"recentorders",today:today(),limit:25});
+    if(j.ok)RECENT_LIST=j.orders||[];
+  }
+  flash="Refreshed.";
+  home();
+});
+</script>
+</body>
+</html>
