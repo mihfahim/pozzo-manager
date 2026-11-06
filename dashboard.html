@@ -12,7 +12,7 @@
 <style>
 :root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
 *{box-sizing:border-box}
-html,body{max-width:100%;overflow-x:hidden;overscroll-behavior-y:contain}
+html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
 .ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
@@ -36,10 +36,8 @@ main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidd
 .kicker{color:var(--mut);font-size:13.5px;margin-bottom:3px;line-height:1.35}
 .headbar h2{font-size:26px;line-height:1.15}
 .head-right{display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%;min-width:0}
-.seg{display:inline-flex;flex-wrap:wrap;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px;max-width:100%}
-.seg button{min-height:38px;border:0;border-radius:14px;padding:8px 12px;background:transparent;color:var(--mut);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background-color .15s ease,color .15s ease}
-.seg button.on{background:var(--grn);color:#fff}
-.seg button:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px;max-width:100%}
+.seg select{width:100%;border:0;background:transparent;padding:8px 12px;font:inherit;font-size:14px;font-weight:600;color:var(--grn);cursor:pointer}
 .custom-range{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:14px;max-width:100%}
 .custom-range>div{min-width:0;max-width:100%}
 .custom-range label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
@@ -383,14 +381,14 @@ function render(){
     </div>
     <div class="head-right">
       <div class="seg" role="tablist" aria-label="Date range">
-        ${[
-          ["month","This month"],
-          ["last_month","Last month"],
-          ["today","Today"],
-          ["week","Last 7d"],
-          ["all","All time"],
-          ["custom","Custom"]
-        ].map(([k,lbl])=>`<button type="button" class="${state.rangeMode===k?"on":""}" onclick="setRange('${k}')">${lbl}</button>`).join("")}
+        <select onchange="setRange(this.value)">
+          <option value="month" ${state.rangeMode==="month"?"selected":""}>This month</option>
+          <option value="last_month" ${state.rangeMode==="last_month"?"selected":""}>Last month</option>
+          <option value="today" ${state.rangeMode==="today"?"selected":""}>Today</option>
+          <option value="week" ${state.rangeMode==="week"?"selected":""}>Last 7d</option>
+          <option value="all" ${state.rangeMode==="all"?"selected":""}>All time</option>
+          <option value="custom" ${state.rangeMode==="custom"?"selected":""}>Custom</option>
+        </select>
       </div>
       <button class="btn p" type="button" onclick="openExpenseModal()">+ Add expense</button>
     </div>
