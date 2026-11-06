@@ -15,7 +15,7 @@
 <style>
 :root{--bg:#f1ede6;--card:#f9f6f0;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--warn:#8a5a14;--bad:#a8431f}
 *{box-sizing:border-box}
-html,body{overscroll-behavior-y:contain}
+html,body{max-width:100%;overflow-x:hidden;overscroll-behavior-y:contain}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:96px}
 h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
 .ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
@@ -31,18 +31,18 @@ header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto
 header h1{font-size:24px;color:var(--grn)}
 header p{margin:4px 0 0;font-size:14px;color:var(--mut)}
 .embed header{display:none}
-main{max-width:640px;margin:auto;padding:16px}
+main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:16px;border-radius:18px;border:1px solid var(--grn);background:var(--grn);color:#fff;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
 .btn.alt{background:var(--in);color:var(--ink);border-color:var(--line)}
 .btn:disabled{opacity:.55;cursor:default}
 #sum{margin:14px 0;font-size:16px;line-height:1.6;color:var(--mut)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(60,50,30,.08)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(60,50,30,.08);max-width:100%;overflow:hidden}
 .card.flag{border-left:6px solid #c99a4b}.card.err{border-left:6px solid var(--bad)}
-.top{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:17px;margin-bottom:4px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-weight:600;font-size:17px;margin-bottom:4px}
 .top small{color:var(--mut);font-weight:400;font-size:14px}
 .top label{font-weight:500;font-size:15px;display:flex;align-items:center;gap:8px}
 .top input[type=checkbox]{width:22px;height:22px;accent-color:var(--grn)}
-.card input[type=text],.card textarea{width:100%;padding:14px 16px;margin:6px 0;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
+.card input[type=text],.card textarea{width:100%;min-width:0;max-width:100%;padding:14px 16px;margin:6px 0;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
 .card textarea{resize:none;overflow:hidden;line-height:1.45;display:block}
 .note{font-size:15px;margin:8px 0;padding:10px 12px;border-radius:14px}
 .note.w{background:#f6ece0;color:#6b4a1b}.note.b{background:#f6e4dc;color:var(--bad);font-weight:600}

@@ -13,7 +13,7 @@
 <style>
 :root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
 *{box-sizing:border-box}
-html,body{overscroll-behavior-y:contain}
+html,body{max-width:100%;overflow-x:hidden;overscroll-behavior-y:contain}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
 .ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
@@ -28,7 +28,7 @@ header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn)
 header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
 header h1{font-size:22px;color:var(--grn)}
 .embed header{display:none}
-main{max-width:920px;margin:0 auto;padding:18px 16px}
+main{width:100%;max-width:920px;margin:0 auto;padding:14px 12px;overflow-x:hidden}
 .num{font-variant-numeric:tabular-nums}
 
 /* Top Bar */
@@ -44,42 +44,42 @@ main{max-width:920px;margin:0 auto;padding:18px 16px}
 .btn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
 
 /* Filter Tabs & Search */
-.controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px;max-width:100%}
 .seg{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
-.seg button{min-height:40px;border:0;border-radius:999px;padding:8px 15px;background:transparent;color:var(--mut);font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.seg button{min-height:40px;border:0;border-radius:999px;padding:8px 14px;background:transparent;color:var(--mut);font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
 .seg button.on{background:var(--grn);color:#fff}
 .seg button:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
-.ctrl-right{display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;min-width:220px}
-.search{width:280px;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
+.ctrl-right{display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end;min-width:0;max-width:100%}
+.search{flex:1;width:240px;min-width:0;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
 
 /* Alerts & Banners */
-.flash{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--bd);color:var(--grn);border:1px solid #c6ddd4;border-radius:16px;padding:12px 15px;margin-bottom:14px;font-size:14px;font-weight:600}
+.flash{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--bd);color:var(--grn);border:1px solid #c6ddd4;border-radius:16px;padding:12px 15px;margin-bottom:14px;font-size:14px;font-weight:600;max-width:100%;overflow-wrap:anywhere}
 .flash.err{background:var(--badbg);color:var(--bad);border-color:#e8bfae}
 .flash.warn{background:var(--ambbg);color:var(--amb);border-color:#e5cfa8}
 
 /* Customer Name Buttons Queue */
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
-.queue-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
-.queue-head h3{font-size:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px 14px;margin-bottom:16px;max-width:100%;overflow:hidden}
+.queue-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:12px}
+.queue-head h3{font-size:19px}
 .queue-hint{font-size:13px;color:var(--mut)}
-.btn-grid{display:flex;flex-direction:column;gap:10px}
-.order-btn{display:flex;justify-content:space-between;align-items:center;gap:14px;width:100%;min-height:70px;padding:14px 18px;border-radius:18px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .08s ease;box-shadow:0 1px 2px rgba(45,38,24,.05)}
+.btn-grid{display:flex;flex-direction:column;gap:9px;max-width:100%}
+.order-btn{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;max-width:100%;overflow:hidden;box-sizing:border-box;min-height:64px;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .08s ease;box-shadow:0 1px 2px rgba(45,38,24,.05)}
 .order-btn:hover{border-color:var(--grn);background:#fff}
 .order-btn:active{transform:scale(.995)}
 .order-btn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
 .order-btn.packed{background:var(--sub);opacity:.88}
-.ob-left{min-width:0;flex:1}
-.ob-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.cname{font-family:Georgia,"Times New Roman",serif;font-size:19px;font-weight:700;color:var(--ink);line-height:1.2}
-.oid-chip{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--bd);color:var(--grn);font-size:12px;font-weight:700;letter-spacing:.02em}
+.ob-left{min-width:0;flex:1;overflow:hidden}
+.cname{display:block;font-family:Georgia,"Times New Roman",serif;font-size:17px;font-weight:700;color:var(--ink);line-height:1.25;overflow-wrap:anywhere}
+.ob-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:5px}
+.oid-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--bd);color:var(--grn);font-size:12px;font-weight:700;letter-spacing:.02em}
 .order-btn.packed .oid-chip{background:var(--line);color:var(--mut)}
-.st-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--ambbg);color:var(--amb);font-size:12px;font-weight:600}
-.ob-sub{color:var(--mut);font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ob-right{text-align:right;flex:none}
-.ob-pcs{font-weight:700;font-size:15px;color:var(--grn)}
+.st-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--ambbg);color:var(--amb);font-size:11.5px;font-weight:600}
+.pack-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--mut);font-size:11.5px;font-weight:600}
+.ob-right{text-align:right;flex:none;white-space:nowrap}
+.ob-pcs{display:block;font-weight:700;font-size:14.5px;color:var(--grn)}
 .order-btn.packed .ob-pcs{color:var(--mut)}
-.ob-cod{font-size:13px;color:var(--mut);margin-top:3px}
+.ob-sub{display:block;font-size:12px;color:var(--mut);margin-top:2px}
 
 /* Packing Window Modal */
 .modal{position:fixed;inset:0;background:rgba(30,25,15,.5);display:flex;align-items:flex-end;justify-content:center;z-index:40;padding:12px}
@@ -522,19 +522,20 @@ function render(){
     ${state.loading&&!state.orders.length?`<div class="empty">Loading orders…</div>`
     :list.length?`<div class="btn-grid">${list.map(o=>{
       const pcs=(o.items||[]).reduce((s,it)=>s+(Number(it.qty)||0),0);
+      const itemCnt=(o.items||[]).length;
       const isPacked=!!o.packed;
       return `<button type="button" class="order-btn ${isPacked?"packed":""}" data-order-id="${esc(o.id)}" onclick="openPackWindow('${esc(o.id)}')">
         <span class="ob-left">
-          <span class="ob-top">
-            <span class="cname">${esc(o.name||"Customer")}</span>
+          <span class="cname">${esc(o.name||"Customer")}</span>
+          <span class="ob-meta">
             <span class="oid-chip num">${esc(o.id)}</span>
             ${o.status==="Partial Return"?`<span class="st-chip">Partial Return</span>`:""}
+            ${isPacked?`<span class="pack-chip">Packed</span>`:""}
           </span>
-          <span class="ob-sub num">${esc(o.address||"No address")}${o.phone?" · "+esc(o.phone):""}${isPacked?" · Packed "+esc(o.packed):""}</span>
         </span>
         <span class="ob-right num">
-          <span class="ob-pcs">${pcs} pc${pcs===1?"":"s"} (${(o.items||[]).length} item${(o.items||[]).length===1?"":"s"})</span><br>
-          <span class="ob-cod">COD ${tk(o.cod)}</span>
+          <span class="ob-pcs">${itemCnt} item${itemCnt===1?"":"s"}</span>
+          <span class="ob-sub">${pcs} pc${pcs===1?"":"s"}</span>
         </span>
       </button>`;
     }).join("")}</div>`

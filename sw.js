@@ -1,4 +1,4 @@
-const PREFIX="pm-",C=PREFIX+"v8";
+const PREFIX="pm-",C=PREFIX+"v9";
 const FILES=["./","index.html","dashboard.html","dispatch.html","orders.html","stock.html","stickers.html","manifest.webmanifest","icon-192.png","icon-512.png"];
 self.addEventListener("install",e=>{
   e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)).catch(()=>{}));

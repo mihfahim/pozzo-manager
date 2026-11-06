@@ -12,7 +12,7 @@
 <style>
 :root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
 *{box-sizing:border-box}
-html,body{overscroll-behavior-y:contain}
+html,body{max-width:100%;overflow-x:hidden;overscroll-behavior-y:contain}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
 .ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
@@ -27,22 +27,23 @@ header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn)
 header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
 header h1{font-size:22px;color:var(--grn)}
 .embed header{display:none}
-main{max-width:1080px;margin:0 auto;padding:18px 16px}
+main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidden}
 .num{font-variant-numeric:tabular-nums}
 
 /* Header & Period Selector */
-.headbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
-.kicker{color:var(--mut);font-size:14px;margin-bottom:3px}
-.headbar h2{font-size:28px;line-height:1.15}
-.head-right{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.seg{display:inline-flex;flex-wrap:nowrap;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
-.seg::-webkit-scrollbar{display:none}
-.seg button{min-height:40px;border:0;border-radius:999px;padding:8px 13px;background:transparent;color:var(--mut);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.headbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px;max-width:100%}
+.headbar>*,main>section,.cols>*{min-width:0;max-width:100%}
+.kicker{color:var(--mut);font-size:13.5px;margin-bottom:3px;line-height:1.35}
+.headbar h2{font-size:26px;line-height:1.15}
+.head-right{display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%;min-width:0}
+.seg{display:inline-flex;flex-wrap:wrap;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px;max-width:100%}
+.seg button{min-height:38px;border:0;border-radius:14px;padding:8px 12px;background:transparent;color:var(--mut);font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background-color .15s ease,color .15s ease}
 .seg button.on{background:var(--grn);color:#fff}
 .seg button:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
-.custom-range{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:14px}
+.custom-range{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:14px;max-width:100%}
+.custom-range>div{min-width:0;max-width:100%}
 .custom-range label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
-.custom-range input[type="date"]{min-height:42px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--in);font:inherit;font-size:14px;color:var(--ink)}
+.custom-range input[type="date"]{width:100%;min-width:0;max-width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--in);font:inherit;font-size:14px;color:var(--ink)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:pointer;transition:background-color .15s ease}
 .btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
@@ -155,12 +156,38 @@ main{max-width:1080px;margin:0 auto;padding:18px 16px}
 [hidden]{display:none!important}
 
 @media (max-width:880px){
-  .kpis,.stock-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .headbar{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:12px}
+  .head-right{flex-direction:column;align-items:stretch;width:100%}
+  .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:4px}
+  .seg button{width:100%;min-width:0;padding:8px 4px;font-size:12.5px;text-align:center;overflow:hidden;text-overflow:ellipsis}
+  .kpis,.stock-stats,.alert-btns,.navgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stock-stats .sstat-wide{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;gap:10px}
   .cols{grid-template-columns:1fr}
 }
-@media (max-width:540px){
-  .kpis,.stock-stats,.alert-btns,.navgrid{grid-template-columns:1fr}
-  .kpi .val{font-size:25px}
+@media (max-width:600px){
+  main{padding:12px}
+  .custom-range{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px}
+  .custom-range .btn{grid-column:1 / -1;width:100%}
+  .kpis,.stock-stats,.alert-btns,.navgrid{gap:8px}
+  .kpis{margin-bottom:12px}
+  .kpi{padding:12px;border-radius:16px}
+  .kpi .lbl{font-size:12.5px;margin-bottom:4px}
+  .kpi .val{font-size:20px}
+  .kpi .sub{font-size:11.5px;margin-top:4px}
+  .card{padding:14px 12px;border-radius:18px;margin-bottom:12px}
+  .card h3{font-size:19px}
+  .sstat{padding:11px 12px;border-radius:14px}
+  .sstat .lbl{font-size:12px}
+  .sstat .val{font-size:19px}
+  .sstat .sub{font-size:11.5px}
+  .abtn{flex-direction:column;align-items:flex-start;gap:6px;padding:12px;min-height:auto;border-radius:15px}
+  .abtn .atitle{font-size:14px}
+  .abtn .asub{font-size:11.5px}
+  .abtn .aright{text-align:left;width:100%}
+  .abtn .aval{font-size:16px}
+  .abtn .act{font-size:11.5px}
+  .navtile{padding:11px 12px;min-height:62px}
+  .navtile span{font-size:12px}
 }
 </style>
 </head>
@@ -419,19 +446,21 @@ function render(){
     </div>
     <div class="stock-stats">
       <div class="sstat">
-        <div class="lbl">Total items in stock</div>
-        <div class="val num">${loadingInit?dash:s.totalUnits+" pcs"}</div>
-        <div class="sub num">${s.totalItems} active products</div>
-      </div>
-      <div class="sstat">
         <div class="lbl">Stock value at cost</div>
         <div class="val num">${loadingInit?dash:tk(s.valueCost)}</div>
-        <div class="sub num">Total buying cost of current stock</div>
+        <div class="sub num">Total buying cost of stock</div>
       </div>
       <div class="sstat">
         <div class="lbl">Stock value at sale</div>
         <div class="val num">${loadingInit?dash:tk(s.valueSale)}</div>
         <div class="sub num">Est. margin ${tk(potentialStockMargin)}</div>
+      </div>
+      <div class="sstat sstat-wide">
+        <div>
+          <div class="lbl">Total items in stock</div>
+          <div class="sub num">${s.totalItems} active products</div>
+        </div>
+        <div class="val num">${loadingInit?dash:s.totalUnits+" pcs"}</div>
       </div>
     </div>
 
