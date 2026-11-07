@@ -13,22 +13,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
 <style>
-:root{--bg:#f1ede6;--card:#f9f6f0;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--warn:#8a5a14;--bad:#a8431f}
+:root{--bg:#f4f7fa;--card:#ffffff;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--warn:#8a5a14;--bad:#a8431f;--blue:#1f6fa8;--deep:#0f3f66}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:96px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
 h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
-.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--deep);font-size:13px;font-weight:700;border-bottom:0 solid var(--line);transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
-.ptr.ready{background:#d4e7df}
+.ptr.ready{background:#cde5f7}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto}
-header h1{font-size:24px;color:var(--grn)}
+header h1{font-size:24px;color:var(--deep)}
 header p{margin:4px 0 0;font-size:14px;color:var(--mut)}
 .embed header{display:none}
 main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
@@ -48,7 +48,7 @@ main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 .note.w{background:#f6ece0;color:#6b4a1b}.note.b{background:#f6e4dc;color:var(--bad);font-weight:600}
 .card img{width:100%;border:1px solid var(--line);border-radius:16px;margin-top:6px;background:#fff}
 .lnk{background:none;border:0;color:var(--grn);text-decoration:underline;font-size:15px;padding:6px 0;cursor:pointer}
-.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px 14px;display:flex;justify-content:center}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom, 0px));display:flex;justify-content:center}
 .bar .btn{max-width:616px}
 #msg{font-size:15px;margin-top:10px;color:var(--grn);line-height:1.5}
 [hidden]{display:none!important}
@@ -359,6 +359,8 @@ try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").ca
   document.addEventListener("touchstart",e=>{
     if(busy||!e.touches||e.touches.length!==1)return;
     if(scrollTop()>2){lock="up";return}
+    const tgt=e.target;
+    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])")||tgt.closest("input, textarea, select, .bar"))){lock="modal";return}
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
   },{passive:true});
   document.addEventListener("touchmove",e=>{

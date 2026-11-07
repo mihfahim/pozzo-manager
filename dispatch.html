@@ -11,22 +11,22 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-:root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
+:root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
-.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--deep);font-size:13px;font-weight:700;border-bottom:0 solid var(--line);transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
-.ptr.ready{background:#d4e7df}
+.ptr.ready{background:#cde5f7}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
-header h1{font-size:22px;color:var(--grn)}
+header h1{font-size:22px;color:var(--deep)}
 .embed header{display:none}
 main{width:100%;max-width:920px;margin:0 auto;padding:14px 12px;overflow-x:hidden}
 .num{font-variant-numeric:tabular-nums}
@@ -45,11 +45,18 @@ main{width:100%;max-width:920px;margin:0 auto;padding:14px 12px;overflow-x:hidde
 
 /* Filter Tabs & Search */
 .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px;max-width:100%}
-.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto}
-.seg button{flex:none;border:0;border-radius:999px;padding:8px 14px;background:transparent;color:var(--mut);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.seg{display:flex;flex-wrap:nowrap;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;border:0;border-radius:999px;padding:8px 14px;background:transparent;color:var(--mut);font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
 .seg button.on{background:var(--grn);color:#fff}
-.ctrl-right{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between}
-.search{flex:1;min-width:0;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
+.ctrl-right{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between;flex-wrap:wrap}
+.period-sel{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--grn);border-radius:14px;padding:4px 10px;min-height:44px;box-shadow:0 1px 3px rgba(31,111,168,.1)}
+.period-sel label{font-size:13px;color:var(--grn);font-weight:700;margin-right:6px;white-space:nowrap}
+.period-sel select{border:0;background:#fff;padding:6px 20px 6px 4px;font:inherit;font-size:14px;font-weight:700;color:var(--deep);cursor:pointer;outline:none;appearance:auto}
+.custom-dates{display:flex;gap:8px;align-items:center;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-top:6px;flex-wrap:wrap}
+.custom-dates label{font-size:12px;color:var(--mut);font-weight:600}
+.custom-dates input[type="date"]{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:10px;background:var(--in);font:inherit;font-size:13px;color:var(--ink)}
+.search{flex:1;min-width:160px;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
 
 /* Alerts & Banners */
 .flash{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--bd);color:var(--grn);border:1px solid #c6ddd4;border-radius:16px;padding:12px 15px;margin-bottom:14px;font-size:14px;font-weight:600;max-width:100%;overflow-wrap:anywhere}
@@ -81,7 +88,7 @@ main{width:100%;max-width:920px;margin:0 auto;padding:14px 12px;overflow-x:hidde
 
 /* Packing Window Modal */
 .modal{position:fixed;inset:0;background:rgba(30,25,15,.5);display:flex;align-items:flex-end;justify-content:center;z-index:40;padding:12px}
-.sheet{background:var(--card);width:100%;max-width:560px;border-radius:26px;padding:22px 20px 22px;max-height:90vh;overflow:auto;border:1px solid var(--line);box-shadow:0 12px 32px rgba(20,18,12,.22)}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:26px;padding:22px 20px 22px;max-height:90vh;overflow:auto;border:1px solid var(--line);box-shadow:0 12px 32px rgba(20,18,12,.22);-webkit-overflow-scrolling:touch}
 .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .sheet-kicker{font-size:13px;font-weight:700;color:var(--grn);margin-bottom:3px}
 .sheet h3{font-size:24px;line-height:1.15}
@@ -238,11 +245,22 @@ function goTab(tab,extra){
   const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",sticker:"stickers.html",stickers:"stickers.html"};
   if(map[tab])window.location.href=map[tab];
 }
+function fmtDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())}
+function monthBounds(y,m){
+  const start=new Date(y,m-1,1);
+  const end=new Date(y,m,0);
+  return {from:fmtDate(start),to:fmtDate(end)};
+}
+const tdNow=today();
+const curMonthInit=monthBounds(Number(tdNow.slice(0,4)),Number(tdNow.slice(5,7)));
 
 let state={
   loading:true,
   filter:"topack", // 'topack' | 'packed' | 'all'
-  sortOrder:"oldest", // 'oldest' | 'newest'
+  period:"month", // default: 'month' (This month), 'today', 'week', 'last_month', 'all', 'custom'
+  customFrom:curMonthInit.from,
+  customTo:tdNow,
+  sortOrder:"newest", // 'newest' | 'oldest'
   q:"",
   orders:[],
   statusMsg:"",
@@ -252,26 +270,80 @@ let state={
   modal:null // {order, checked:{[idx]:true}}
 };
 
-async function loadDispatch(silent){
-  if(!silent){state.loading=true;render()}
+function activePeriodBounds(){
+  const td=today();
+  const y=Number(td.slice(0,4)),m=Number(td.slice(5,7)),day=Number(td.slice(8,10));
+  if(state.period==="month")return monthBounds(y,m);
+  if(state.period==="last_month"){
+    const pm=m===1?12:m-1,py=m===1?y-1:y;
+    return monthBounds(py,pm);
+  }
+  if(state.period==="today")return {from:td,to:td};
+  if(state.period==="week"){
+    const start=new Date(y,m-1,day-6);
+    return {from:fmtDate(start),to:td};
+  }
+  if(state.period==="all")return {from:"2020-01-01",to:"2099-12-31"};
+  const f=state.customFrom||curMonthInit.from,t=state.customTo||td;
+  return f<=t?{from:f,to:t}:{from:t,to:f};
+}
+
+const DISP_CACHE_KEY="pt_disp_cache";
+function getCachedDisp(){
+  try{
+    const raw=sessionStorage.getItem(DISP_CACHE_KEY);
+    if(!raw)return null;
+    const p=JSON.parse(raw);
+    return(p&&p.orders&&typeof p.ts==="number")?p:null;
+  }catch(e){return null}
+}
+function setCachedDisp(orders){
+  try{sessionStorage.setItem(DISP_CACHE_KEY,JSON.stringify({ts:Date.now(),orders:orders}))}catch(e){}
+}
+function clearDispCache(){
+  try{sessionStorage.removeItem(DISP_CACHE_KEY)}catch(e){}
+}
+
+let _dispFetchPromise=null;
+async function loadDispatch(silent,fresh){
+  const cached=getCachedDisp();
+  if(cached&&cached.orders&&!state.orders.length){
+    state.orders=normalizeOrders(cached.orders);
+    state.loading=false;
+    render();
+    if(!fresh&&(Date.now()-cached.ts<90000))return;
+  }else if(!silent&&!state.orders.length){
+    state.loading=true;render();
+  }
+
   const c=cfg();
   if(!c.url||!c.key){state.loading=false;state.orders=[];render();return}
-  let j=await api({action:"dispatchlist",today:today(),fresh:true});
-  if(!j.ok&&j.error!=="nocfg"){
-    // Fallback if script version is older
-    j=await api({action:"recentorders",today:today(),limit:50});
-  }
-  state.loading=false;
-  if(!j.ok){
-    if(!silent){state.statusMsg=j.error||"Could not load orders";state.isErr=true;render()}
-    return;
-  }
-  state.orders=normalizeOrders(j.orders||[]);
-  render();
-  if(state.modal&&state.modal.order){
-    const updated=state.orders.find(x=>x.id===state.modal.order.id);
-    if(updated){state.modal.order=updated;renderPackWindow()}
-  }
+
+  if(_dispFetchPromise)return _dispFetchPromise;
+  _dispFetchPromise=(async()=>{
+    try{
+      let j=await api({action:"dispatchlist",today:today(),fresh:!!fresh});
+      if(!j.ok&&j.error!=="nocfg"){
+        // Fallback if script version is older
+        j=await api({action:"recentorders",today:today(),limit:50});
+      }
+      state.loading=false;
+      if(!j.ok){
+        if(!silent&&!state.orders.length){state.statusMsg=j.error||"Could not load orders";state.isErr=true;render()}
+        return;
+      }
+      state.orders=normalizeOrders(j.orders||[]);
+      setCachedDisp(j.orders||[]);
+      render();
+      if(state.modal&&state.modal.order){
+        const updated=state.orders.find(x=>x.id===state.modal.order.id);
+        if(updated){state.modal.order=updated;renderPackWindow()}
+      }
+    }finally{
+      _dispFetchPromise=null;
+    }
+  })();
+  return _dispFetchPromise;
 }
 
 function openPackWindow(orderId){
@@ -301,6 +373,7 @@ async function markOrderDone(orderId){
   const stamp=nowStamp();
   o.packed=stamp;
   saveLocalPacked(o.id,stamp);
+  clearDispCache();
   state.lastPackedId=o.id;
   state.statusMsg="Packed "+(o.name||"customer")+" ("+o.id+") — removed from To pack list.";
   state.isErr=false;
@@ -315,6 +388,7 @@ async function markOrderDone(orderId){
   }else if(j&&j.error&&j.error!=="nocfg"&&j.error!=="no connection"&&j.error!=="slow"){
     o.packed="";
     saveLocalPacked(o.id,"");
+    clearDispCache();
     state.lastPackedId="";
     state.statusMsg="Could not save packed status: "+j.error;
     state.isErr=true;
@@ -327,6 +401,7 @@ async function unpackOrder(orderId){
   if(!o)return;
   o.packed="";
   saveLocalPacked(o.id,"");
+  clearDispCache();
   state.lastPackedId="";
   state.statusMsg="Moved "+(o.name||"customer")+" ("+o.id+") back to To pack list.";
   state.isErr=false;
@@ -449,16 +524,51 @@ function dismissParcelExport(){
   render();
 }
 
+function parseOrderDate(rawDate, rawId){
+  if(rawDate){
+    const s=String(rawDate).trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+    const m=s.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+    if(m){
+      const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const mi=M.indexOf(m[2].toUpperCase());
+      if(mi>-1){
+        const p=n=>String(n).padStart(2,"0");
+        return m[3]+"-"+p(mi+1)+"-"+p(Number(m[1]));
+      }
+    }
+  }
+  if(rawId){
+    const m=String(rawId).toUpperCase().match(/^PZ(\d{2})([A-Z]{3})/);
+    if(m){
+      const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const mi=M.indexOf(m[2]);
+      if(mi>-1){
+        const yr="20"+m[1];
+        const p=n=>String(n).padStart(2,"0");
+        return yr+"-"+p(mi+1)+"-15";
+      }
+    }
+  }
+  return "";
+}
+
 function filteredOrders(){
   const ql=state.q.trim().toLowerCase();
+  const bounds=activePeriodBounds();
+  const applyPeriod=(state.filter==="packed"||state.filter==="all");
   let list=state.orders.filter(o=>{
     if(state.filter==="topack"&&o.packed)return false;
     if(state.filter==="packed"&&!o.packed)return false;
+    if(applyPeriod&&state.period!=="all"){
+      const od=parseOrderDate(o.date,o.id);
+      if(od&&(od<bounds.from||od>bounds.to))return false;
+    }
     if(!ql)return true;
     const itemText=(o.items||[]).map(it=>it.name+" "+it.displayName+" "+it.variant).join(" ");
     return (o.id+" "+o.name+" "+o.phone+" "+o.address+" "+itemText).toLowerCase().includes(ql);
   });
-  if(state.sortOrder==="newest")list=list.slice().reverse();
+  if(state.sortOrder==="oldest")list=list.slice().reverse();
   return list;
 }
 
@@ -506,9 +616,27 @@ function render(){
       <button type="button" class="${state.filter==="all"?"on":""}" onclick="state.filter='all';render()">All (${state.orders.length})</button>
     </div>
     <div class="ctrl-right">
-      <button class="btn sm" type="button" onclick="state.sortOrder=state.sortOrder==='oldest'?'newest':'oldest';render()">${state.sortOrder==="oldest"?"Oldest first":"Newest first"}</button>
+      <div class="period-sel" title="Filter orders by order date">
+        <label for="dispPeriod"> </label>
+        <select id="dispPeriod" onchange="state.period=this.value;render()">
+          <option value="month"${state.period==="month"?" selected":""}>This month</option>
+          <option value="today"${state.period==="today"?" selected":""}>Today</option>
+          <option value="week"${state.period==="week"?" selected":""}>Last 7 days</option>
+          <option value="last_month"${state.period==="last_month"?" selected":""}>Last month</option>
+          <option value="all"${state.period==="all"?" selected":""}>All time</option>
+          <option value="custom"${state.period==="custom"?" selected":""}>Custom range…</option>
+        </select>
+      </div>
+      <button class="btn sm" type="button" onclick="state.sortOrder=state.sortOrder==='newest'?'oldest':'newest';render()">${state.sortOrder==="newest"?"Newest first":"Oldest first"}</button>
       <input class="search" type="search" placeholder="Search customer, ID, product" value="${esc(state.q)}" oninput="state.q=this.value;render()">
     </div>
+    ${state.period==="custom"?`
+    <div class="custom-dates">
+      <label>From:</label>
+      <input type="date" value="${esc(state.customFrom)}" onchange="state.customFrom=this.value;render()">
+      <label style="margin-left:6px">To:</label>
+      <input type="date" value="${esc(state.customTo)}" onchange="state.customTo=this.value;render()">
+    </div>`:""}
   </div>
 
   <div class="card">
@@ -543,30 +671,30 @@ function render(){
 
 window.addEventListener("message",e=>{
   const d=e&&e.data;
-  if(d&&(d.type==="pozzo:refresh-dispatch"||d.type==="pozzo:order-dirty"))loadDispatch(true);
+  if(d&&(d.type==="pozzo:refresh-dispatch"||d.type==="pozzo:order-dirty")){
+    clearDispCache();
+    loadDispatch(true,true);
+  }
 });
 
 try{
   if(typeof BroadcastChannel!=="undefined"){
     const ch=new BroadcastChannel("pozzo_sync");
     ch.addEventListener("message",e=>{
-      if(e&&e.data&&e.data.type==="pozzo:order-dirty")loadDispatch(true);
+      if(e&&e.data&&e.data.type==="pozzo:order-dirty"){
+        clearDispCache();
+        loadDispatch(true,true);
+      }
     });
   }
 }catch(e){}
 
 window.addEventListener("storage",e=>{
-  if(e&&(e.key==="pt_orders"||e.key===PACK_STORE_KEY))loadDispatch(true);
+  if(e&&(e.key==="pt_orders"||e.key===PACK_STORE_KEY)){
+    clearDispCache();
+    loadDispatch(true,true);
+  }
 });
-
-document.addEventListener("visibilitychange",()=>{
-  if(!document.hidden)loadDispatch(true);
-});
-
-const _dispPoll=setInterval(()=>{
-  if(!document.hidden&&!state.modal)loadDispatch(true);
-},45000);
-if(_dispPoll&&typeof _dispPoll.unref==="function")_dispPoll.unref();
 
 (function initPTR(onRefresh){
   if(typeof document==="undefined")return;
@@ -600,7 +728,7 @@ if(_dispPoll&&typeof _dispPoll.unref==="function")_dispPoll.unref();
     if(busy||!e.touches||e.touches.length!==1)return;
     if(scrollTop()>2){lock="up";return}
     const tgt=e.target;
-    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])"))){lock="modal";return}
+    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])")||tgt.closest("input, textarea, select"))){lock="modal";return}
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
   },{passive:true});
   document.addEventListener("touchmove",e=>{

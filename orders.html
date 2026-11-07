@@ -12,22 +12,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-:root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--amb:#8a5a14}
+:root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--amb:#8a5a14;--blue:#1f6fa8;--deep:#0f3f66;--cod:#e9f4fc;--codb:#bfddf2}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:96px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
-.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--deep);font-size:13px;font-weight:700;border-bottom:0 solid var(--line);transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
-.ptr.ready{background:#d4e7df}
+.ptr.ready{background:#cde5f7}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 header img{display:block;margin:0 auto 4px;width:110px;max-width:42%;height:auto}
-header h1{font-size:24px;color:var(--grn)}
+header h1{font-size:24px;color:var(--deep)}
 .embed header{display:none}
 main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
@@ -67,7 +67,7 @@ textarea{resize:vertical;line-height:1.5}
 .sum.g{border-top:1px solid var(--line);margin-top:6px;padding-top:14px;font-size:20px;font-weight:700}
 .sum.g span:last-child{font-size:30px;font-family:Georgia,serif}
 pre{white-space:pre-wrap;background:#ede6db;border-radius:18px;padding:16px;font:inherit;color:var(--mut);margin:0;line-height:1.6}
-.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:12px;padding:12px 16px 14px;background:var(--card);border-top:1px solid var(--line);z-index:10}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:12px;padding:12px 16px calc(14px + env(safe-area-inset-bottom, 0px));background:var(--card);border-top:1px solid var(--line);z-index:10}
 .bar .btn{flex:1}.bar .btn:first-child{flex:.9}.bar .btn.p{flex:1.1}
 .warn{background:#f6ece0;border:1px solid #e8d5b8;border-radius:16px;padding:12px 14px;margin-bottom:12px;font-size:15px;color:#6b4a1b;line-height:1.45}
 .warn.bad{background:#f6e4dc;border-color:#e8bfae;color:var(--bad);font-weight:600}
@@ -77,6 +77,13 @@ pre{white-space:pre-wrap;background:#ede6db;border-radius:18px;padding:16px;font
 .so .meta{flex:1;min-width:0}
 .ver{text-align:center;color:var(--mut);font-size:13px;margin:6px 0 0}
 [hidden]{display:none!important}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  header,.bar,#ptr,.top,.hint,button,.row,.card h3,#mmsg{display:none!important}
+  main{max-width:100%;padding:0;margin:0}
+  .card{border:0;box-shadow:none;padding:0;margin:0}
+  #memoimg{border:0;border-radius:0;width:100%;max-width:100%;height:auto;display:block}
+}
 </style>
 </head>
 <body>
@@ -958,14 +965,17 @@ async function drawMemo(o,noLogo){
       if(stroke){cx.strokeStyle=stroke;cx.lineWidth=2;cx.stroke()}
     };
     const HR=yy=>{if(draw){cx.fillStyle=LINE;cx.fillRect(P,yy,IN,1)}};
-    let y=30;
+    let y=22;
+    const headerHeight=110;
     if(logo&&logo.naturalWidth){
-      const sc=Math.min(180/logo.naturalWidth,110/logo.naturalHeight),lw=logo.naturalWidth*sc,lh=logo.naturalHeight*sc;
-      if(draw)cx.drawImage(logo,(W-lw)/2,y,lw,lh);
-      y+=lh+14;
-    }else{y+=30;T(SHOP.name,W/2,y,"600 32px "+SANS,BLUE,"center");y+=16}
-    y+=16;T(SHOP.fb+" · "+SHOP.phone,W/2,y,"400 20px "+SANS,MUT,"center");
-    y+=40;
+      const sc=Math.min(headerHeight/logo.naturalHeight,220/logo.naturalWidth),lw=logo.naturalWidth*sc,lh=logo.naturalHeight*sc;
+      if(draw)cx.drawImage(logo,P,y+(headerHeight-lh)/2,lw,lh);
+    }
+    T(SHOP.name,W-P,y+50,"700 40px "+SANS,BLUE,"right");
+    T(SHOP.phone,W-P,y+86,"500 24px "+SANS,MUT,"right");
+    y+=headerHeight+14;
+    HR(y);
+    y+=24;
     T("Cash memo",P,y+22,"600 32px "+SANS,BLUE);
     cx.font="600 22px "+SANS;const cw=cx.measureText(o.id).width+36;
     RR(W-P-cw,y-6,cw,40,20,CHIP);
@@ -1037,8 +1047,15 @@ async function showMemo(order,msg,stockPending){
   ${stockPending?`<p id="stockline" class="hint" style="margin:0 4px 12px">Updating stock…</p>`:""}
   <div class="card"><h3>Cash memo</h3><p class="hint">The memo is not stored. You can rebuild it any time from the order ID.</p>
     <img id="memoimg" alt="Cash memo" style="width:100%;border:1px solid var(--line);border-radius:12px;min-height:120px">
-    <div class="row" style="margin-top:14px"><button class="btn p" type="button" onclick="memoPng()">Download PNG</button><button class="btn p" type="button" onclick="memoPdf()">Download PDF</button></div>
-    <button class="btn" type="button" style="margin-top:12px" onclick="memoShare()">Share</button>
+    <div class="row" style="margin-top:14px">
+      <button class="btn p" id="copyBtn" type="button" onclick="memoCopy()">📋 Copy Image</button>
+      <button class="btn p" type="button" onclick="memoPng()">Download PNG</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" type="button" onclick="memoPrint()">🖨️ Print Memo</button>
+      <button class="btn" type="button" onclick="memoPdf()">Download PDF</button>
+    </div>
+    <button class="btn" type="button" style="margin-top:10px" onclick="memoShare()">Share</button>
     <p id="mmsg" class="hint" style="margin-top:10px"></p></div>
   <button class="btn" type="button" onclick="home()">Done</button>`;
   try{MEMO.cv=await drawMemo(order);$("#memoimg").src=MEMO.cv.toDataURL("image/png")}
@@ -1050,6 +1067,35 @@ function memoSave(blob,name){
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 const memoBlob=()=>new Promise(r=>MEMO.cv.toBlob(r,"image/png"));
+async function memoCopy(){
+  if(!MEMO||!MEMO.cv)return;
+  const m=$("#mmsg"),btn=$("#copyBtn");
+  m.textContent="";
+  try{
+    const blob=await memoBlob();
+    if(navigator.clipboard&&window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+      if(btn){
+        const orig=btn.textContent;btn.textContent="✓ Copied to clipboard!";
+        setTimeout(()=>{if(btn)btn.textContent=orig},2500);
+      }
+      m.textContent="✓ Memo image copied! You can now paste (Ctrl+V) directly into WhatsApp or Messenger.";
+      return;
+    }
+    throw new Error("ClipboardItem not supported");
+  }catch(e){
+    if(m)m.textContent="Direct image copying is not supported on this browser. Use Download PNG to save and send.";
+  }
+}
+function memoPrint(){
+  if(!MEMO||!MEMO.cv)return;
+  const img=$("#memoimg");
+  if(!img||!img.src){
+    const m=$("#mmsg");if(m)m.textContent="Memo is still rendering, please wait a moment.";
+    return;
+  }
+  window.print();
+}
 async function memoPng(){
   if(!MEMO||!MEMO.cv)return;
   memoSave(await memoBlob(),memoName("png"));
@@ -1181,6 +1227,8 @@ if(!bootOrderFromHash())home();
   document.addEventListener("touchstart",e=>{
     if(busy||!e.touches||e.touches.length!==1)return;
     if(scrollTop()>2){lock="up";return}
+    const tgt=e.target;
+    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])")||tgt.closest("input, textarea, select, .bar"))){lock="modal";return}
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
   },{passive:true});
   document.addEventListener("touchmove",e=>{

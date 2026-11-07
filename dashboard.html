@@ -10,22 +10,22 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#f1ede6;--card:#f9f6f0;--sub:#f2eee7;--in:#fdfcf8;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--bd:#e3eee9;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0}
+:root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:56px;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
 h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
-.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--grn);font-size:13px;font-weight:700;border-bottom:0 solid #c6ddd4;transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--deep);font-size:13px;font-weight:700;border-bottom:0 solid var(--line);transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
-.ptr.ready{background:#d4e7df}
+.ptr.ready{background:#cde5f7}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--grn);text-align:center}
+header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
-header h1{font-size:22px;color:var(--grn)}
+header h1{font-size:22px;color:var(--deep)}
 .embed header{display:none}
 main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidden}
 .num{font-variant-numeric:tabular-nums}
@@ -74,7 +74,7 @@ main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidd
 .sstat .val{font-family:Georgia,"Times New Roman",serif;font-size:24px;font-weight:700;line-height:1.15}
 .sstat .sub{font-size:13px;color:var(--mut);margin-top:4px}
 
-.alert-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.alert-btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
 .abtn{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:74px;padding:14px 16px;border-radius:18px;border:1px solid var(--line);background:var(--in);font:inherit;color:var(--ink);text-align:left;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
 .abtn.warn{background:var(--ambbg);border-color:#e5cfa8}
 .abtn.bad{background:var(--badbg);border-color:#e8bfae}
@@ -130,7 +130,7 @@ main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidd
 
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(30,25,15,.46);display:flex;align-items:flex-end;justify-content:center;z-index:30;padding:12px}
-.sheet{background:var(--card);width:100%;max-width:560px;border-radius:26px;padding:22px 20px 24px;max-height:90vh;overflow:auto;border:1px solid var(--line)}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:26px;padding:22px 20px 24px;max-height:90vh;overflow:auto;border:1px solid var(--line);-webkit-overflow-scrolling:touch}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
 .sheet h3{font-size:23px}
 .sheet .sub{color:var(--mut);margin:0 0 14px;font-size:14px;line-height:1.45}
@@ -159,6 +159,7 @@ main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidd
   .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:4px}
   .seg button{width:100%;min-width:0;padding:8px 4px;font-size:12.5px;text-align:center;overflow:hidden;text-overflow:ellipsis}
   .kpis,.stock-stats,.alert-btns,.navgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .alert-btns .abtn:nth-child(3){grid-column:span 2}
   .stock-stats .sstat-wide{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;gap:10px}
   .cols{grid-template-columns:1fr}
 }
@@ -296,21 +297,69 @@ function allCategories(){
   return out;
 }
 
+const DASH_CACHE_PREFIX="pt_dash_";
+function getCachedDash(key){
+  try{
+    const raw=sessionStorage.getItem(DASH_CACHE_PREFIX+key);
+    if(!raw)return null;
+    const p=JSON.parse(raw);
+    return(p&&p.data&&typeof p.ts==="number")?p:null;
+  }catch(e){return null}
+}
+function setCachedDash(key,data){
+  try{sessionStorage.setItem(DASH_CACHE_PREFIX+key,JSON.stringify({ts:Date.now(),data:data}))}catch(e){}
+}
+function clearDashCache(){
+  try{
+    Object.keys(sessionStorage).forEach(k=>{
+      if(k.startsWith(DASH_CACHE_PREFIX))sessionStorage.removeItem(k);
+    });
+  }catch(e){}
+}
+
+let _dashFetchPromise=null;
 async function loadDashboard(fresh){
-  state.loading=true;state.error="";
-  render();
+  const r=activeDates();
+  const cacheKey=r.from+"_"+r.to+"_"+(r.range||"");
+  const cached=getCachedDash(cacheKey);
+
+  // Instant render from client cache if available
+  if(cached&&cached.data){
+    state.data=cached.data;
+    state.loading=false;
+    state.error="";
+    render();
+    if(!fresh&&(Date.now()-cached.ts<90000))return;
+  }else if(!state.data){
+    state.loading=true;state.error="";
+    render();
+  }
+
   const c=cfg();
   if(!c.url||!c.key){state.loading=false;state.error="nocfg";render();return}
-  const r=activeDates();
-  const j=await api({action:"dashboard",from:r.from,to:r.to,range:r.range||"",today:today(),fresh:!!fresh});
-  state.loading=false;
-  if(!j.ok){state.error=j.error||"Could not load dashboard data";render();return}
-  state.data=j;
-  if(Array.isArray(j.categories)){
-    const customOnly=j.categories.filter(x=>!DEFAULT_CATS.some(d=>d.toLowerCase()===x.toLowerCase()));
-    if(customOnly.length)saveLocalCats(customOnly);
-  }
-  render();
+
+  // Deduplicate overlapping requests
+  if(_dashFetchPromise)return _dashFetchPromise;
+  _dashFetchPromise=(async()=>{
+    try{
+      const j=await api({action:"dashboard",from:r.from,to:r.to,range:r.range||"",today:today(),fresh:!!fresh});
+      state.loading=false;
+      if(!j.ok){
+        if(!state.data){state.error=j.error||"Could not load dashboard data";render()}
+        return;
+      }
+      state.data=j;
+      setCachedDash(cacheKey,j);
+      if(Array.isArray(j.categories)){
+        const customOnly=j.categories.filter(x=>!DEFAULT_CATS.some(d=>d.toLowerCase()===x.toLowerCase()));
+        if(customOnly.length)saveLocalCats(customOnly);
+      }
+      render();
+    }finally{
+      _dashFetchPromise=null;
+    }
+  })();
+  return _dashFetchPromise;
 }
 
 function setRange(mode){
@@ -354,6 +403,7 @@ function render(){
     outCount:0,outRestockCost:0,outUnitSaleValue:0,outItems:[],
     issues:0,tocheck:0
   };
+  const alerts=d&&Array.isArray(d.predictiveAlerts)?d.predictiveAlerts:[];
   const p=d&&d.period?d.period:{
     salesValue:0,billedSales:0,customerDelivery:0,
     salesCount:0,soldUnits:0,returnedCount:0,cancelledCount:0,
@@ -484,6 +534,13 @@ function render(){
           <div class="act num">Stock val ৳ 0 · Unit sale ${tk(s.outUnitSaleValue)}</div>
         </div>
       </button>
+
+      <button class="abtn ${alerts.length?"warn":""}" type="button" onclick="openStockListModal('predictive')">
+        <div>
+          <div class="atitle num">Predictive Alert</div>
+          <div class="asub num">${alerts.length} items < 15 days</div>
+        </div>
+      </button>
     </div>
   </section>
 
@@ -510,6 +567,14 @@ function render(){
           <span class="num">${tk(b.amount)} (${b.pct}%)</span>
         </div>`).join("")}</div>
       </div>`:""}
+
+      <div style="margin-bottom:14px">
+        <div class="sec-label" style="margin-bottom:6px">Top 10 Bestsellers</div>
+        <div class="cat-list">${d&&d.bestSellers&&d.bestSellers.length?d.bestSellers.map(b=>`<div class="cat-row">
+          <span><b>${esc(b.name || b.pid)}</b></span>
+          <span class="num">${b.qty} units</span>
+        </div>`).join(""):'<div class="empty">No sales in this period.</div>'}</div>
+      </div>
 
       <div class="card-head" style="margin-top:8px;margin-bottom:6px">
         <span class="sec-label" style="margin:0">Expense entries (${p.expenses.length})</span>
@@ -571,10 +636,37 @@ function render(){
             <b>Dispatch</b>
             <span class="num">${awaitingPack} to pack · ${awaitingDispatch} parcel file</span>
           </button>
+          <button class="navtile" type="button" onclick="openBackupModal()">
+            <b>Backup &amp; Restore</b>
+            <span>Excel download &amp; sheet</span>
+          </button>
         </div>
+      </section>
+
+      <section class="card" aria-label="Sales Trends">
+        <div class="card-head"><h3>Sales Trends (Day of Week)</h3></div>
+        <div class="cat-list">${(()=>{
+          if(!d||!d.salesTrends)return '<div class="empty">No trend data.</div>';
+          const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+          const max=Math.max(...d.salesTrends, 1);
+          return days.map((day,i)=>{
+            const val=d.salesTrends[i]||0;
+            const pct=Math.round((val/max)*100);
+            return `<div class="cat-row" style="flex-direction:column;align-items:stretch;gap:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span><b>${day}</b></span>
+                <span class="num">${val} units</span>
+              </div>
+              <div style="height:6px;background:var(--sub);border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:var(--grn);border-radius:3px;transition:width .3s ease"></div>
+              </div>
+            </div>`;
+          }).join("");
+        })()}</div>
       </section>
     </div>
   </div>`;
+
 }
 
 /* ---------- Modals: Add Expense & Custom Categories, Low/Out Stock Lists, Purchases ---------- */
@@ -714,6 +806,7 @@ async function submitExpense(){
     return;
   }
   closeModal();
+  clearDashCache();
   state.flash="Saved expense: "+cat+" ("+tk(amt)+")";
   await loadDashboard(true);
 }
@@ -731,39 +824,46 @@ async function confirmDeleteExpense(id){
     render();
     return;
   }
+  clearDashCache();
   state.flash="Expense entry removed.";
   await loadDashboard(true);
 }
 
 function openStockListModal(kind){
   const s=state.data&&state.data.stock?state.data.stock:{lowItems:[],outItems:[],lowCount:0,lowUnits:0,lowCostValue:0,lowSaleValue:0,outCount:0,outRestockCost:0,outUnitSaleValue:0};
+  const alerts=state.data&&Array.isArray(state.data.predictiveAlerts)?state.data.predictiveAlerts:[];
   const isOut=kind==="out";
-  const items=isOut?(s.outItems||[]):(s.lowItems||[]);
+  const isPredictive=kind==="predictive";
+  const items=isOut?(s.outItems||[]):(isPredictive?alerts:(s.lowItems||[]));
   const m=$("#modal");
   m.hidden=false;
   m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="stkModalTitle">
     <div class="sheet-head">
-      <h3 id="stkModalTitle">${isOut?"Out of stock products":"Low stock products"} (${items.length})</h3>
+      <h3 id="stkModalTitle">${isOut?"Out of stock products":isPredictive?"Predictive Alerts (Low stock risk)":"Low stock products"} (${items.length})</h3>
       <button class="btn sm" type="button" onclick="closeModal()">Close</button>
     </div>
     <p class="sub num">${isOut
       ?`Estimated restock cost to reach low-stock targets: <b>${tk(s.outRestockCost)}</b> · Sum of unit sale prices: <b>${tk(s.outUnitSaleValue)}</b>`
-      :`Total remaining units: <b>${s.lowUnits} pcs</b> · Value at cost: <b>${tk(s.lowCostValue)}</b> · Value at sale: <b>${tk(s.lowSaleValue)}</b>`
+      :isPredictive
+        ?`Products projected to run out in less than 15 days.`
+        :`Total remaining units: <b>${s.lowUnits} pcs</b> · Value at cost: <b>${tk(s.lowCostValue)}</b> · Value at sale: <b>${tk(s.lowSaleValue)}</b>`
     }</p>
     ${items.length?`<div class="list">${items.map(it=>`<div class="item" style="cursor:default">
       <div class="main">
         <div class="title num">${esc(it.id)} · ${esc(it.name)}</div>
         <div class="meta num">${isOut
           ?`Stock: <b>${it.stock}</b> · Target min: ${it.low||1} · Unit cost ${tk(it.cost)} · Sale ${tk(it.price)}`
-          :`Stock: <b>${it.stock}</b> (min ${it.low}) · Unit cost ${tk(it.cost)} · Sale ${tk(it.price)}`
+          :isPredictive
+            ?`Current stock: <b>${it.currentStock}</b> · <b>${it.daysRemaining} days remaining</b>`
+            :`Stock: <b>${it.stock}</b> (min ${it.low}) · Unit cost ${tk(it.cost)} · Sale ${tk(it.price)}`
         }</div>
       </div>
       <div class="side">
-        <div class="amt num">${isOut?"Restock "+tk(it.restockCost):"Cost "+tk(it.valueCost)}</div>
-        <div class="meta num">${isOut?"Unit sale "+tk(it.price):"Sale "+tk(it.valueSale)}</div>
+        <div class="amt num">${isOut?"Restock "+tk(it.restockCost):isPredictive?"&nbsp;":"Cost "+tk(it.valueCost)}</div>
+        <div class="meta num">${isOut?"Unit sale "+tk(it.price):isPredictive?"&nbsp;":"Sale "+tk(it.valueSale)}</div>
       </div>
     </div>`).join("")}</div>`
-    :`<div class="empty">${isOut?"Great news — no products are out of stock right now.":"No products are running low right now."}</div>`}
+    :`<div class="empty">${isOut?"Great news — no products are out of stock right now.":isPredictive?"All products have more than 15 days of stock.":"No products are running low right now."}</div>`}
     <div class="acts">
       <button class="btn" type="button" onclick="closeModal()">Close</button>
       <button class="btn p" type="button" onclick="closeModal();goTab('stock')">Go to Stock &rarr;</button>
@@ -800,8 +900,36 @@ function openPurchasesModal(){
   </div>`;
 }
 
+function openBackupModal(){
+  const m=$("#modal");
+  m.hidden=false;
+  const sid=state.data&&state.data.stockSheetId;
+  const sUrl=(state.data&&state.data.stockUrl)||(sid?"https://docs.google.com/spreadsheets/d/"+sid:"");
+  const exportUrl=sid?"https://docs.google.com/spreadsheets/d/"+sid+"/export?format=xlsx":"";
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bkModalTitle">
+    <div class="sheet-head">
+      <h3 id="bkModalTitle">Backup &amp; Restore</h3>
+      <button class="btn sm" type="button" onclick="closeModal()">Close</button>
+    </div>
+    <p class="sub">Download your live Pozzo Stock sheet as an Excel file (.xlsx) or open the Google Sheet directly.</p>
+    ${sid?`
+    <div class="acts" style="flex-direction:column;gap:10px">
+      <a class="btn p" style="text-decoration:none;text-align:center" href="${esc(exportUrl)}" target="_blank" rel="noopener" download="Pozzo_Stock_Backup.xlsx">&#11123; Download Excel Backup (.xlsx)</a>
+      <a class="btn" style="text-decoration:none;text-align:center" href="${esc(sUrl)}" target="_blank" rel="noopener">&#8599; Open Stock Google Sheet</a>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:var(--in);border:1px solid var(--line);border-radius:14px;font-size:13px;color:var(--mut);line-height:1.45">
+      <b>How to restore from Excel:</b> Click <b>Open Stock Google Sheet</b> above, go to <b>File &gt; Import</b>, click the <b>Upload</b> tab, choose your Excel file, and select <i>Replace spreadsheet</i>.
+    </div>`:
+    `<div class="empty">Connecting to sheet… Please try again in a moment.</div>`}
+  </div>`;
+}
+
+
 window.addEventListener("message",e=>{
-  if(e&&e.data&&e.data.type==="pozzo:refresh-dashboard")loadDashboard(true);
+  if(e&&e.data&&(e.data.type==="pozzo:refresh-dashboard"||e.data.type==="pozzo:order-dirty")){
+    clearDashCache();
+    loadDashboard(true);
+  }
 });
 
 (function initPTR(onRefresh){
@@ -836,7 +964,7 @@ window.addEventListener("message",e=>{
     if(busy||!e.touches||e.touches.length!==1)return;
     if(scrollTop()>2){lock="up";return}
     const tgt=e.target;
-    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])"))){lock="modal";return}
+    if(tgt&&tgt.closest&&(tgt.closest(".sheet")||tgt.closest(".modal:not([hidden])")||tgt.closest("input, textarea, select"))){lock="modal";return}
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
   },{passive:true});
   document.addEventListener("touchmove",e=>{
