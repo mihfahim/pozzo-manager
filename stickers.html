@@ -14,6 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
 <style>
 :root{--bg:#f4f7fa;--card:#ffffff;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--warn:#8a5a14;--bad:#a8431f;--blue:#1f6fa8;--deep:#0f3f66}
+html.dark{--bg:#0f141b;--card:#18212c;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--warn:#f0b865;--bad:#f28b75;--blue:#4da3e3;--deep:#b8dcf8}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
@@ -22,17 +23,22 @@ h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
 .ptr.ready{background:#cde5f7}
+html.dark .ptr.ready{background:#214563}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
+header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
+html.dark header{background:#141c26}
 header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto}
+.theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.embed .theme-btn{display:none}
 header h1{font-size:24px;color:var(--deep)}
 header p{margin:4px 0 0;font-size:14px;color:var(--mut)}
 .embed header{display:none}
 main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:16px;border-radius:18px;border:1px solid var(--grn);background:var(--grn);color:#fff;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+html.dark .btn:not(.alt){color:#0b1926}
 .btn.alt{background:var(--in);color:var(--ink);border-color:var(--line)}
 .btn:disabled{opacity:.55;cursor:default}
 #sum{margin:14px 0;font-size:16px;line-height:1.6;color:var(--mut)}
@@ -46,6 +52,8 @@ main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 .card textarea{resize:none;overflow:hidden;line-height:1.45;display:block}
 .note{font-size:15px;margin:8px 0;padding:10px 12px;border-radius:14px}
 .note.w{background:#f6ece0;color:#6b4a1b}.note.b{background:#f6e4dc;color:var(--bad);font-weight:600}
+html.dark .note.w{background:#362916;color:#f3c87c}
+html.dark .note.b{background:#3b1d19;color:#f59b87}
 .card img{width:100%;border:1px solid var(--line);border-radius:16px;margin-top:6px;background:#fff}
 .lnk{background:none;border:0;color:var(--grn);text-decoration:underline;font-size:15px;padding:6px 0;cursor:pointer}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom, 0px));display:flex;justify-content:center}
@@ -55,9 +63,9 @@ main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 </style>
 </head>
 <body>
-<script>if(window.self!==window.top)document.documentElement.classList.add("embed")</script>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Stickers</h1><p>Steadfast labels &rarr; Parcel tag Excel</p></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Stickers</h1><p>Steadfast labels &rarr; Parcel tag Excel</p></header>
 <main>
   <input id="f" type="file" accept="application/pdf" multiple hidden>
   <button class="btn" onclick="f.click()">Choose label PDF</button>
@@ -109,7 +117,7 @@ async function readPdf(file){
     };
     const lines=rows.map(r=>joinItems(r.items));
     const p=parse(lines,file.name,n);
-    if(BN.test(p.name+p.addr)){msg.style.color="#14202e";msg.textContent="Reading Bangla from page "+n+" (first run downloads language data)...";await ocrFix(p,pg,rows);msg.textContent=""}
+    if(BN.test(p.name+p.addr)){msg.style.color="var(--ink)";msg.textContent="Reading Bangla from page "+n+" (first run downloads language data)...";await ocrFix(p,pg,rows);msg.textContent=""}
     await makeCrop(p,pg,rows);
     P.push(p);
   }
@@ -390,9 +398,23 @@ try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").ca
 })(()=>{
   mark();
   render();
-  msg.style.color="#2b4f48";
+  msg.style.color="var(--grn)";
   msg.textContent=P.length?"Labels refreshed.":"Up to date.";
 });
+function applyTheme(dark,save){
+  try{
+    if(document.documentElement&&document.documentElement.classList)document.documentElement.classList.toggle("dark",!!dark);
+    const tb=document.getElementById("themeBtn");if(tb)tb.textContent=dark?"☀️ Light":"🌙 Dark";
+    if(save)try{localStorage.setItem("pt_theme",dark?"dark":"light")}catch(e){}
+  }catch(e){}
+}
+function toggleTheme(){
+  const d=document.documentElement&&document.documentElement.classList?document.documentElement.classList.contains("dark"):false;
+  applyTheme(!d,true);
+}
+try{applyTheme(localStorage.getItem("pt_theme")==="dark",false)}catch(e){}
+window.addEventListener("message",e=>{if(e&&e.data&&e.data.type==="pozzo:theme")applyTheme(!!e.data.dark,false)});
+window.addEventListener("storage",e=>{if(e&&e.key==="pt_theme")applyTheme(e.newValue==="dark",false)});
 </script>
 </body>
 </html>

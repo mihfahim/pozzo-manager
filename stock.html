@@ -9,9 +9,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 :root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--amb:#8a5a14;--blu:#1f6fa8;--deep:#0f3f66}
+html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--amb:#f0b865;--blu:#4da3e3;--deep:#b8dcf8}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
@@ -20,44 +20,81 @@ h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
 .ptr.ready{background:#cde5f7}
+html.dark .ptr.ready{background:#214563}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blu);text-align:center}
+header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blu);text-align:center}
+html.dark header{background:#141c26}
 header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto}
+.theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.embed .theme-btn{display:none}
 header h1{font-size:22px;color:var(--deep)}
 .embed header{display:none}
 main{width:100%;max-width:640px;margin:auto;padding:14px 12px;overflow-x:hidden}
 .warnbox{background:#f6ece0;border:1px solid #e8d5b8;border-radius:16px;padding:12px 14px;margin-bottom:14px;font-size:15px;color:#6b4a1b}
 .warnbox.bad{background:#f6e4dc;border-color:#e8bfae;color:var(--bad)}
+html.dark .warnbox{background:#362916;border-color:#5a4320;color:#f3c87c}
+html.dark .warnbox.bad{background:#3b1d19;border-color:#69322b;color:#f59b87}
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px;min-width:0}
-.stat small{color:var(--mut);font-size:13px;display:block}
-.stat b{font-family:Georgia,serif;font-size:22px}
+.stat.click{cursor:pointer}
+.stat.click:active{transform:scale(.99)}
+.stat small{color:var(--mut);font-size:12.5px;display:block}
+.stat b{font-family:Georgia,serif;font-size:21px;display:block;margin-top:2px}
+.stat .sub{color:var(--mut);font-size:12px;margin-top:3px;line-height:1.25}
 .stat.warn b{color:var(--amb)}.stat.bad b{color:var(--bad)}
 .seg{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:14px;max-width:100%}
 .seg button{flex:1;min-width:0;border:0;border-radius:999px;padding:10px 4px;background:transparent;color:var(--mut);font:inherit;font-size:14.5px;font-weight:600;cursor:pointer}
 .seg button.on{background:var(--grn);color:#fff}
+html.dark .seg button.on{color:#0b1926}
 .seg i{font-style:normal;background:#e8bfae;color:var(--bad);border-radius:999px;padding:1px 7px;font-size:12px;margin-left:4px}
 .seg button.on i{background:#fff;color:var(--grn)}
+html.dark .seg i{background:#3b1d19;color:#f59b87}
+html.dark .seg button.on i{background:#0b1926;color:#4da3e3}
 input,select,textarea{width:100%;min-width:0;max-width:100%;padding:13px 16px;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
+html.dark select option{background:#18212c;color:#edf2f7}
 textarea{line-height:1.4;resize:vertical}
 label{display:block;font-size:15px;margin:12px 0 6px}
-.chips{display:flex;gap:8px;margin:10px 0 14px;overflow-x:auto;max-width:100%}
-.chips button{flex:none;border:1px solid var(--line);background:var(--in);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.chips{display:flex;gap:8px;margin:10px 0 14px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--in);border-radius:999px;padding:8px 13px;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer}
 .chips button.on{background:var(--bd);border-color:var(--grn);color:var(--grn);font-weight:600}
 .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(60,50,30,.07);max-width:100%;overflow:hidden}
+html.dark .card{box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .card.big{border-radius:26px;padding:20px}
-.card h3{font-size:23px;margin-bottom:6px}
+.card h3{font-size:21px;margin-bottom:6px}
 .prow{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
 .prow>div{min-width:0;flex:1}
 .prow .n{font-weight:600;font-size:16.5px;overflow-wrap:anywhere}
-.prow .s{color:var(--mut);font-size:13.5px;overflow-wrap:anywhere}
-.qty{font-family:Georgia,serif;font-size:25px;text-align:right;line-height:1;flex:none}
+.prow .s{color:var(--mut);font-size:13.5px;overflow-wrap:anywhere;margin-top:2px;line-height:1.35}
+.qty{font-family:Georgia,serif;font-size:24px;text-align:right;line-height:1;flex:none}
+.qty small{display:block;font-family:"Segoe UI",sans-serif;font-size:11.5px;color:var(--mut);margin-top:3px;font-weight:600}
 .qty.low{color:var(--amb)}.qty.out{color:var(--bad)}
-.tag{display:inline-block;font-size:12px;border-radius:999px;padding:2px 8px;margin-left:6px;font-family:"Segoe UI",sans-serif}
-.tag.low{background:#f6e6c9;color:var(--amb)}.tag.out{background:#f6e4dc;color:var(--bad)}.tag.good{background:var(--bd);color:var(--grn)}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:2px 8px;margin-left:6px;font-family:"Segoe UI",sans-serif;font-weight:600;vertical-align:middle}
+.tag.low{background:#f6e6c9;color:var(--amb)}.tag.out{background:#f6e4dc;color:var(--bad)}.tag.good{background:var(--bd);color:var(--grn)}.tag.fast{background:#e3f3eb;color:#176742}
+html.dark .tag.low{background:#362916;color:var(--amb)}
+html.dark .tag.out{background:#3b1d19;color:var(--bad)}
+html.dark .tag.fast{background:#163326;color:#7de0a8}
+.insight{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:13px 14px;margin-bottom:12px}
+.ins-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.ins-head h3{font-size:18px;margin:0}
+.ins-head button{border:0;background:none;color:var(--grn);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;padding:2px 0}
+.ins-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.ins-row:first-of-type{border-top:0;padding-top:2px}
+.ins-main{min-width:0;flex:1}
+.ins-main b{font-size:14.5px;display:block;overflow-wrap:anywhere}
+.ins-main span{font-size:12.5px;color:var(--mut);display:block;margin-top:1px}
+.ins-side{text-align:right;flex:none}
+.ins-side b{font-family:Georgia,serif;font-size:16px;display:block}
+.ins-side span{font-size:12px;color:var(--mut)}
+.ins-side b.bad{color:var(--bad)}.ins-side b.warn{color:var(--amb)}.ins-side b.good{color:var(--grn)}
+.low-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.low-box{background:var(--sub);border:1px solid var(--line);border-radius:14px;padding:9px 11px}
+.low-box small{display:block;font-size:11.5px;color:var(--mut)}
+.low-box b{display:block;font-family:Georgia,serif;font-size:16.5px;margin-top:2px}
+.rank{display:inline-block;min-width:24px;text-align:center;font-size:12px;font-weight:700;border-radius:8px;padding:2px 6px;margin-right:6px;background:var(--bd);color:var(--deep)}
 .det{border-top:1px dashed var(--line);margin-top:12px;padding-top:10px;font-size:15px}
 .det p{margin:4px 0;color:var(--mut)}.det b{color:var(--ink)}
 .det table,table.t{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
@@ -66,7 +103,9 @@ table.t th{color:var(--mut);font-weight:500;border-top:0}
 .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .btn{border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:15px;font-weight:600;padding:11px 14px;color:var(--ink);cursor:pointer}
 .btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
+html.dark .btn.p{color:#0b1926}
 .btn.w{background:#f6e4dc;border-color:#e8bfae;color:var(--bad)}
+html.dark .btn.w{background:#3b1d19;border-color:#69322b;color:#f59b87}
 .btn.f{display:block;width:100%;padding:15px;font-size:17px;border-radius:18px}
 .btn:disabled{opacity:.55;cursor:default}
 .issue .t{font-size:13px;font-weight:700;color:var(--bad);text-transform:uppercase;letter-spacing:.03em}
@@ -78,10 +117,12 @@ table.t th{color:var(--mut);font-weight:500;border-top:0}
 .bar .btn{flex:1;font-size:16px;padding:14px 8px;border-radius:16px;white-space:nowrap}
 .bar .btn.p{flex:1.4}.bar .btn:first-child{flex:1.4}.bar .btn:last-child{flex:.8}
 .modal{position:fixed;inset:0;background:rgba(30,25,15,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+html.dark .modal{background:rgba(5,10,16,.72)}
 .sheet{background:var(--card);width:100%;max-width:640px;border-radius:26px 26px 0 0;padding:20px 18px 24px;max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch}
 .sheet h3{font-size:24px;margin-bottom:4px}
 .sheet .sub{color:var(--mut);margin:0 0 8px;font-size:15px;line-height:1.45}
 .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--grn);color:#fff;border-radius:999px;padding:10px 18px;font-size:15px;z-index:30;max-width:90%;text-align:center}
+html.dark .toast,html.dark #busy{color:#0b1926}
 .empty{text-align:center;color:var(--mut);padding:26px 0}
 .top small{color:var(--mut);font-size:15px}
 .top h2{font-size:30px;margin:2px 0 14px}
@@ -93,6 +134,9 @@ table.t th{color:var(--mut);font-weight:500;border-top:0}
 .calc{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:16px;gap:8px}
 .calc b{font-family:Georgia,serif}
 .note{font-size:14px;margin:8px 0 0;color:var(--mut)}.note.w{color:#6b4a1b}.note.b{color:var(--bad);font-weight:600}
+html.dark .note.w{color:#f3c87c}
+.simwarn{background:#f6ece0;color:#6b4a1b}
+html.dark .simwarn{background:#362916;color:#f3c87c}
 .sum{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:17px}
 .sum.m{color:var(--mut)}
 .sum.g{border-top:1px solid var(--line);margin-top:6px;padding-top:14px;font-size:20px;font-weight:700}
@@ -105,13 +149,17 @@ table.t th{color:var(--mut);font-weight:500;border-top:0}
 .pick.on{border-color:var(--grn);background:var(--bd)}
 .pick .btn{width:100%;margin-top:10px}
 .ver{text-align:center;color:var(--mut);font-size:13px;margin:10px 0 0}
+.sync-note{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bd);color:var(--deep);border:1px solid var(--line);border-radius:16px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600}
+@keyframes skelPulse{0%,100%{opacity:.55}50%{opacity:1}}
+.skel{height:14px;border-radius:8px;background:var(--sub);animation:skelPulse 1.2s ease-in-out infinite}
+.skel.w60{width:60%}.skel.w40{width:40%;margin-top:8px}.skel.num{width:44px;height:28px;border-radius:10px}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<script>if(window.self!==window.top)document.documentElement.classList.add("embed")</script>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Stock</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Stock</h1></header>
 <main id="app"></main>
 <div class="bar" id="bar"><button class="btn p" onclick="ui.newPurchase()">+ New purchase</button><button class="btn" onclick="ui.more()">More</button></div>
 <div id="modal" class="modal" hidden></div>
@@ -126,9 +174,13 @@ const tk=n=>"৳ "+(Math.round(n*100)/100).toLocaleString("en-US");
 function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
 const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
 let CHAIN=Promise.resolve(),INFLIGHT=0;
+const READ_ACTIONS={stockload:1,detail:1,purchases:1,tocheck:1,issues:1,products:1,purchaseplan:1,importplan:1};
 const busy=()=>{const b=$("#busy");if(b)b.hidden=INFLIGHT===0};
 function api(payload){
   INFLIGHT++;busy();
+  if(payload&&READ_ACTIONS[payload.action]){
+    return apiRaw(payload).finally(()=>{INFLIGHT--;busy()});
+  }
   const run=CHAIN.then(()=>apiRaw(payload));
   CHAIN=run.catch(()=>{});
   return run.finally(()=>{INFLIGHT--;busy()});
@@ -152,27 +204,90 @@ function postStockDirty(){
   try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"pozzo:stock-dirty"},"*")}catch(e){}
 }
 
-let S={products:[],counts:{units:0,value:0,low:0,tocheck:0,issues:0},suppliers:[],url:""};
+let S={products:[],counts:{units:0,value:0,low:0,tocheck:0,issues:0},suppliers:[],url:"",predictiveAlerts:[],fastRunners:[]};
 let PLAN=null,IPLAN=null;
 const initH=String(typeof location!=="undefined"?location.hash:"").replace(/^#/,"");
-let loadErr="",view="main",tab=(initH==="issues"?"issues":(initH==="check"?"check":"stock")),fl=(initH==="low"||initH==="out"||initH==="arch")?initH:"all",q="",openId=null,CHK=[],ISS=[],RRET=[],HIST={},PUR=null,RECENT=[],IMP=null;
+let loadErr="",view="main",tab=(initH==="issues"?"issues":(initH==="check"?"check":"stock")),fl=(initH==="low"||initH==="out"||initH==="pred"||initH==="fast"||initH==="arch")?initH:"all",q="",openId=null,rowLim=50,CHK=[],ISS=[],RRET=[],HIST={},PUR=null,RECENT=[],IMP=null;
 const prod=id=>S.products.find(p=>p.id===id);
 const stat=p=>p.stock<=0?"out":p.stock<=p.low?"low":"ok";
 const ui={};
 
 const STOCK_CACHE_KEY="pt_stock_cache";
+const STOCK_PREVIEW_KEY="pt_stock_preview";
 function getCachedStock(){
   try{
-    const raw=sessionStorage.getItem(STOCK_CACHE_KEY);
+    const raw=localStorage.getItem(STOCK_CACHE_KEY)||sessionStorage.getItem(STOCK_CACHE_KEY);
     if(!raw)return null;
     const p=JSON.parse(raw);
     return(p&&p.data&&typeof p.ts==="number")?p:null;
   }catch(e){return null}
 }
+function getStockPreview(){
+  try{
+    const raw=localStorage.getItem(STOCK_PREVIEW_KEY);
+    if(!raw)return null;
+    const p=JSON.parse(raw);
+    return(p&&p.stock)?p:null;
+  }catch(e){return null}
+}
+function seedPreviewIntoState(pv){
+  if(!pv||!pv.stock||S.products.length)return false;
+  const st=pv.stock;
+  const alerts=Array.isArray(pv.predictiveAlerts)?pv.predictiveAlerts:[];
+  const lowOnly=Number(st.lowCount)||0;
+  const out=Number(st.outCount)||0;
+  const mapItem=(x,stockVal)=>({
+    id:String(x.id||""),
+    name:String(x.name||""),
+    stock:Number(x.stock!==undefined?x.stock:stockVal)||0,
+    low:Number(x.low)||0,
+    price:Number(x.price)||0,
+    cost:Number(x.cost)||0,
+    prices:x.price?[Number(x.price)]:[],
+    aliases:[],
+    archived:false,
+    sold10:0,
+    sold30:0
+  });
+  const lowArr=(Array.isArray(st.lowItems)?st.lowItems:[]).map(x=>mapItem(x,x.stock));
+  const outArr=(Array.isArray(st.outItems)?st.outItems:[]).map(x=>mapItem(x,0));
+  const outRestock=Number(st.outRestockCost)||0;
+  const lowRestock=lowArr.reduce((sum,x)=>sum+Math.max(1,(x.low||0)-x.stock+1)*x.cost,0);
+  S={
+    products:lowArr.concat(outArr),
+    counts:{
+      activeCount:Number(st.totalItems)||0,
+      units:Number(st.totalUnits)||0,
+      value:Number(st.valueCost)||0,
+      valueSale:Number(st.valueSale)||0,
+      low:lowOnly+out,
+      lowOnly:lowOnly,
+      out:out,
+      lowUnits:Number(st.lowUnits)||0,
+      lowCostValue:Number(st.lowCostValue)||0,
+      lowSaleValue:Number(st.lowSaleValue)||0,
+      outRestockCost:outRestock,
+      restockCostNeeded:Math.round(outRestock+lowRestock),
+      tocheck:Number(st.tocheck)||0,
+      issues:Number(st.issues)||0,
+      predictiveCount:alerts.length,
+      fastRunnersCount:0
+    },
+    suppliers:[],
+    url:"",
+    predictiveAlerts:alerts,
+    fastRunners:[],
+    _previewOnly:true
+  };
+  return true;
+}
 function setCachedStock(data){
-  try{sessionStorage.setItem(STOCK_CACHE_KEY,JSON.stringify({ts:Date.now(),data:data}))}catch(e){}
+  const s=JSON.stringify({ts:Date.now(),data:data});
+  try{localStorage.setItem(STOCK_CACHE_KEY,s)}catch(e){}
+  try{sessionStorage.setItem(STOCK_CACHE_KEY,s)}catch(e){}
 }
 function clearStockCache(){
+  try{localStorage.removeItem(STOCK_CACHE_KEY)}catch(e){}
   try{sessionStorage.removeItem(STOCK_CACHE_KEY)}catch(e){}
 }
 
@@ -191,24 +306,35 @@ window.addEventListener("message",e=>{
 let LOADING=false;
 async function load(fresh){
   const cached=getCachedStock();
-  if(!fresh&&cached&&cached.data&&!S.products.length){
+  const hasRealData=S.products.length&&!S._previewOnly;
+  if(!fresh&&cached&&cached.data&&!hasRealData){
     const j=cached.data;
     loadErr="";S=j;CHK=j.tocheck||[];ISS=j.issues||[];RRET=j.resolvedReturns||[];
     render();
     if(Date.now()-cached.ts<90000)return;
+  }else if(!hasRealData&&view==="main"){
+    seedPreviewIntoState(getStockPreview());
+    LOADING=true;
+    render();
   }
-  if(LOADING)return;
+  if(LOADING&&hasRealData)return;
   LOADING=true;
   try{
-    const j=await api({action:"stockload",fresh:!!fresh});
+    const j=await api({action:"stockload",fresh:!!fresh,today:today()});
     if(!j.ok){
-      if(!S.products.length){loadErr=errText(j.error);render()}
+      if(!hasRealData&&!S._previewOnly){loadErr=errText(j.error)}
+      else if(!j.ok&&S._previewOnly){loadErr=errText(j.error)}
+      LOADING=false;
+      render();
       return;
     }
     loadErr="";S=j;CHK=j.tocheck||[];ISS=j.issues||[];RRET=j.resolvedReturns||[];
     setCachedStock(j);
+    LOADING=false;
     render();
-  }finally{LOADING=false}
+  }finally{
+    if(LOADING){LOADING=false;if(view==="main")render()}
+  }
 }
 function render(){
   $("#bar").hidden=view!=="main";
@@ -218,14 +344,55 @@ function render(){
   if(view==="iconfirm")return renderIConfirm();
   renderMain();
 }
+function stockStatsSummary(){
+  const c=S.counts||{};
+  const live=S.products.filter(p=>!p.archived);
+  let valueSale=0,lowOnly=0,out=0,lowUnits=0,lowCostVal=0,lowSaleVal=0,outRestock=0,lowRestock=0;
+  if(typeof c.valueSale==="number"&&typeof c.lowOnly==="number"){
+    return {
+      activeCount:c.activeCount||live.length,
+      units:c.units||0,
+      value:c.value||0,
+      valueSale:c.valueSale||0,
+      lowOnly:c.lowOnly||0,
+      out:c.out||0,
+      lowUnits:c.lowUnits||0,
+      lowCostValue:c.lowCostValue||0,
+      lowSaleValue:c.lowSaleValue||0,
+      outRestockCost:c.outRestockCost||0,
+      restockCostNeeded:c.restockCostNeeded||0,
+      predCount:Array.isArray(S.predictiveAlerts)?S.predictiveAlerts.length:(c.predictiveCount||0),
+      fastCount:Array.isArray(S.fastRunners)?S.fastRunners.length:(c.fastRunnersCount||0)
+    };
+  }
+  live.forEach(p=>{
+    const s=Number(p.stock||0),pos=Math.max(s,0);
+    valueSale+=pos*p.price;
+    if(s<=0){out++;outRestock+=Math.max(1,Number(p.low)||1)*p.cost}
+    else if(s<=p.low){
+      lowOnly++;lowUnits+=s;lowCostVal+=s*p.cost;lowSaleVal+=s*p.price;
+      lowRestock+=Math.max(1,(Number(p.low)||0)-s+1)*p.cost;
+    }
+  });
+  return {
+    activeCount:live.length,units:c.units||0,value:c.value||0,valueSale:Math.round(valueSale),
+    lowOnly:lowOnly,out:out,lowUnits:lowUnits,lowCostValue:Math.round(lowCostVal),lowSaleValue:Math.round(lowSaleVal),
+    outRestockCost:Math.round(outRestock),restockCostNeeded:Math.round(outRestock+lowRestock),
+    predCount:Array.isArray(S.predictiveAlerts)?S.predictiveAlerts.length:0,
+    fastCount:Array.isArray(S.fastRunners)?S.fastRunners.length:0
+  };
+}
 function renderMain(){
-  const c=S.counts;
+  const c=S.counts||{};
+  const sm=stockStatsSummary();
+  const coldSync=LOADING&&!S.products.length&&!S._previewOnly;
+  const dash="&mdash;";
   $("#app").innerHTML=`${loadErr?`<div class="warnbox bad">${esc(loadErr)}<br><button class="btn" style="margin-top:10px" onclick="ui.retry()">Try again</button></div>`:""}
   <div class="cards">
-    <div class="stat"><small>Units in stock</small><b>${c.units}</b></div>
-    <div class="stat"><small>Stock value (at cost)</small><b>${tk(c.value)}</b></div>
-    <div class="stat ${c.low?"warn":""}"><small>Low or out of stock</small><b>${c.low}</b></div>
-    <div class="stat ${c.issues?"bad":""}"><small>Open issues</small><b>${c.issues}</b></div></div>
+    <div class="stat click" onclick="ui.stockFilter('all')"><small>Units in stock</small><b>${coldSync?dash:sm.units}</b><div class="sub">${coldSync?"Loading products…":sm.activeCount+" active products"}</div></div>
+    <div class="stat"><small>Stock value (cost)</small><b>${coldSync?dash:tk(sm.value)}</b><div class="sub">${coldSync?"Calculating valuation…":"Sale "+tk(sm.valueSale)}</div></div>
+    <div class="stat click ${(sm.lowOnly||sm.out)?(sm.out?"bad":"warn"):""}" onclick="ui.stockFilter('${sm.lowOnly?"low":"out"}')"><small>Low &amp; Out of stock</small><b>${coldSync?dash:sm.lowOnly+" low · "+sm.out+" out"}</b><div class="sub">${coldSync?"Checking thresholds…":"Restock "+tk(sm.restockCostNeeded)}</div></div>
+    <div class="stat click ${sm.predCount?"warn":""}" onclick="ui.stockFilter('pred')"><small>Predictive (&lt;15d)</small><b>${coldSync?dash:sm.predCount}</b><div class="sub">${coldSync||S._previewOnly?"Loading 10d runners…":sm.fastCount+" fast runners (10d)"}</div></div></div>
   <div class="seg">
     <button class="${tab==="stock"?"on":""}" onclick="ui.tab('stock')">Stock</button>
     <button class="${tab==="check"?"on":""}" onclick="ui.tab('check')">To check${c.tocheck?`<i>${c.tocheck}</i>`:""}</button>
@@ -235,33 +402,195 @@ function renderMain(){
   ({stock:stockView,check:checkView,issues:issuesView})[tab]();
 }
 ui.tab=t=>{tab=t;openId=null;render()};
+ui.stockFilter=f=>{tab="stock";fl=f;openId=null;rowLim=50;render()};
 ui.retry=()=>load(true);
 
 /* ---------- stock tab ---------- */
 function stockView(){
-  $("#body").innerHTML=`<input id="q" placeholder="Search products" value="${esc(q)}" oninput="q=this.value;renderRows()">
-  <div class="chips">${[["all","All"],["low","Low stock"],["out","Out of stock"],["arch","Archived"]].map(([k,n])=>`<button class="${fl===k?"on":""}" onclick="fl='${k}';render()">${n}</button>`).join("")}</div>
+  const sm=stockStatsSummary();
+  const chips=[
+    ["all","All"],
+    ["low","Low stock"+(sm.lowOnly?` (${sm.lowOnly})`:"")],
+    ["out","Out of stock"+(sm.out?` (${sm.out})`:"")],
+    ["pred","Predictive"+(sm.predCount?` (${sm.predCount})`:"")],
+    ["fast","Fast runners (10d)"],
+    ["arch","Archived"]
+  ];
+  $("#body").innerHTML=`<input id="q" placeholder="Search products, code, or alias" value="${esc(q)}" oninput="q=this.value;rowLim=50;renderRows()">
+  <div class="chips">${chips.map(([k,n])=>`<button class="${fl===k?"on":""}" onclick="ui.stockFilter('${k}')">${n}</button>`).join("")}</div>
   <div id="rows"></div>`;
   renderRows();
 }
+function prodDetailHtml(p){
+  const extraPrices=(p.prices||[]).filter(x=>x!==p.price);
+  const margin=p.price>0&&p.cost>=0?Math.round((p.price-p.cost)*100)/100:0;
+  const pct=p.price>0?Math.round((margin/p.price)*100):0;
+  return `<div class="det">
+    <p>Low-stock min: <b>${p.low} pcs</b> · Margin: <b>${tk(margin)}</b>${p.price>0?` (${pct}%)`:""}</p>
+    ${(p.sold10||p.sold30)?`<p>Sold: <b>${p.sold10||0}</b> pcs in 10d · <b>${p.sold30||0}</b> pcs in 30d</p>`:""}
+    ${extraPrices.length?`<p>Other accepted prices: <b>${extraPrices.map(tk).join(", ")}</b></p>`:""}
+    ${p.aliases&&p.aliases.length?`<p>Other names: <b>${esc(p.aliases.join(", "))}</b></p>`:""}
+    ${HIST[p.id]?`<table>${HIST[p.id].slice(0,6).map(h=>`<tr><td>${esc(h.time.slice(0,10))} · ${esc(h.type)}${h.ref?" "+esc(h.ref):""}</td><td style="text-align:right"><b>${h.qty>0?"+":"−"}${Math.abs(h.qty)}</b></td></tr>`).join("")}</table>`:""}
+    <div class="acts"><button class="btn p" onclick="ui.edit('${p.id}')">Edit</button><button class="btn" onclick="ui.adjust('${p.id}')">Adjust stock</button><button class="btn" onclick="ui.merge('${p.id}')">Merge…</button></div></div>`;
+}
+function productCardHtml(p,opts){
+  const s=stat(p);
+  const needQty=s==="out"?Math.max(1,Number(p.low)||1):s==="low"?Math.max(1,(Number(p.low)||0)-p.stock+1):0;
+  const stockCostVal=Math.max(0,p.stock)*p.cost;
+  const stockSaleVal=Math.max(0,p.stock)*p.price;
+  const pace=(p.sold10||0)>0?`${p.sold10} sold/10d${p.stock>0?" · ~"+Math.floor(p.stock/(p.sold10/10))+"d left":""}`:(p.sold30||0)>0?`${p.sold30} sold/30d`:"";
+  let sub=`Sell ${tk(p.price)} · avg cost ${tk(p.cost)}`;
+  if(opts&&opts.lowDetail){
+    sub=`Min ${p.low} · Need <b>+${needQty} pcs</b> (${tk(needQty*p.cost)})`+(pace?` · ${pace}`:"");
+  }else if(opts&&opts.outDetail){
+    sub=`Target min ${p.low||1} · Restock <b>+${needQty} pcs</b> (${tk(needQty*p.cost)})`+(pace?` · ${pace}`:"");
+  }else if(pace){
+    sub+=` · ${pace}`;
+  }
+  const extraLine=(opts&&(opts.lowDetail||opts.outDetail))?`<div class="s">Cost val ${tk(stockCostVal)} · Sale val ${tk(stockSaleVal)} · Sell ${tk(p.price)} · Cost ${tk(p.cost)}</div>`:"";
+  return `<div class="card" id="pc-${esc(p.id)}"><div class="prow" onclick="ui.toggle('${p.id}')">
+    <div><div class="cd">${esc(p.id)}</div><div class="n">${esc(p.name)}${s==="low"?'<span class="tag low">low</span>':s==="out"?'<span class="tag out">out</span>':""}${(p.sold10||0)>=3&&fl==="all"?'<span class="tag fast">hot 10d</span>':""}</div><div class="s">${sub}</div>${extraLine}</div>
+    <div class="qty ${s}">${p.stock}${(opts&&opts.lowDetail)?`<small>min ${p.low}</small>`:""}</div></div>
+    ${openId===p.id?prodDetailHtml(p):""}</div>`;
+}
+function overviewInsightsHtml(sm){
+  const fast=Array.isArray(S.fastRunners)?S.fastRunners:[];
+  const pred=Array.isArray(S.predictiveAlerts)?S.predictiveAlerts:[];
+  let html="";
+  if(fast.length){
+    html+=`<div class="insight">
+      <div class="ins-head"><h3>Fast runners (10-day window)</h3><button type="button" onclick="ui.stockFilter('fast')">See all (${fast.length}) &rarr;</button></div>
+      ${fast.slice(0,5).map((r,idx)=>`<div class="ins-row" onclick="ui.stockFilter('fast')">
+        <div class="ins-main"><b><span class="rank">#${idx+1}</span>${esc(r.name)}</b><span>${r.sold10} sold in 10d (${r.rate10}/day) · Sales ${tk(r.revenue10)}</span></div>
+        <div class="ins-side"><b class="${r.stock<=0?"bad":(r.daysAt10d!==null&&r.daysAt10d<15)?"warn":"good"}">${r.stock} left</b><span>${r.daysAt10d!==null?"~"+r.daysAt10d+"d left":""}</span></div>
+      </div>`).join("")}
+    </div>`;
+  }
+  if(pred.length){
+    html+=`<div class="insight">
+      <div class="ins-head"><h3>Predictive stock (&lt;15 days)</h3><button type="button" onclick="ui.stockFilter('pred')">See all (${pred.length}) &rarr;</button></div>
+      ${pred.slice(0,5).map(a=>`<div class="ins-row" onclick="ui.stockFilter('pred')">
+        <div class="ins-main"><b>${esc(a.name)}</b><span>${a.avgDaily?a.avgDaily+"/day · ":""}Stock ${a.currentStock!==undefined?a.currentStock:a.stock} · Need +${a.suggestedQty||Math.max(1,a.low||1)}</span></div>
+        <div class="ins-side"><b class="${a.daysRemaining<=5?"bad":"warn"}">${a.daysRemaining}d left</b><span>30d pace</span></div>
+      </div>`).join("")}
+    </div>`;
+  }
+  if(sm.lowOnly||sm.out){
+    html+=`<div class="insight">
+      <div class="ins-head"><h3>Detailed low &amp; out summary</h3><button type="button" onclick="ui.stockFilter('${sm.lowOnly?"low":"out"}')">Inspect list &rarr;</button></div>
+      <div class="low-grid">
+        <div class="low-box"><small>Low stock items</small><b>${sm.lowOnly} (${sm.lowUnits} pcs)</b></div>
+        <div class="low-box"><small>Out of stock</small><b style="color:var(--bad)">${sm.out} items</b></div>
+        <div class="low-box"><small>Low stock val (cost / sale)</small><b>${tk(sm.lowCostValue)} / ${tk(sm.lowSaleValue)}</b></div>
+        <div class="low-box"><small>Est. restock needed</small><b>${tk(sm.restockCostNeeded)}</b></div>
+      </div>
+    </div>`;
+  }
+  return html;
+}
+function predCardHtml(a){
+  const p=prod(a.id)||{id:a.id,name:a.name,stock:a.currentStock,low:a.low||0,price:a.price||0,cost:a.cost||0,prices:[],aliases:[]};
+  const sug=a.suggestedQty||Math.max(1,Math.ceil((a.avgDaily||0)*15)-Math.max(0,p.stock));
+  return `<div class="card" id="pc-${esc(p.id)}"><div class="prow" onclick="ui.toggle('${p.id}')">
+    <div><div class="cd">${esc(p.id)}</div><div class="n">${esc(p.name)}<span class="tag ${a.daysRemaining<=5?"out":"low"}">${a.daysRemaining}d left</span></div>
+    <div class="s">30d sold: <b>${a.sold30||0} pcs</b> (${a.avgDaily||0}/day) · Suggested restock <b>+${sug} pcs</b> (${tk(sug*(p.cost||0))})</div></div>
+    <div class="qty ${a.daysRemaining<=5?"out":"low"}">${p.stock}<small>left</small></div></div>
+    ${openId===p.id?prodDetailHtml(p):""}</div>`;
+}
+function fastCardHtml(r,idx){
+  const p=prod(r.id)||{id:r.id,name:r.name,stock:r.stock,low:r.low||0,price:r.price||0,cost:r.cost||0,prices:[],aliases:[]};
+  const risk=r.stock<=0?"out":(r.daysAt10d!==null&&r.daysAt10d<15)?"low":"";
+  return `<div class="card" id="pc-${esc(p.id)}"><div class="prow" onclick="ui.toggle('${p.id}')">
+    <div><div class="cd">${esc(p.id)}</div><div class="n"><span class="rank">#${idx+1}</span>${esc(r.name)}${risk?`<span class="tag ${risk}">${r.stock<=0?"out":"~"+r.daysAt10d+"d left"}</span>`:""}</div>
+    <div class="s"><b>${r.sold10} sold in 10d</b> (${r.rate10}/day) · Sales ${tk(r.revenue10)} · Sell ${tk(p.price)}</div></div>
+    <div class="qty ${risk}">${p.stock}<small>in stock</small></div></div>
+    ${openId===p.id?prodDetailHtml(p):""}</div>`;
+}
 function renderRows(){
   const ql=q.trim().toLowerCase();
-  const rows=S.products.filter(p=>(fl==="arch")===p.archived).filter(p=>fl==="low"?stat(p)==="low":fl==="out"?stat(p)==="out":true).filter(p=>!ql||(p.id+" "+p.name+" "+p.aliases.join(" ")).toLowerCase().includes(ql));
-  $("#rows").innerHTML=!S.products.length&&!loadErr?`<div class="empty">No products yet. Tap More, then Import stock list, or Add a product.</div>`:rows.length?rows.map(p=>{
-    const s=stat(p);
-    return `<div class="card"><div class="prow" onclick="ui.toggle('${p.id}')">
-      <div><div class="cd">${esc(p.id)}</div><div class="n">${esc(p.name)}${s==="low"?'<span class="tag low">low</span>':s==="out"?'<span class="tag out">out</span>':""}</div><div class="s">Sells at ${tk(p.price)} · avg cost ${tk(p.cost)}</div></div>
-      <div class="qty ${s}">${p.stock}</div></div>
-      ${openId===p.id?`<div class="det">
-        <p>Accepted prices: <b>${p.prices.map(tk).join(", ")}</b></p>
-        <p>Other names (same product): <b>${p.aliases.length?esc(p.aliases.join(", ")):"none"}</b></p>
-        <p>Low-stock level: <b>${p.low}</b></p>
-        <table>${(HIST[p.id]||[]).slice(0,6).map(h=>`<tr><td>${esc(h.time.slice(0,10))} · ${esc(h.type)}${h.ref?" "+esc(h.ref):""}</td><td style="text-align:right"><b>${h.qty>0?"+":"−"}${Math.abs(h.qty)}</b></td></tr>`).join("")}</table>
-        <div class="acts"><button class="btn p" onclick="ui.edit('${p.id}')">Edit</button><button class="btn" onclick="ui.adjust('${p.id}')">Adjust stock</button><button class="btn" onclick="ui.merge('${p.id}')">Merge…</button></div></div>`:""}</div>`}).join(""):`<div class="empty">No products here.</div>`;
+  const matchQ=x=>!ql||(String(x.id)+" "+String(x.name)+" "+(x.aliases?x.aliases.join(" "):"")).toLowerCase().includes(ql);
+  if(fl==="pred"){
+    const pred=(Array.isArray(S.predictiveAlerts)?S.predictiveAlerts:[]).filter(matchQ);
+    $("#rows").innerHTML=`<div class="card">
+      <h3>Predictive stock (&lt;15 days)</h3>
+      <p class="s" style="color:var(--mut);margin:0">${pred.length} product${pred.length===1?"":"s"} projected to run out within 15 days based on 30-day sell rate.</p>
+    </div>`+(pred.length?pred.map(predCardHtml).join(""):`<div class="empty">All products have 15+ days of stock at the current 30-day sales pace.</div>`);
+    return;
+  }
+  if(fl==="fast"){
+    const fast=(Array.isArray(S.fastRunners)?S.fastRunners:[]).filter(matchQ);
+    $("#rows").innerHTML=`<div class="card">
+      <h3>Fast runners (10-day window)</h3>
+      <p class="s" style="color:var(--mut);margin:0">Single products with the highest sell rate over the last 10 days.</p>
+    </div>`+(fast.length?fast.map((r,idx)=>fastCardHtml(r,idx)).join(""):`<div class="empty">No sales recorded in the last 10 days yet.</div>`);
+    return;
+  }
+  let rows=S.products.filter(p=>(fl==="arch")===p.archived)
+    .filter(p=>fl==="low"?stat(p)==="low":fl==="out"?stat(p)==="out":true)
+    .filter(matchQ);
+  if(fl==="low"){
+    rows=rows.slice().sort((a,b)=>(a.stock-a.low)-(b.stock-b.low)||(b.sold10||0)-(a.sold10||0)||a.stock-b.stock);
+  }else if(fl==="out"){
+    rows=rows.slice().sort((a,b)=>(b.sold30||0)-(a.sold30||0)||(b.sold10||0)-(a.sold10||0)||(b.low||0)-(a.low||0));
+  }
+  const sm=stockStatsSummary();
+  let lead="";
+  if(fl==="all"&&!ql&&S.products.length){
+    lead=overviewInsightsHtml(sm);
+  }else if(fl==="low"){
+    const lowCost=rows.reduce((s,p)=>s+Math.max(0,p.stock)*p.cost,0);
+    const lowSale=rows.reduce((s,p)=>s+Math.max(0,p.stock)*p.price,0);
+    const lowUnits=rows.reduce((s,p)=>s+Math.max(0,p.stock),0);
+    const restockNeedCost=rows.reduce((s,p)=>s+Math.max(1,(Number(p.low)||0)-p.stock+1)*p.cost,0);
+    lead=`<div class="card"><h3>Detailed low stock (${rows.length})</h3>
+      <div class="low-grid">
+        <div class="low-box"><small>Units remaining</small><b>${lowUnits} pcs</b></div>
+        <div class="low-box"><small>Est. restock cost</small><b>${tk(restockNeedCost)}</b></div>
+        <div class="low-box"><small>Value at cost</small><b>${tk(lowCost)}</b></div>
+        <div class="low-box"><small>Value at sale</small><b>${tk(lowSale)}</b></div>
+      </div></div>`;
+  }else if(fl==="out"){
+    const outQty=rows.reduce((s,p)=>s+Math.max(1,Number(p.low)||1),0);
+    const outCost=rows.reduce((s,p)=>s+Math.max(1,Number(p.low)||1)*p.cost,0);
+    lead=`<div class="card"><h3>Out of stock (${rows.length})</h3>
+      <div class="low-grid">
+        <div class="low-box"><small>Target restock units</small><b>${outQty} pcs</b></div>
+        <div class="low-box"><small>Est. restock cost</small><b style="color:var(--bad)">${tk(outCost)}</b></div>
+      </div></div>`;
+  }
+  const show=ql||fl!=="all"?rows:rows.slice(0,rowLim);
+  const more=rows.length>show.length?`<button class="btn f" style="margin-bottom:12px" onclick="rowLim+=60;renderRows()">Show more (${rows.length-show.length} left)</button>`:"";
+  const opts={lowDetail:fl==="low",outDetail:fl==="out"};
+  const syncingBanner=(LOADING&&(S._previewOnly||!S.products.length))?`<div class="sync-note"><span>${S._previewOnly?"Showing saved preview · syncing full catalog &amp; 10d runners…":"Loading stock list from Google Sheet…"}</span></div>`:"";
+  const skelCards=[1,2,3].map(()=>`<div class="card"><div class="prow"><div><div class="skel w60"></div><div class="skel w40"></div></div><div class="skel num"></div></div></div>`).join("");
+  const emptyMsg=LOADING?skelCards:(loadErr?"":`<div class="empty">No products yet. Tap More, then Import stock list, or Add a product.</div>`);
+  $("#rows").innerHTML=syncingBanner+lead+(!S.products.length?emptyMsg:show.length?show.map(p=>productCardHtml(p,opts)).join("")+more:(LOADING&&S._previewOnly?skelCards:`<div class="empty">No products here.</div>`));
 }
 ui.toggle=async id=>{
-  openId=openId===id?null:id;renderRows();
-  if(openId&&!HIST[id]){const j=await api({action:"detail",pid:id});if(j.ok){HIST[id]=j.history;renderRows()}}
+  const prev=openId;
+  openId=openId===id?null:id;
+  const updateCard=pid=>{
+    const el=typeof document.getElementById==="function"?document.getElementById("pc-"+pid):null;
+    if(!el||typeof el.outerHTML!=="string")return false;
+    if(fl==="pred"){
+      const a=(S.predictiveAlerts||[]).find(x=>x.id===pid);
+      if(a){el.outerHTML=predCardHtml(a);return true}
+    }else if(fl==="fast"){
+      const idx=(S.fastRunners||[]).findIndex(x=>x.id===pid);
+      if(idx>=0){el.outerHTML=fastCardHtml(S.fastRunners[idx],idx);return true}
+    }
+    const p=prod(pid);
+    if(p){el.outerHTML=productCardHtml(p,{lowDetail:fl==="low",outDetail:fl==="out"});return true}
+    return false;
+  };
+  let updated=true;
+  if(prev&&prev!==openId&&!updateCard(prev))updated=false;
+  if(openId&&!updateCard(openId))updated=false;
+  if(!updated)renderRows();
+  if(openId&&!HIST[id]){
+    const j=await api({action:"detail",pid:id});
+    if(j.ok){HIST[id]=j.history;if(openId===id&&!updateCard(id))renderRows()}
+  }
 };
 
 /* ---------- to check ---------- */
@@ -553,16 +882,27 @@ const blankLine=()=>({name:"",qty:1,buy:0,sell:0,extra:0});
 ui.newPurchase=async()=>{
   PUR={date:today(),supplier:S.suppliers[0]||"__new",newSupplier:"",lines:[blankLine()],result:null};
   view="purchase";render();
-  const j=await api({action:"purchases"});if(j.ok){RECENT=j.items;if(view==="purchase")renderPurchase()}
+  const j=await api({action:"purchases"});
+  if(j.ok){
+    RECENT=j.items;
+    if(view==="purchase"){
+      const box=$("#recentPurchases");
+      if(box)box.innerHTML=renderRecentPurchasesHtml();
+      else renderPurchase();
+    }
+  }
 };
+function renderRecentPurchasesHtml(){
+  return RECENT.length?`<div class="card big"><h3>Recent purchases</h3>${RECENT.map(r=>`<div class="card" style="margin:10px 0 0"><div class="prow"><div><div class="n">${esc(r.id)} · ${esc(r.supplier)}</div><div class="s">${esc(r.date)} · ${tk(r.total)}${r.status==="voided"?" · voided":""}</div><div class="s">${esc(r.lines.join(", "))}</div></div>${r.status!=="voided"?`<button class="btn w" onclick="ui.voidP('${r.id}')">Void</button>`:""}</div></div>`).join("")}</div>`:"";
+}
 function renderPurchase(){
   const sup=S.suppliers;
   $("#app").innerHTML=`<div class="top"><small>Stock in</small><h2>New purchase</h2></div>
   <p id="err" class="err"></p>
   <div class="card big"><h3>Purchase</h3>
     <label>Date</label><input type="date" value="${PUR.date}" oninput="PUR.date=this.value">
-    <label>Supplier</label><select onchange="PUR.supplier=this.value;renderPurchase()">${sup.map(s=>`<option ${s===PUR.supplier?"selected":""}>${esc(s)}</option>`).join("")}<option value="__new" ${PUR.supplier==="__new"?"selected":""}>+ Add new supplier…</option></select>
-    ${PUR.supplier==="__new"?`<label>New supplier name</label><input value="${esc(PUR.newSupplier)}" oninput="PUR.newSupplier=this.value" placeholder="Supplier name">`:""}</div>
+    <label>Supplier</label><select id="purSupSel" onchange="PUR.supplier=this.value;renderPurchase()">${sup.map(s=>`<option ${s===PUR.supplier?"selected":""}>${esc(s)}</option>`).join("")}<option value="__new" ${PUR.supplier==="__new"?"selected":""}>+ Add new supplier…</option></select>
+    ${PUR.supplier==="__new"?`<label>New supplier name</label><input id="newSup" value="${esc(PUR.newSupplier)}" oninput="PUR.newSupplier=this.value" onchange="PUR.newSupplier=this.value" placeholder="Supplier name">`:""}</div>
   <div class="card big"><h3>Products</h3><p class="note" style="margin:0 0 10px">All prices are per piece.</p><div id="lines"></div>
     <button class="btn f" onclick="ui.addLine()">+ Add product</button></div>
   <div class="card big"><h3>Purchase total</h3>
@@ -572,7 +912,7 @@ function renderPurchase(){
   <div class="acts" style="margin-bottom:14px"><button class="btn p f" style="flex:1" onclick="ui.savePurchase()">Review purchase &rarr;</button></div>
   <button class="btn f" style="margin-bottom:14px" onclick="ui.backMain()">Back to stock</button>
   <div id="result"></div>
-  ${RECENT.length?`<div class="card big"><h3>Recent purchases</h3>${RECENT.map(r=>`<div class="card" style="margin:10px 0 0"><div class="prow"><div><div class="n">${esc(r.id)} · ${esc(r.supplier)}</div><div class="s">${esc(r.date)} · ${tk(r.total)}${r.status==="voided"?" · voided":""}</div><div class="s">${esc(r.lines.join(", "))}</div></div>${r.status!=="voided"?`<button class="btn w" onclick="ui.voidP('${r.id}')">Void</button>`:""}</div></div>`).join("")}</div>`:""}
+  <div id="recentPurchases">${renderRecentPurchasesHtml()}</div>
   <datalist id="plist">${S.products.filter(p=>!p.archived).map(p=>`<option value="${esc(p.name)}">`).join("")}</datalist>`;
   drawLines();
 }
@@ -612,7 +952,9 @@ ui.backMain=()=>{view="main";tab="stock";PUR=null;IMP=null;PLAN=null;IPLAN=null;
 ui.savePurchase=async()=>{
   const e=$("#err");e.textContent="";
   const bad=m=>{e.textContent=m;window.scrollTo(0,0)};
-  const sup=PUR.supplier==="__new"?PUR.newSupplier.trim():PUR.supplier;
+  const nsEl=$("#newSup");
+  if(nsEl&&nsEl.value!==undefined)PUR.newSupplier=nsEl.value;
+  const sup=PUR.supplier==="__new"?String(PUR.newSupplier||"").trim():String(PUR.supplier||"").trim();
   if(!sup)return bad("Enter the supplier.");
   const used=PUR.lines.filter(l=>l.name.trim());
   if(!used.length)return bad("Add at least one product.");
@@ -672,12 +1014,13 @@ ui.confirmPurchase=async()=>{
     lines.push(Object.assign({},u,c.pid?{pid:c.pid}:{letters:c.letters}));
   }
   const btn=document.querySelector(".acts .btn.p");if(btn){btn.disabled=true;btn.textContent="Saving…"}
-  const j=await api({action:"purchase",reqId:PLAN.req,date:PUR.date,supplier:PUR.sup,lines:lines});
+  const j=await api({action:"purchase",reqId:PLAN.req,date:PUR.date,supplier:PLAN.sup,lines:lines});
   if(!j.ok){if(btn){btn.disabled=false;btn.textContent="✓ Confirm all and save"}return bad(errText(j.error))}
   postStockDirty();
   if(j.repeat)toast("This purchase was already saved. Nothing was added twice.");
-  const sj=await api({action:"stockload",fresh:true});if(sj.ok){S=sj;CHK=sj.tocheck||[];ISS=sj.issues||[];RRET=sj.resolvedReturns||[]}
-  const rj=await api({action:"purchases"});if(rj.ok)RECENT=rj.items;
+  const [sj,rj]=await Promise.all([api({action:"stockload",fresh:true,today:today()}),api({action:"purchases"})]);
+  if(sj.ok){S=sj;CHK=sj.tocheck||[];ISS=sj.issues||[];RRET=sj.resolvedReturns||[];setCachedStock(sj)}
+  if(rj.ok)RECENT=rj.items;
   const sup=PLAN.sup;PLAN=null;HIST={};
   PUR={date:today(),supplier:sup,newSupplier:"",lines:[blankLine()]};
   view="purchase";renderPurchase();
@@ -691,8 +1034,9 @@ ui.voidP=async id=>{
   const j=await api({action:"voidpurchase",id:id});
   if(!j.ok)return toast(errText(j.error));
   toast("Voided."+(j.notes&&j.notes.length?" "+j.notes.join(" · "):""));
-  const sj=await api({action:"stockload",fresh:true});if(sj.ok){S=sj;CHK=sj.tocheck||[];ISS=sj.issues||[];RRET=sj.resolvedReturns||[]}
-  const rj=await api({action:"purchases"});if(rj.ok)RECENT=rj.items;
+  const [sj,rj]=await Promise.all([api({action:"stockload",fresh:true,today:today()}),api({action:"purchases"})]);
+  if(sj.ok){S=sj;CHK=sj.tocheck||[];ISS=sj.issues||[];RRET=sj.resolvedReturns||[];setCachedStock(sj)}
+  if(rj.ok)RECENT=rj.items;
   HIST={};
   renderPurchase();
 };
@@ -738,12 +1082,23 @@ function toProducts(rows){
 function list_filter(l){return l.filter(r=>r.name||r.price)}
 ui.parseText=t=>{IMP.text=t;const p=toProducts(csvRows(t));IMP.rows=p.list;IMP.note=p.note;drawImport()};
 const cellVal=v=>v==null?"":(typeof v==="object"?(v.result!==undefined?v.result:(v.text!==undefined?v.text:(v.richText?v.richText.map(x=>x.text).join(""):""))):v);
+function ensureExcelJS(){
+  if(typeof ExcelJS!=="undefined")return Promise.resolve(true);
+  return new Promise(res=>{
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
+    s.onload=()=>res(true);
+    s.onerror=()=>res(false);
+    document.head.appendChild(s);
+  });
+}
 ui.readFile=async f=>{
   if(!f)return;
   try{
     let rows;
     if(/\.xlsx$/i.test(f.name)){
-      if(typeof ExcelJS==="undefined")return toast("The Excel library did not load. Check your internet.");
+      const okLib=await ensureExcelJS();
+      if(!okLib||typeof ExcelJS==="undefined")return toast("The Excel library did not load. Check your internet.");
       const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
       rows=[];wb.worksheets[0].eachRow(r=>rows.push(r.values.slice(1).map(cellVal)));
     }else rows=csvRows(await f.text());
@@ -770,7 +1125,7 @@ function irow(r,i){
   const row=IPLAN.rows[i];
   const st=r.status==="exists"?`<span class="tag out">skipped · ${esc(r.code)}</span>`:r.letters?`<span class="cd">${esc(r.code)}</span>`:`<input maxlength="4" style="width:84px;padding:6px 8px;text-transform:uppercase" placeholder="ABCD" value="${esc(IPLAN.letters[i])}" oninput="IPLAN.letters[${i}]=this.value.toUpperCase().replace(/[^A-Z]/g,'')">`;
   let h=`<tr${r.status==="exists"?' style="opacity:.55"':""}><td>${st}</td><td>${esc(r.name)}</td><td>${tk(row.price)}</td><td>${row.stock}</td></tr>`;
-  if(r.status==="similar"&&r.candidate)h+=`<tr><td colspan="4" style="background:#f6ece0;color:#6b4a1b">Looks like <b>${esc(r.candidate.id)} ${esc(r.candidate.name)}</b> (${tk(r.candidate.price)})
+  if(r.status==="similar"&&r.candidate)h+=`<tr><td colspan="4" class="simwarn">Looks like <b>${esc(r.candidate.id)} ${esc(r.candidate.name)}</b> (${tk(r.candidate.price)})
     <label style="display:inline;margin:0 0 0 8px"><input type="checkbox" style="width:auto;padding:0" onchange="IPLAN.skip[${i}]=this.checked"> Skip, same product</label></td></tr>`;
   return h;
 }
@@ -869,6 +1224,20 @@ ui.start();
   document.addEventListener("touchend",onEnd,{passive:true});
   document.addEventListener("touchcancel",onEnd,{passive:true});
 })(async ()=>{HIST={};await load(true);if(!loadErr)toast("Stock refreshed");});
+function applyTheme(dark,save){
+  try{
+    if(document&&document.documentElement&&document.documentElement.classList)document.documentElement.classList.toggle("dark",!!dark);
+    const tb=document.getElementById("themeBtn");if(tb)tb.textContent=dark?"☀️ Light":"🌙 Dark";
+    if(save)try{localStorage.setItem("pt_theme",dark?"dark":"light")}catch(e){}
+  }catch(e){}
+}
+function toggleTheme(){
+  const d=document&&document.documentElement&&document.documentElement.classList?document.documentElement.classList.contains("dark"):false;
+  applyTheme(!d,true);
+}
+try{applyTheme(localStorage.getItem("pt_theme")==="dark",false)}catch(e){}
+try{window.addEventListener("message",e=>{if(e&&e.data&&e.data.type==="pozzo:theme")applyTheme(!!e.data.dark,false)})}catch(e){}
+try{window.addEventListener("storage",e=>{if(e&&e.key==="pt_theme")applyTheme(e.newValue==="dark",false)})}catch(e){}
 </script>
 </body>
 </html>
