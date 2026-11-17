@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cash Memo Mockup Preview – Pozzo Toys</title>
+<style>
+:root{--bg:#f1ede6;--card:#ffffff;--line:#e3ddd1;--ink:#1f1d1a;--mut:#7b756b;--grn:#2b4f48;--blue:#1F6FA8}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 16px 60px;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:680px;margin:0 auto}
+.header{text-align:center;margin-bottom:20px}
+.header h1{font-size:22px;margin:0 0 6px;color:var(--grn)}
+.header p{margin:0;font-size:14px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:20px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.card h2{font-size:16px;margin:0 0 12px;color:var(--ink);display:flex;align-items:center;justify-content:space-between}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#e2f0ea;color:var(--grn);font-size:12px;font-weight:700}
+.memo-frame{width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;display:block}
+img.mockup{width:100%;height:auto;display:block;border-radius:12px}
+canvas{width:100%;height:auto;display:block;border-radius:12px}
+.details{margin-top:14px;background:#f9f8f5;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5}
+.details ul{margin:6px 0 0;padding-left:18px}
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;padding:12px 16px;border-radius:12px;border:1px solid var(--grn);background:var(--grn);color:#fff;font:inherit;font-size:14px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer}
+.btn.alt{background:#fff;color:var(--ink);border-color:var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>New Cash Memo Mockup</h1>
+    <p>Review the new layout before applying it to your app</p>
+  </div>
+
+  <div class="card">
+    <h2>
+      <span>Live Canvas Layout</span>
+      <span class="badge">Exact App Dimensions</span>
+    </h2>
+    <div class="memo-frame">
+      <canvas id="liveMemo" width="800" height="1100"></canvas>
+    </div>
+    <div class="details">
+      <b>What changed in this design:</b>
+      <ul>
+        <li><b>Logo on the left</b>: The official Pozzo Toys mascot logo is placed on the top left.</li>
+        <li><b>Pozzo Toys on the right</b>: Bold title aligned to the right.</li>
+        <li><b>Only the phone number below it</b>: <code>01712-666868</code> (no Facebook link).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>
+      <span>Graphic Concept Mockup</span>
+      <span class="badge">Visual Reference</span>
+    </h2>
+    <div class="memo-frame">
+      <img class="mockup" src="memo-mockup.jpg" alt="Pozzo Toys Cash Memo Mockup">
+    </div>
+  </div>
+</div>
+
+<script>
+const SANS = '"Segoe UI","Noto Sans Bengali","Noto Sans",system-ui,sans-serif';
+const BLUE = "#1F6FA8", DEEP = "#0F3F66", INK = "#1C1B1F", MUT = "#5F6368", LINE = "#E3E5E8", CHIP = "#DEEFFB", SOFT = "#F5FAFE", COD = "#E9F4FC", CODB = "#BFDDF2";
+
+const cv = document.getElementById("liveMemo");
+const cx = cv.getContext("2d");
+
+const logo = new Image();
+logo.src = "icon-192.png?v=17";
+logo.onload = () => draw();
+
+function draw() {
+  const W = 800, P = 44, IN = W - 2 * P;
+  cx.fillStyle = "#FFFFFF";
+  cx.fillRect(0, 0, W, cv.height);
+
+  const T = (txt, x, yy, font, color, align) => {
+    cx.font = font; cx.fillStyle = color; cx.textAlign = align || "left";
+    cx.textBaseline = "alphabetic"; cx.fillText(txt, x, yy);
+  };
+  const RR = (x, yy, w, h, r, fill, stroke) => {
+    cx.beginPath();
+    if (cx.roundRect) cx.roundRect(x, yy, w, h, r); else cx.rect(x, yy, w, h);
+    if (fill) { cx.fillStyle = fill; cx.fill(); }
+    if (stroke) { cx.strokeStyle = stroke; cx.lineWidth = 2; cx.stroke(); }
+  };
+  const HR = yy => { cx.fillStyle = LINE; cx.fillRect(P, yy, IN, 1); };
+
+  let y = 36;
+
+  // --- HEADER: Logo on Left, Brand + Phone on Right ---
+  const headerHeight = 76;
+  if (logo && logo.complete) {
+    const sc = Math.min(headerHeight / logo.naturalHeight, 140 / logo.naturalWidth);
+    const lw = logo.naturalWidth * sc, lh = logo.naturalHeight * sc;
+    cx.drawImage(logo, P, y, lw, lh);
+  }
+
+  // Right Side: Pozzo Toys and only the phone number below it
+  T("POZZO TOYS", W - P, y + 36, "700 36px " + SANS, BLUE, "right");
+  T("01712-666868", W - P, y + 66, "500 22px " + SANS, MUT, "right");
+
+  y += headerHeight + 28;
+  HR(y);
+  y += 32;
+
+  // Title & Order Badge
+  T("Cash memo", P, y + 22, "600 32px " + SANS, BLUE);
+  const orderId = "PZ26OCT-014";
+  cx.font = "600 22px " + SANS;
+  const cw = cx.measureText(orderId).width + 36;
+  RR(W - P - cw, y - 6, cw, 40, 20, CHIP);
+  T(orderId, W - P - cw / 2, y + 22, "600 22px " + SANS, DEEP, "center");
+
+  y += 64;
+  T("26-10-2026", W - P, y, "400 20px " + SANS, MUT, "right");
+  y += 26;
+
+  // Customer Card
+  RR(P, y, IN, 134, 22, SOFT);
+  let cy = y + 38;
+  T("Anika Rahman", P + 24, cy, "600 25px " + SANS, INK); cy += 34;
+  T("01711-223344", P + 24, cy, "400 22px " + SANS, MUT); cy += 32;
+  T("House 12, Road 4, Sector 7, Uttara, Dhaka", P + 24, cy, "400 22px " + SANS, MUT);
+  y += 134 + 30;
+
+  // Items
+  const items = [
+    { name: "Talking Cactus (Green)", qty: 2, price: 550 },
+    { name: "Wooden Puzzle - Pastel", qty: 1, price: 380 }
+  ];
+
+  items.forEach(it => {
+    const qp = it.price + " × " + it.qty, amt = (it.price * it.qty).toLocaleString();
+    T(it.name, P + 2, y, "400 22px " + SANS, INK);
+    T(qp, W - P - 120, y, "400 21px " + SANS, MUT, "right");
+    T(amt, W - P - 2, y, "500 22px " + SANS, INK, "right");
+    y += 34; HR(y - 8); y += 14;
+  });
+
+  y += 4;
+  const row = (k, v, big) => {
+    T(k, P + 2, y, big ? "600 26px " + SANS : "400 22px " + SANS, big ? INK : MUT);
+    T(v, W - P - 2, y, big ? "600 26px " + SANS : "400 22px " + SANS, INK, "right");
+    y += big ? 46 : 38;
+  };
+  row("Product value", "1,480");
+  row("Delivery", "80");
+  row("Total", "1,560", true);
+  row("Advance paid", "− 200");
+
+  y += 8;
+  RR(P, y, IN, 104, 28, COD, CODB);
+  T("COD amount due", P + 28, y + 62, "600 24px " + SANS, DEEP);
+  T("৳1,360", W - P + -28, y + 68, "600 48px " + SANS, BLUE, "right");
+
+  y += 104 + 46;
+  T("Thank you for shopping with Pozzo Toys", W / 2, y, "400 20px " + SANS, MUT, "center");
+}
+draw();
+</script>
+</body>
+</html>

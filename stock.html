@@ -54,6 +54,10 @@ html.dark .seg button.on{color:#0b1926}
 html.dark .seg i{background:#3b1d19;color:#f59b87}
 html.dark .seg button.on i{background:#0b1926;color:#4da3e3}
 input,select,textarea{width:100%;min-width:0;max-width:100%;padding:13px 16px;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
+.date-wrap{position:relative;display:block;width:100%;max-width:100%}
+.date-wrap .date-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 16px;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink);pointer-events:none;z-index:1;white-space:nowrap}
+.date-wrap input[type="date"]{position:relative;z-index:2;opacity:0;width:100%;cursor:pointer}
+.date-wrap:focus-within .date-face{border-color:var(--grn);outline:2px solid rgba(31,111,168,.18)}
 html.dark select option{background:#18212c;color:#edf2f7}
 textarea{line-height:1.4;resize:vertical}
 label{display:block;font-size:15px;margin:12px 0 6px}
@@ -172,6 +176,32 @@ const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").r
 const num=v=>{const n=parseFloat(String(v).replace(/[,৳\s]|tk/gi,""));return isNaN(n)?0:n};
 const tk=n=>"৳ "+(Math.round(n*100)/100).toLocaleString("en-US");
 function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
+function fmtDMY(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso)return iso[3]+"-"+iso[2]+"-"+iso[1];
+  const dmy=raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if(dmy){
+    const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const mi=M.indexOf(dmy[2].toUpperCase());
+    if(mi>-1)return String(Number(dmy[1])).padStart(2,"0")+"-"+String(mi+1).padStart(2,"0")+"-"+dmy[3];
+  }
+  return raw;
+}
+function fmtDMYStamp(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{2}:\d{2}))?/);
+  if(m)return m[3]+"-"+m[2]+"-"+m[1]+(m[4]?" "+m[4]:"");
+  return fmtDMY(raw);
+}
+function syncDateFace(el){
+  try{
+    const face=el&&el.parentNode&&el.parentNode.querySelector?el.parentNode.querySelector(".date-val"):null;
+    if(face)face.textContent=fmtDMY(el.value)||"";
+  }catch(e){}
+}
 const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
 let CHAIN=Promise.resolve(),INFLIGHT=0;
 const READ_ACTIONS={stockload:1,detail:1,purchases:1,tocheck:1,issues:1,products:1,purchaseplan:1,importplan:1};
@@ -430,7 +460,7 @@ function prodDetailHtml(p){
     ${(p.sold10||p.sold30)?`<p>Sold: <b>${p.sold10||0}</b> pcs in 10d · <b>${p.sold30||0}</b> pcs in 30d</p>`:""}
     ${extraPrices.length?`<p>Other accepted prices: <b>${extraPrices.map(tk).join(", ")}</b></p>`:""}
     ${p.aliases&&p.aliases.length?`<p>Other names: <b>${esc(p.aliases.join(", "))}</b></p>`:""}
-    ${HIST[p.id]?`<table>${HIST[p.id].slice(0,6).map(h=>`<tr><td>${esc(h.time.slice(0,10))} · ${esc(h.type)}${h.ref?" "+esc(h.ref):""}</td><td style="text-align:right"><b>${h.qty>0?"+":"−"}${Math.abs(h.qty)}</b></td></tr>`).join("")}</table>`:""}
+    ${HIST[p.id]?`<table>${HIST[p.id].slice(0,6).map(h=>`<tr><td>${esc(fmtDMY(h.time.slice(0,10)))} · ${esc(h.type)}${h.ref?" "+esc(h.ref):""}</td><td style="text-align:right"><b>${h.qty>0?"+":"−"}${Math.abs(h.qty)}</b></td></tr>`).join("")}</table>`:""}
     <div class="acts"><button class="btn p" onclick="ui.edit('${p.id}')">Edit</button><button class="btn" onclick="ui.adjust('${p.id}')">Adjust stock</button><button class="btn" onclick="ui.merge('${p.id}')">Merge…</button></div></div>`;
 }
 function productCardHtml(p,opts){
@@ -659,7 +689,7 @@ function issuesView(){
     ${RRET.slice(0,10).map(r=>`<div style="padding:10px 0;border-top:1px solid var(--line);font-size:14px">
       <div style="display:flex;justify-content:space-between;gap:8px">
         <b>${esc(r.order)} &middot; ${esc(r.typed)} (&times;${r.qty})</b>
-        <span style="color:var(--mut)">${esc(r.resolved||r.time)}</span>
+        <span style="color:var(--mut)">${esc(fmtDMYStamp(r.resolved||r.time))}</span>
       </div>
       <div style="color:var(--mut);margin-top:3px">${esc(r.resolution)}</div>
     </div>`).join("")}
@@ -896,14 +926,14 @@ ui.newPurchase=async()=>{
   }
 };
 function renderRecentPurchasesHtml(){
-  return RECENT.length?`<div class="card big"><h3>Recent purchases</h3>${RECENT.map(r=>`<div class="card" style="margin:10px 0 0"><div class="prow"><div><div class="n">${esc(r.id)} · ${esc(r.supplier)}</div><div class="s">${esc(r.date)} · ${tk(r.total)}${r.status==="voided"?" · voided":""}</div><div class="s">${esc(r.lines.join(", "))}</div></div>${r.status!=="voided"?`<button class="btn w" onclick="ui.voidP('${r.id}')">Void</button>`:""}</div></div>`).join("")}</div>`:"";
+  return RECENT.length?`<div class="card big"><h3>Recent purchases</h3>${RECENT.map(r=>`<div class="card" style="margin:10px 0 0"><div class="prow"><div><div class="n">${esc(r.id)} · ${esc(r.supplier)}</div><div class="s">${esc(fmtDMY(r.date))} · ${tk(r.total)}${r.status==="voided"?" · voided":""}</div><div class="s">${esc(r.lines.join(", "))}</div></div>${r.status!=="voided"?`<button class="btn w" onclick="ui.voidP('${r.id}')">Void</button>`:""}</div></div>`).join("")}</div>`:"";
 }
 function renderPurchase(){
   const sup=S.suppliers;
   $("#app").innerHTML=`<div class="top"><small>Stock in</small><h2>New purchase</h2></div>
   <p id="err" class="err"></p>
   <div class="card big"><h3>Purchase</h3>
-    <label>Date</label><input type="date" value="${PUR.date}" oninput="PUR.date=this.value">
+    <label>Date</label><div class="date-wrap"><span class="date-face"><span class="date-val">${esc(fmtDMY(PUR.date))}</span><span aria-hidden="true">&#128197;</span></span><input type="date" value="${PUR.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" oninput="PUR.date=this.value;syncDateFace(this)" onchange="syncDateFace(this)"></div>
     <label>Supplier</label><select id="purSupSel" onchange="PUR.supplier=this.value;renderPurchase()">${sup.map(s=>`<option ${s===PUR.supplier?"selected":""}>${esc(s)}</option>`).join("")}<option value="__new" ${PUR.supplier==="__new"?"selected":""}>+ Add new supplier…</option></select>
     ${PUR.supplier==="__new"?`<label>New supplier name</label><input id="newSup" value="${esc(PUR.newSupplier)}" oninput="PUR.newSupplier=this.value" onchange="PUR.newSupplier=this.value" placeholder="Supplier name">`:""}</div>
   <div class="card big"><h3>Products</h3><p class="note" style="margin:0 0 10px">All prices are per piece.</p><div id="lines"></div>

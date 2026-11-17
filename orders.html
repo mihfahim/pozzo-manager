@@ -52,6 +52,10 @@ html.dark .card{box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .hint{color:var(--mut);font-size:15px;margin:0 0 12px;line-height:1.45}
 label{display:block;font-size:15px;margin:12px 0 6px}
 input,textarea,select{width:100%;min-width:0;max-width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink)}
+.date-wrap{position:relative;display:block;width:100%;max-width:100%}
+.date-wrap .date-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--in);font:inherit;font-size:17px;color:var(--ink);pointer-events:none;z-index:1;white-space:nowrap}
+.date-wrap input[type="date"]{position:relative;z-index:2;opacity:0;width:100%;cursor:pointer}
+.date-wrap:focus-within .date-face{border-color:var(--grn);outline:2px solid rgba(31,111,168,.18)}
 html.dark select option{background:#18212c;color:#edf2f7}
 textarea{resize:vertical;line-height:1.5}
 .chk{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--sub);margin:12px 0 0;cursor:pointer;font-size:15px}
@@ -135,6 +139,35 @@ const num=v=>{const n=parseFloat(String(v).replace(/,/g,""));return isNaN(n)?0:n
 const tk=n=>"৳ "+Math.round(n).toLocaleString("en-US");
 const en=s=>s.replace(/[০-৯]/g,d=>"০১২৩৪৫৬৭৮৯".indexOf(d));
 function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
+function fmtDMY(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso)return iso[3]+"-"+iso[2]+"-"+iso[1];
+  const dmy=raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if(dmy){
+    const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const mi=M.indexOf(dmy[2].toUpperCase());
+    if(mi>-1)return String(Number(dmy[1])).padStart(2,"0")+"-"+String(mi+1).padStart(2,"0")+"-"+dmy[3];
+  }
+  return raw;
+}
+function fmtDMYStamp(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{2}:\d{2}))?/);
+  if(m)return m[3]+"-"+m[2]+"-"+m[1]+(m[4]?" "+m[4]:"");
+  return fmtDMY(raw);
+}
+function fmtDMYInText(s){
+  return String(s==null?"":s).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g,(_,y,m,d)=>d+"-"+m+"-"+y);
+}
+function syncDateFace(el){
+  try{
+    const face=el&&el.parentNode&&el.parentNode.querySelector?el.parentNode.querySelector(".date-val"):null;
+    if(face)face.textContent=fmtDMY(el.value)||"";
+  }catch(e){}
+}
 const MON3=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 const MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function normalizeOrderId(raw){
@@ -531,9 +564,9 @@ function renderOrderDetail(flashNote){
     <div class="sum"><span>Name</span><b>${esc(o.name||"-")}</b></div>
     <div class="sum"><span>Phone</span><span>${esc(o.phone||"-")}${o.phone2?" / "+esc(o.phone2):""}</span></div>
     <div class="sum"><span>Address</span><span style="text-align:right;max-width:65%">${esc(o.address||"-")}</span></div>
-    <div class="sum m"><span>Order date</span><span>${esc(o.date)}</span></div>
-    <div class="sum m"><span>Parcel export</span><span>${o.exported?"Exported ("+esc(o.exported)+")":"Not exported yet"}</span></div>
-    <div class="sum m"><span>Dispatch status</span><span>${o.packed?"Packed ("+esc(o.packed)+")":"Not packed yet"}</span></div>
+    <div class="sum m"><span>Order date</span><span>${esc(fmtDMY(o.date))}</span></div>
+    <div class="sum m"><span>Parcel export</span><span>${o.exported?"Exported ("+esc(fmtDMYStamp(o.exported))+")":"Not exported yet"}</span></div>
+    <div class="sum m"><span>Dispatch status</span><span>${o.packed?"Packed ("+esc(fmtDMYStamp(o.packed))+")":"Not packed yet"}</span></div>
   </div>
 
   <div class="card"><h3>Products</h3>
@@ -560,7 +593,7 @@ function renderOrderDetail(flashNote){
   </div>
 
   ${(o.returnNote||openRet.length||resRet.length)?`<div class="card"><h3>Return &amp; inspection log</h3>
-    ${o.returnNote?`<div style="margin-bottom:10px">${o.returnNote.split(" | ").map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:14px">${esc(n)}</div>`).join("")}</div>`:""}
+    ${o.returnNote?`<div style="margin-bottom:10px">${o.returnNote.split(" | ").map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:14px">${esc(fmtDMYInText(n))}</div>`).join("")}</div>`:""}
     ${openRet.length?`<div class="warn" style="margin-bottom:10px"><b>Waiting for inspection in Stock → Issues (${openRet.length}):</b><br>
       ${openRet.map(r=>`• ${esc(r.item)} ×${r.qty} (${esc(r.id)})`).join("<br>")}</div>`:""}
     ${resRet.length?`<div class="ok" style="margin-bottom:10px"><b>Inspected returns (${resRet.length}):</b><br>
@@ -628,14 +661,14 @@ function renderEditOrderScreen(){
   <div class="card"><h3>Order &amp; status</h3>
     <div class="row">
       <div><label for="ed_id">Order ID</label><input id="ed_id" value="${esc(EDIT.id)}" oninput="EDIT.id=this.value.trim().toUpperCase()"></div>
-      <div><label for="ed_date">Date</label><input id="ed_date" type="date" value="${esc(EDIT.date)}" oninput="onEditDateChange(this.value)"></div>
+      <div><label for="ed_date">Date</label><div class="date-wrap"><span class="date-face"><span class="date-val">${esc(fmtDMY(EDIT.date))}</span><span aria-hidden="true">&#128197;</span></span><input id="ed_date" type="date" value="${esc(EDIT.date)}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" oninput="onEditDateChange(this.value);syncDateFace(this)" onchange="syncDateFace(this)"></div></div>
     </div>
     <p class="hint" style="margin:8px 0 0">If you move the date to another month, the order moves to that month's sheet and gets that month's next free ID (unless you type one).</p>
     <label for="ed_status">Status</label>
     <select id="ed_status" onchange="EDIT.status=this.value;edCalc()">
       ${["Active","Partial Return","Returned","Cancelled"].map(st=>`<option value="${st}" ${EDIT.status===st?"selected":""}>${st}</option>`).join("")}
     </select>
-    ${o.exported?`<label class="chk"><input type="checkbox" ${EDIT.clearExport?"checked":""} onchange="EDIT.clearExport=this.checked"><span>Clear parcel export mark (${esc(o.exported)}) so it can be re-exported</span></label>`:""}
+    ${o.exported?`<label class="chk"><input type="checkbox" ${EDIT.clearExport?"checked":""} onchange="EDIT.clearExport=this.checked"><span>Clear parcel export mark (${esc(fmtDMYStamp(o.exported))}) so it can be re-exported</span></label>`:""}
     <label class="chk"><input type="checkbox" ${EDIT.packed?"checked":""} onchange="EDIT.packed=this.checked"><span>Marked as packed in Dispatch</span></label>
   </div>
 
@@ -799,7 +832,7 @@ async function doDeleteOrder(){
     "• Removes "+o.id+" ("+o.name+") completely from the Google Sheet.\n"+
     "• Frees the SN "+o.id+" so the next new order will reuse it.\n"+
     "• Restores any deducted stock and keeps a permanent deletion record in the Stock Ledger & Change log."+
-    (o.exported?"\n\n⚠ Warning: This order was already marked as parcel-exported ("+o.exported+").":"")+
+    (o.exported?"\n\n⚠ Warning: This order was already marked as parcel-exported ("+fmtDMYStamp(o.exported)+").":"")+
     "\n\nThis cannot be undone. Delete permanently?";
   if(!confirm(warn))return;
   const errEl=$("#derr");if(errEl)errEl.textContent="";
@@ -1078,7 +1111,7 @@ function review(){
   ${O.notes.length||O.unread.length?`<div class="warn">${O.notes.map(esc).join("<br>")}${O.unread.length?(O.notes.length?"<br>":"")+"Lines not understood: "+O.unread.map(esc).join(" | "):""}</div>`:""}
   <div class="card"><h3>Order</h3><p class="hint">The ID shown is a preview. The sheet sets the final ID when you save, so two devices never get the same one. Type your own ID only if you need to.</p>
     <div class="row"><div><label>Order ID</label><input id="oid" placeholder="Set when saved" value="${esc(O.id)}" oninput="idTyped(this.value)"></div>
-    <div><label>Date</label><input type="date" value="${O.date}" oninput="O.date=this.value;if(O.idAuto&&this.value)previewId()"></div></div></div>
+    <div><label>Date</label><div class="date-wrap"><span class="date-face"><span class="date-val">${esc(fmtDMY(O.date))}</span><span aria-hidden="true">&#128197;</span></span><input type="date" value="${O.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" oninput="O.date=this.value;syncDateFace(this);if(O.idAuto&&this.value)previewId()" onchange="syncDateFace(this)"></div></div></div></div>
   <div class="card"><h3>Customer details</h3>
     <label>Customer name</label><input value="${esc(O.name)}" oninput="O.name=this.value">
     <label>Phone number</label><input inputmode="tel" value="${esc(O.phone)}" oninput="O.phone=this.value.trim()">
@@ -1210,7 +1243,7 @@ async function saveOrder(){
 /* ---------- cash memo (drawn on a canvas, never stored) ---------- */
 const SHOP={name:"POZZO TOYS",fb:"Facebook: Pozzo Toys",phone:"01712-666868"};
 let MEMO=null,LOGO=null,pvT=null;
-function memoDate(d){const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?(+m[3])+" "+MN[+m[2]-1]+" "+m[1]:String(d)}
+function memoDate(d){return fmtDMY(d)}
 async function memoLogo(){
   if(LOGO)return LOGO;
   const el=document.querySelector("header img");if(!el)return null;
@@ -1418,7 +1451,7 @@ async function regenMemo(){
 }
 
 /* ---------- parcel entry file ---------- */
-function fileDate(){const t=new Date();return String(t.getDate()).padStart(2,"0")+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()]+" "+String(t.getFullYear()).slice(-2)}
+function fileDate(){const t=new Date(),p=n=>String(n).padStart(2,"0");return p(t.getDate())+"-"+p(t.getMonth()+1)+"-"+t.getFullYear()}
 async function parcelExcel(list){
   if(typeof ExcelJS==="undefined")throw new Error("The Excel library did not load. Check your internet connection and try again.");
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Sheet1");
@@ -1469,14 +1502,15 @@ async function backup(){
   head(A,[["Order ID",14],["Date",12],["Customer name",24],["Phone",15],["Second phone",15],["Address",50],["Items",50],["Product subtotal",16],["Discount",10],["Delivery charge",15],["Grand total",13],["Status",14],["Message total",14]]);
   head(I,[["Order ID",14],["Date",12],["Product",34],["Qty",8],["Unit price",12],["Subtotal",12]]);
   orders.forEach(o=>{
-    const r=A.addRow([o.id,o.date,o.name,String(o.phone),o.phone2?String(o.phone2):null,o.address,o.items.map(i=>i.name+" x"+i.qty).join("; "),o.sub==null?"":o.sub,o.discount,o.delivery,o.total,o.status||"Active",o.msgTotal==null?"":o.msgTotal]);
+    const dStr=fmtDMY(o.date);
+    const r=A.addRow([o.id,dStr,o.name,String(o.phone),o.phone2?String(o.phone2):null,o.address,o.items.map(i=>i.name+" x"+i.qty).join("; "),o.sub==null?"":o.sub,o.discount,o.delivery,o.total,o.status||"Active",o.msgTotal==null?"":o.msgTotal]);
     r.getCell(4).numFmt="@";r.getCell(5).numFmt="@";
-    o.items.forEach(i=>I.addRow([o.id,o.date,i.name,i.qty,i.price,i.qty*i.price]));
+    o.items.forEach(i=>I.addRow([o.id,dStr,i.name,i.qty,i.price,i.qty*i.price]));
   });
   const buf=await wb.xlsx.writeBuffer();
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
-  a.download="Pozzo orders backup "+today()+".xlsx";document.body.appendChild(a);a.click();a.remove();
+  a.download="Pozzo orders backup "+fmtDMY(today())+".xlsx";document.body.appendChild(a);a.click();a.remove();
 }
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 function bootOrderFromHash(){

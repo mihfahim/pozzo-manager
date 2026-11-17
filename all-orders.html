@@ -95,6 +95,19 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const tk=n=>"৳ "+Math.round(Number(n)||0).toLocaleString("en-US");
 function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
+function fmtDMY(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso)return iso[3]+"-"+iso[2]+"-"+iso[1];
+  const dmy=raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if(dmy){
+    const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const mi=M.indexOf(dmy[2].toUpperCase());
+    if(mi>-1)return String(Number(dmy[1])).padStart(2,"0")+"-"+String(mi+1).padStart(2,"0")+"-"+dmy[3];
+  }
+  return raw;
+}
 const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
 const ALL_MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const monthYearKey=(m,y)=>String(y)+"-"+String(m).padStart(2,"0");
@@ -264,7 +277,7 @@ function filteredOrders(){
     const st=o.status||"Active";
     if(state.statusFilter!=="all"&&st!==state.statusFilter)return false;
     if(!ql)return true;
-    return (String(o.id||"")+" "+String(o.name||"")+" "+String(o.phone||"")+" "+String(o.date||"")).toLowerCase().includes(ql);
+    return (String(o.id||"")+" "+String(o.name||"")+" "+String(o.phone||"")+" "+String(o.date||"")+" "+fmtDMY(o.date)).toLowerCase().includes(ql);
   });
 }
 
@@ -346,7 +359,7 @@ function renderOrderButtonsHtml(list){
   return list.map(o=>`<button class="ord-btn" type="button" onclick="openOrderSummary('${esc(o.id)}')">
     <div class="main">
       <div class="title num">${esc(o.id)}${statusTag(o.status)} · ${esc(o.name||"Customer")}</div>
-      <div class="meta num">${esc(o.date)}${o.phone?" · "+esc(o.phone):""}${o.items&&o.items.length?" · "+o.items.length+" item"+(o.items.length===1?"":"s"):""}</div>
+      <div class="meta num">${esc(fmtDMY(o.date))}${o.phone?" · "+esc(o.phone):""}${o.items&&o.items.length?" · "+o.items.length+" item"+(o.items.length===1?"":"s"):""}</div>
     </div>
     <div class="side num">
       <div class="amt">${tk(o.total)}</div>

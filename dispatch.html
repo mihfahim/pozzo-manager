@@ -68,6 +68,10 @@ html.dark .period-sel select option{background:#18212c;color:#edf2f7}
 .custom-dates{display:flex;gap:8px;align-items:center;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-top:6px;flex-wrap:wrap}
 .custom-dates label{font-size:12px;color:var(--mut);font-weight:600}
 .custom-dates input[type="date"]{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:10px;background:var(--in);font:inherit;font-size:13px;color:var(--ink)}
+.custom-dates .date-wrap{position:relative;display:inline-block;min-width:138px}
+.custom-dates .date-wrap .date-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;padding:4px 10px;border:1px solid var(--line);border-radius:10px;background:var(--in);font:inherit;font-size:13px;color:var(--ink);pointer-events:none;z-index:1;white-space:nowrap}
+.custom-dates .date-wrap input[type="date"]{position:relative;z-index:2;opacity:0;width:100%;cursor:pointer}
+.custom-dates .date-wrap:focus-within .date-face{border-color:var(--grn);outline:2px solid rgba(31,111,168,.18)}
 .search{flex:1;min-width:160px;max-width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
 
 /* Alerts & Banners */
@@ -203,6 +207,32 @@ const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").rep
 const tk=n=>"৳ "+Math.round(Number(n)||0).toLocaleString("en-US");
 function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
 function nowStamp(){const t=new Date(),p=n=>String(n).padStart(2,"0");return today()+" "+p(t.getHours())+":"+p(t.getMinutes())}
+function fmtDMY(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso)return iso[3]+"-"+iso[2]+"-"+iso[1];
+  const dmy=raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if(dmy){
+    const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const mi=M.indexOf(dmy[2].toUpperCase());
+    if(mi>-1)return String(Number(dmy[1])).padStart(2,"0")+"-"+String(mi+1).padStart(2,"0")+"-"+dmy[3];
+  }
+  return raw;
+}
+function fmtDMYStamp(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{2}:\d{2}))?/);
+  if(m)return m[3]+"-"+m[2]+"-"+m[1]+(m[4]?" "+m[4]:"");
+  return fmtDMY(raw);
+}
+function syncDateFace(el){
+  try{
+    const face=el&&el.parentNode&&el.parentNode.querySelector?el.parentNode.querySelector(".date-val"):null;
+    if(face)face.textContent=fmtDMY(el.value)||"";
+  }catch(e){}
+}
 const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
 
 const PACK_STORE_KEY="pt_packed_orders";
@@ -488,7 +518,7 @@ function renderPackWindow(){
   m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="packCustTitle">
     <div class="sheet-head">
       <div>
-        <div class="sheet-kicker num">${esc(o.id)} · ${esc(o.date||"")}${isPacked?" · Packed "+esc(o.packed):""}</div>
+        <div class="sheet-kicker num">${esc(o.id)} · ${esc(fmtDMY(o.date||""))}${isPacked?" · Packed "+esc(fmtDMYStamp(o.packed)):""}</div>
         <h3 id="packCustTitle">${esc(o.name||"Customer")}</h3>
         <div class="sheet-cust num">${o.phone?esc(o.phone):""}${o.phone2?" / "+esc(o.phone2):""}${o.address?"<br>"+esc(o.address):""}</div>
       </div>
@@ -541,7 +571,7 @@ function renderPackWindow(){
   m.hidden=false;
 }
 
-function fileDate(){const t=new Date();return String(t.getDate()).padStart(2,"0")+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()]+" "+String(t.getFullYear()).slice(-2)}
+function fileDate(){const t=new Date(),p=n=>String(n).padStart(2,"0");return p(t.getDate())+"-"+p(t.getMonth()+1)+"-"+t.getFullYear()}
 async function exportPending(){
   state.statusMsg="Preparing parcel entry file…";state.isErr=false;state.lastPackedId="";state.exportPrompt=null;render();
   const j=await api({action:"list",mode:"next",today:today()});
@@ -696,9 +726,9 @@ function render(){
     ${state.period==="custom"?`
     <div class="custom-dates">
       <label>From:</label>
-      <input type="date" value="${esc(state.customFrom)}" onchange="state.customFrom=this.value;render()">
+      <div class="date-wrap"><span class="date-face num"><span class="date-val">${esc(fmtDMY(state.customFrom))}</span><span aria-hidden="true">&#128197;</span></span><input type="date" value="${esc(state.customFrom)}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onchange="state.customFrom=this.value;syncDateFace(this);render()"></div>
       <label style="margin-left:6px">To:</label>
-      <input type="date" value="${esc(state.customTo)}" onchange="state.customTo=this.value;render()">
+      <div class="date-wrap"><span class="date-face num"><span class="date-val">${esc(fmtDMY(state.customTo))}</span><span aria-hidden="true">&#128197;</span></span><input type="date" value="${esc(state.customTo)}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onchange="state.customTo=this.value;syncDateFace(this);render()"></div>
     </div>`:""}
   </div>
 
@@ -1079,7 +1109,7 @@ async function stkGenerate(){
   if(bad.length){if(m){m.style.color="var(--bad)";m.textContent="Some included parcels have empty fields.";}return}
   if(typeof ExcelJS==="undefined"){if(m){m.style.color="var(--bad)";m.textContent="Excel library did not load. Check internet connection.";}return}
   const groups={};
-  inc.forEach(p=>{const k=p.date?`${p.date.d} ${STK_MONTHS[p.date.m-1]} ${p.date.y}`:"Unknown date";(groups[k]=groups[k]||[]).push(p)});
+  inc.forEach(p=>{const k=p.date?`${String(p.date.d).padStart(2,"0")}-${String(p.date.m).padStart(2,"0")}-${String(p.date.y).length===2?"20"+p.date.y:p.date.y}`:"Unknown date";(groups[k]=groups[k]||[]).push(p)});
   const done=[],files=[];
   for(const [k,rows] of Object.entries(groups)){
     let serial=1;

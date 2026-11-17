@@ -47,6 +47,11 @@ main{width:100%;max-width:1080px;margin:0 auto;padding:16px 14px;overflow-x:hidd
 .custom-range>div{min-width:0;max-width:100%}
 .custom-range label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
 .custom-range input[type="date"]{width:100%;min-width:0;max-width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--in);font:inherit;font-size:14px;color:var(--ink)}
+.date-wrap{position:relative;display:block;width:100%;max-width:100%}
+.date-wrap .date-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:var(--in);color:var(--ink);font:inherit;font-size:16px;pointer-events:none;z-index:1;white-space:nowrap}
+.date-wrap input[type="date"]{position:relative;z-index:2;opacity:0;width:100%;cursor:pointer}
+.date-wrap:focus-within .date-face{border-color:var(--grn);outline:2px solid rgba(31,111,168,.18)}
+.custom-range .date-wrap .date-face{min-height:42px;padding:8px 10px;border-radius:12px;font-size:14px}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:pointer;transition:background-color .15s ease}
 .btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
@@ -242,11 +247,25 @@ function monthBounds(y,m){
   const end=new Date(y,m,0);
   return {from:fmtDate(start),to:fmtDate(end)};
 }
-function niceDate(s){
-  const p=String(s||"").split("-");
-  if(p.length!==3)return String(s||"");
-  const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return Number(p[2])+" "+(M[Number(p[1])-1]||p[1])+" "+p[0];
+function fmtDMY(s){
+  const raw=String(s==null?"":s).trim();
+  if(!raw)return "";
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso)return iso[3]+"-"+iso[2]+"-"+iso[1];
+  const dmy=raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if(dmy){
+    const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const mi=M.indexOf(dmy[2].toUpperCase());
+    if(mi>-1)return pad(Number(dmy[1]))+"-"+pad(mi+1)+"-"+dmy[3];
+  }
+  return raw;
+}
+function niceDate(s){return fmtDMY(s)}
+function syncDateFace(el){
+  try{
+    const face=el&&el.parentNode&&el.parentNode.querySelector?el.parentNode.querySelector(".date-val"):null;
+    if(face)face.textContent=fmtDMY(el.value)||"";
+  }catch(e){}
 }
 const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
 const localCats=()=>{try{const a=JSON.parse(localStorage.getItem("pt_exp_cats")||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}};
@@ -565,8 +584,8 @@ function render(){
 
   ${state.loading?`<div class="sync-note"><span>${d?"Syncing latest "+esc(r.label.toLowerCase())+" numbers from Google Sheet…":"Loading dashboard from Google Sheet…"}</span></div>`:""}
   ${state.rangeMode==="custom"?`<div class="custom-range">
-    <div><label for="cfrom">From date</label><input id="cfrom" type="date" value="${esc(state.customFrom)}" oninput="state.customFrom=this.value" onchange="state.customFrom=this.value"></div>
-    <div><label for="cto">To date</label><input id="cto" type="date" value="${esc(state.customTo)}" oninput="state.customTo=this.value" onchange="state.customTo=this.value"></div>
+    <div><label for="cfrom">From date</label><div class="date-wrap"><span class="date-face num"><span class="date-val">${esc(fmtDMY(state.customFrom))}</span><span aria-hidden="true">&#128197;</span></span><input id="cfrom" type="date" value="${esc(state.customFrom)}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" oninput="state.customFrom=this.value;syncDateFace(this)" onchange="state.customFrom=this.value;syncDateFace(this)"></div></div>
+    <div><label for="cto">To date</label><div class="date-wrap"><span class="date-face num"><span class="date-val">${esc(fmtDMY(state.customTo))}</span><span aria-hidden="true">&#128197;</span></span><input id="cto" type="date" value="${esc(state.customTo)}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" oninput="state.customTo=this.value;syncDateFace(this)" onchange="state.customTo=this.value;syncDateFace(this)"></div></div>
     <button class="btn p" type="button" onclick="applyCustomRange()">Apply range</button>
   </div>`:""}
 
@@ -827,7 +846,10 @@ function renderExpenseModal(){
 
     <div class="field">
       <label for="expDate">Date</label>
-      <input id="expDate" type="date" value="${esc(st.date)}" oninput="state.modal.date=this.value">
+      <div class="date-wrap">
+        <span class="date-face num"><span class="date-val">${esc(fmtDMY(st.date))}</span><span aria-hidden="true">&#128197;</span></span>
+        <input id="expDate" type="date" value="${esc(st.date)}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" oninput="state.modal.date=this.value;syncDateFace(this)" onchange="syncDateFace(this)">
+      </div>
     </div>
 
     <div class="field">
