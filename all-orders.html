@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2b4f48">
+<title>Pozzo Manager – Orders</title>
+<meta name="description" content="Pozzo Toys monthly orders directory with month and year selector.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png?v=17">
+<link rel="apple-touch-icon" href="icon-192.png?v=17">
+<style>
+:root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66}
+html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--badbg:#3b1d19;--amb:#f0b865;--ambbg:#362916;--blue:#4da3e3;--deep:#b8dcf8}
+*{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(72px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;text-wrap:balance}
+.ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--deep);font-size:13px;font-weight:700;border-bottom:0 solid var(--line);transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
+.ptr.pulling{transition:none}
+.ptr.active{opacity:1;border-bottom-width:1px}
+.ptr.ready{background:#cde5f7}
+html.dark .ptr.ready{background:#214563}
+.ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
+.ptr.ready .ptr-ic{transform:rotate(180deg)}
+@keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
+header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
+html.dark header{background:#141c26}
+header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto;background:transparent}
+.theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.embed .theme-btn{display:none}
+header h1{font-size:22px;color:var(--deep)}
+.embed header{display:none}
+main{width:100%;max-width:720px;margin:0 auto;padding:14px 12px;overflow-x:hidden}
+.num{font-variant-numeric:tabular-nums}
+
+.headbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.kicker{color:var(--mut);font-size:14px;margin-bottom:2px}
+.headbar h2{font-size:28px;line-height:1.15}
+.head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
+.btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
+html.dark .btn.p{color:#0b1926}
+.btn.sm{min-height:36px;padding:6px 12px;border-radius:10px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:default}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:15px 14px;margin-bottom:14px;max-width:100%;overflow:hidden}
+.controls-grid{display:grid;grid-template-columns:1.3fr .9fr;gap:8px;margin-bottom:10px}
+.controls-grid select,.filter-row select,.search{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;font-weight:600;color:var(--ink)}
+.filter-row{display:grid;grid-template-columns:1fr .8fr;gap:8px}
+.search{font-weight:400}
+html.dark select option{background:#18212c;color:#edf2f7}
+
+.summary-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;font-size:13.5px;color:var(--mut)}
+.summary-bar b{color:var(--ink)}
+
+.flash{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--bd);color:var(--grn);border:1px solid #c6ddd4;border-radius:16px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600;overflow-wrap:anywhere}
+html.dark .flash{border-color:#28557d}
+.flash.err{background:var(--badbg);color:var(--bad);border-color:#e8bfae}
+html.dark .flash.err{border-color:#69322b}
+.flash.warn{background:var(--ambbg);color:var(--amb);border-color:#e5cfa8}
+html.dark .flash.warn{border-color:#5a4320}
+
+.ord-list{display:flex;flex-direction:column;gap:9px}
+.ord-btn{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:16px;border:1px solid var(--line);background:var(--in);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .08s ease;box-shadow:0 1px 2px rgba(45,38,24,.04)}
+html.dark .ord-btn{box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.ord-btn:hover,.ord-btn:focus-visible{border-color:var(--grn);background:var(--sub);outline:none}
+.ord-btn:active{transform:scale(.995)}
+.ord-btn .main{min-width:0;flex:1}
+.ord-btn .title{font-weight:700;font-size:15.5px;line-height:1.3;overflow-wrap:anywhere}
+.ord-btn .meta{color:var(--mut);font-size:13px;margin-top:4px;line-height:1.35;overflow-wrap:anywhere}
+.ord-btn .side{text-align:right;flex:none;white-space:nowrap}
+.ord-btn .amt{font-weight:700;font-size:16px;color:var(--ink)}
+.ord-btn .cod{color:var(--mut);font-size:12.5px;margin-top:2px}
+
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--bd);color:var(--grn);font-size:11.5px;font-weight:700;margin-left:6px;vertical-align:middle}
+.tag.warn{background:var(--ambbg);color:var(--amb)}
+.tag.bad{background:var(--badbg);color:var(--bad)}
+
+.skel{height:64px;border-radius:16px;background:linear-gradient(90deg,var(--sub) 25%,var(--line) 50%,var(--sub) 75%);background-size:200% 100%;animation:skPulse 1.2s ease-in-out infinite}
+@keyframes skPulse{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.empty{padding:28px 10px;text-align:center;color:var(--mut);font-size:15px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+<div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Orders</h1></header>
+<main id="app"></main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const tk=n=>"৳ "+Math.round(Number(n)||0).toLocaleString("en-US");
+function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
+const cfg=()=>{try{return JSON.parse(localStorage.getItem("pt_cfg")||"{}")}catch(e){return{}}};
+const ALL_MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const monthYearKey=(m,y)=>String(y)+"-"+String(m).padStart(2,"0");
+
+const tdInit=today();
+let state={
+  month:Number(tdInit.slice(5,7)),
+  year:Number(tdInit.slice(0,4)),
+  statusFilter:"all",
+  q:"",
+  loading:true,
+  syncing:false,
+  err:"",
+  isWarn:false,
+  orders:[],
+  cache:{}
+};
+
+function readMonthCache(ym){
+  if(state.cache[ym])return state.cache[ym];
+  try{
+    const raw=sessionStorage.getItem("pt_mo_"+ym);
+    if(!raw)return null;
+    const p=JSON.parse(raw);
+    if(p&&Array.isArray(p.orders)){state.cache[ym]=p;return p}
+  }catch(e){}
+  return null;
+}
+function saveMonthCache(ym,orders){
+  const entry={ts:Date.now(),orders:orders};
+  state.cache[ym]=entry;
+  try{sessionStorage.setItem("pt_mo_"+ym,JSON.stringify(entry))}catch(e){}
+}
+function clearAllMonthCache(){
+  state.cache={};
+  try{
+    if(typeof sessionStorage!=="undefined"){
+      for(let i=sessionStorage.length-1;i>=0;i--){
+        const k=sessionStorage.key(i);
+        if(k&&k.startsWith("pt_mo_"))sessionStorage.removeItem(k);
+      }
+    }
+  }catch(e){}
+}
+
+async function api(payload){
+  const c=cfg();if(!c.url||!c.key)return {ok:false,error:"nocfg"};
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),45000);
+  try{
+    const r=await fetch(c.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({key:c.key},payload)),signal:ac.signal});
+    return await r.json();
+  }catch(e){return {ok:false,error:e&&e.name==="AbortError"?"slow":"no connection"}}
+  finally{clearTimeout(t)}
+}
+
+function goTab(tab,extra){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage(Object.assign({type:"pozzo:switch-tab",tab:tab},extra||{}),"*");
+      return;
+    }
+  }catch(e){}
+  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",orders:"all-orders.html"};
+  if(map[tab]){
+    const suffix=(tab==="sale"||tab==="sales")&&extra&&extra.orderId?"#order="+encodeURIComponent(extra.orderId):"";
+    window.location.href=map[tab]+suffix;
+  }
+}
+
+function openOrderSummary(id){
+  goTab("sales",{orderId:id});
+}
+
+function statusTag(st){
+  if(!st||st==="Active")return "";
+  if(st==="Partial Return")return `<span class="tag warn">${esc(st)}</span>`;
+  return `<span class="tag bad">${esc(st)}</span>`;
+}
+
+let _fetchReqSeq=0;
+async function loadMonthOrders(force){
+  const c=cfg();
+  const ym=monthYearKey(state.month,state.year);
+  if(!c.url||!c.key){
+    state.loading=false;
+    state.syncing=false;
+    state.orders=[];
+    render();
+    return;
+  }
+
+  const cached=!force?readMonthCache(ym):null;
+  if(cached){
+    state.orders=cached.orders;
+    state.loading=false;
+    state.err="";
+    state.isWarn=false;
+    if(Date.now()-cached.ts<90000){
+      state.syncing=false;
+      render();
+      return;
+    }
+    state.syncing=true;
+    render();
+  }else{
+    state.loading=!state.orders.length||force||!cached;
+    if(!cached)state.orders=[];
+    state.syncing=!!state.orders.length;
+    state.err="";
+    state.isWarn=false;
+    render();
+  }
+
+  const seq=++_fetchReqSeq;
+  const j=await api({action:"monthorders",month:ym,today:today()});
+  if(seq!==_fetchReqSeq||monthYearKey(state.month,state.year)!==ym)return;
+
+  if(!j.ok&&/reading 'date'|unsupported action|unknown action/i.test(String(j.error||""))){
+    const fb=await api({action:"recentorders",limit:50,today:today()});
+    if(seq!==_fetchReqSeq||monthYearKey(state.month,state.year)!==ym)return;
+    state.loading=false;
+    state.syncing=false;
+    if(fb&&fb.ok&&Array.isArray(fb.orders)){
+      const filtered=fb.orders.filter(o=>String(o.date||"").slice(0,7)===ym);
+      state.orders=filtered;
+      state.isWarn=true;
+      state.err=filtered.length
+        ?"Showing latest orders only — redeploy pozzo-script.txt (New version) to load all orders for every month."
+        :"Redeploy pozzo-script.txt (New version) in Google Apps Script to browse orders from this month.";
+      render();
+      return;
+    }
+    state.isWarn=false;
+    state.err="Please update & deploy pozzo-script.txt (New version) in Google Apps Script to browse all orders by month.";
+    state.orders=[];
+    render();
+    return;
+  }
+
+  state.loading=false;
+  state.syncing=false;
+  if(!j.ok){
+    state.isWarn=false;
+    state.err=j.error==="no connection"?"Could not reach Google Sheet. Check your internet and pull down to refresh."
+      :j.error==="slow"?"Google Sheet is slow to respond. Pull down to try again."
+      :(j.error||"Could not load orders for that month.");
+    if(!cached)state.orders=[];
+  }else{
+    const list=Array.isArray(j.orders)?j.orders:[];
+    saveMonthCache(ym,list);
+    state.orders=list;
+    state.err="";
+    state.isWarn=false;
+  }
+  render();
+}
+
+function changePeriod(month,year){
+  state.month=Number(month);
+  state.year=Number(year);
+  return loadMonthOrders(false);
+}
+
+function filteredOrders(){
+  const ql=state.q.trim().toLowerCase();
+  return (state.orders||[]).filter(o=>{
+    const st=o.status||"Active";
+    if(state.statusFilter!=="all"&&st!==state.statusFilter)return false;
+    if(!ql)return true;
+    return (String(o.id||"")+" "+String(o.name||"")+" "+String(o.phone||"")+" "+String(o.date||"")).toLowerCase().includes(ql);
+  });
+}
+
+function render(){
+  const c=cfg();
+  const app=$("#app");
+  if(!app)return;
+  if(!c.url||!c.key){
+    app.innerHTML=`<div class="headbar"><div><div class="kicker">Pozzo Toys</div><h2>Orders</h2></div></div>
+    <div class="card"><h3>Google Sheet not connected</h3>
+      <p class="empty">Open Connection settings on the Sale page to load monthly orders.</p>
+      <div style="text-align:center"><button class="btn p" type="button" onclick="goTab('sales')">Open Sale</button></div>
+    </div>`;
+    return;
+  }
+
+  const mName=ALL_MONTH_NAMES[state.month-1]||"";
+  const curY=Number(today().slice(0,4));
+  const startY=Math.min(2024,state.year);
+  const years=[];
+  for(let yy=curY+1;yy>=startY;yy--)years.push(yy);
+
+  const allList=state.orders||[];
+  const list=filteredOrders();
+  const activeCnt=allList.filter(o=>(o.status||"Active")==="Active").length;
+  const activeSum=allList.filter(o=>(o.status||"Active")!=="Cancelled"&&(o.status||"Active")!=="Returned").reduce((s,o)=>s+(Number(o.total)||0),0);
+
+  app.innerHTML=`<div class="headbar">
+    <div>
+      <div class="kicker">Monthly order directory</div>
+      <h2>${esc(mName)} ${state.year}</h2>
+    </div>
+    <div class="head-actions">
+      <button class="btn sm" type="button" onclick="loadMonthOrders(true)">&#8635; Refresh</button>
+      <button class="btn sm p" type="button" onclick="goTab('sale')">+ New sale</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="controls-grid">
+      <select id="ordMonth" aria-label="Select month" onchange="changePeriod(this.value,state.year)">
+        ${ALL_MONTH_NAMES.map((nm,idx)=>`<option value="${idx+1}" ${state.month===idx+1?"selected":""}>${esc(nm)}</option>`).join("")}
+      </select>
+      <select id="ordYear" aria-label="Select year" onchange="changePeriod(state.month,this.value)">
+        ${years.map(yy=>`<option value="${yy}" ${state.year===yy?"selected":""}>${yy}</option>`).join("")}
+      </select>
+    </div>
+    <div class="filter-row">
+      <input id="ordSearch" class="search" type="search" placeholder="Search ID, name, phone…" value="${esc(state.q)}" oninput="state.q=this.value;renderOrderListOnly()">
+      <select id="ordStatus" aria-label="Filter status" onchange="state.statusFilter=this.value;renderOrderListOnly()">
+        <option value="all"${state.statusFilter==="all"?" selected":""}>All status (${allList.length})</option>
+        <option value="Active"${state.statusFilter==="Active"?" selected":""}>Active</option>
+        <option value="Partial Return"${state.statusFilter==="Partial Return"?" selected":""}>Partial Return</option>
+        <option value="Returned"${state.statusFilter==="Returned"?" selected":""}>Returned</option>
+        <option value="Cancelled"${state.statusFilter==="Cancelled"?" selected":""}>Cancelled</option>
+      </select>
+    </div>
+  </div>
+
+  ${state.err?`<div class="flash ${state.isWarn?"warn":"err"}">${esc(state.err)}</div>`:""}
+
+  <div class="card">
+    <div class="summary-bar num">
+      <span id="ordSummaryText">${state.loading?"Loading "+esc(mName)+" "+state.year+" orders…":`<b>${list.length}</b> of <b>${allList.length}</b> order${allList.length===1?"":"s"} · Active: <b>${activeCnt}</b> · Value: <b>${tk(activeSum)}</b>`}</span>
+      ${state.syncing?`<span>Syncing…</span>`:`<span>Tap any order to open summary</span>`}
+    </div>
+    <div id="ordListBox" class="ord-list">${renderOrderButtonsHtml(list)}</div>
+  </div>`;
+}
+
+function renderOrderButtonsHtml(list){
+  const mName=ALL_MONTH_NAMES[state.month-1]||"";
+  if(state.loading)return `<div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>`;
+  if(!list.length){
+    return `<div class="empty">${state.q||state.statusFilter!=="all"
+      ?`No matching orders in ${esc(mName)} ${state.year}.`
+      :`No orders found for ${esc(mName)} ${state.year}.`}</div>`;
+  }
+  return list.map(o=>`<button class="ord-btn" type="button" onclick="openOrderSummary('${esc(o.id)}')">
+    <div class="main">
+      <div class="title num">${esc(o.id)}${statusTag(o.status)} · ${esc(o.name||"Customer")}</div>
+      <div class="meta num">${esc(o.date)}${o.phone?" · "+esc(o.phone):""}${o.items&&o.items.length?" · "+o.items.length+" item"+(o.items.length===1?"":"s"):""}</div>
+    </div>
+    <div class="side num">
+      <div class="amt">${tk(o.total)}</div>
+      <div class="cod">COD ${tk(o.cod)}</div>
+    </div>
+  </button>`).join("");
+}
+
+function renderOrderListOnly(){
+  const box=document.getElementById("ordListBox");
+  if(!box){render();return}
+  const allList=state.orders||[];
+  const list=filteredOrders();
+  const activeCnt=allList.filter(o=>(o.status||"Active")==="Active").length;
+  const activeSum=allList.filter(o=>(o.status||"Active")!=="Cancelled"&&(o.status||"Active")!=="Returned").reduce((s,o)=>s+(Number(o.total)||0),0);
+  const stEl=document.getElementById("ordSummaryText");
+  if(stEl&&!state.loading){
+    stEl.innerHTML=`<b>${list.length}</b> of <b>${allList.length}</b> order${allList.length===1?"":"s"} · Active: <b>${activeCnt}</b> · Value: <b>${tk(activeSum)}</b>`;
+  }
+  box.innerHTML=renderOrderButtonsHtml(list);
+}
+
+window.addEventListener("message",e=>{
+  const d=e&&e.data;
+  if(d&&(d.type==="pozzo:refresh-orders"||d.type==="pozzo:order-dirty")){
+    clearAllMonthCache();
+    loadMonthOrders(true);
+  }
+});
+try{
+  if(typeof BroadcastChannel!=="undefined"){
+    const ch=new BroadcastChannel("pozzo_sync");
+    ch.addEventListener("message",e=>{
+      if(e&&e.data&&e.data.type==="pozzo:order-dirty"){
+        clearAllMonthCache();
+        loadMonthOrders(true);
+      }
+    });
+  }
+}catch(e){}
+window.addEventListener("storage",e=>{
+  if(e&&e.key==="pt_orders"){
+    clearAllMonthCache();
+    loadMonthOrders(true);
+  }
+});
+
+(function initPTR(onRefresh){
+  if(typeof document==="undefined")return;
+  let el=typeof document.getElementById==="function"?document.getElementById("ptr"):null;
+  const tx=()=>el&&el.querySelector?el.querySelector(".ptr-tx"):null;
+  const ic=()=>el&&el.querySelector?el.querySelector(".ptr-ic"):null;
+  let sx=0,sy=0,lock="",pull=0,busy=false;
+  const THRESH=52;
+  function setVisual(h,cls,text,glyph){
+    if(!el)return;
+    el.className="ptr"+(cls?" "+cls:"");
+    if(el.style)el.style.height=h+"px";
+    const t=tx();if(t&&text)t.textContent=text;
+    const g=ic();if(g&&glyph)g.innerHTML=glyph;
+  }
+  async function triggerPullRefresh(){
+    if(busy)return;
+    busy=true;
+    setVisual(44,"active busy","Refreshing…","&#8635;");
+    const t0=Date.now();
+    try{await onRefresh()}catch(e){}
+    finally{
+      const wait=Math.max(0,260-(Date.now()-t0));
+      const tm=setTimeout(()=>{busy=false;setVisual(0,"","Pull down to refresh","&#8595;")},wait);
+      if(tm&&typeof tm.unref==="function")tm.unref();
+    }
+  }
+  window.triggerPullRefresh=triggerPullRefresh;
+  const scrollTop=()=>Math.max(window.scrollY||0,(document.documentElement&&document.documentElement.scrollTop)||0,(document.body&&document.body.scrollTop)||0);
+  document.addEventListener("touchstart",e=>{
+    if(busy||!e.touches||e.touches.length!==1)return;
+    if(scrollTop()>2){lock="up";return}
+    const tgt=e.target;
+    if(tgt&&tgt.closest&&(tgt.closest("input, textarea, select"))){lock="modal";return}
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;lock="";pull=0;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(busy||lock==="up"||lock==="h"||lock==="modal"||!e.touches||e.touches.length!==1)return;
+    const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+    if(!lock){
+      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){lock="h";return}
+      if(dy<-6){lock="up";return}
+      if(dy>8&&Math.abs(dy)>Math.abs(dx)){if(scrollTop()>2){lock="up";return}lock="v"}else return;
+    }
+    if(lock==="v"){
+      if(dy<=0){pull=0;setVisual(0,"pulling","","");return}
+      pull=Math.min(76,Math.round(dy*0.55));
+      if(e.cancelable)e.preventDefault();
+      setVisual(pull,"pulling active"+(pull>=THRESH?" ready":""),pull>=THRESH?"Release to refresh":"Pull down to refresh","&#8595;");
+    }
+  },{passive:false});
+  function onEnd(){
+    if(busy)return;
+    const goRef=(lock==="v"&&pull>=THRESH);
+    lock="";pull=0;
+    if(goRef)triggerPullRefresh();
+    else setVisual(0,"","Pull down to refresh","&#8595;");
+  }
+  document.addEventListener("touchend",onEnd,{passive:true});
+  document.addEventListener("touchcancel",onEnd,{passive:true});
+})(()=>loadMonthOrders(true));
+
+loadMonthOrders(false);
+function applyTheme(dark,save){
+  try{
+    if(document&&document.documentElement&&document.documentElement.classList)document.documentElement.classList.toggle("dark",!!dark);
+    const tb=document.getElementById("themeBtn");if(tb)tb.textContent=dark?"☀️ Light":"🌙 Dark";
+    if(save)try{localStorage.setItem("pt_theme",dark?"dark":"light")}catch(e){}
+  }catch(e){}
+}
+function toggleTheme(){
+  const d=document&&document.documentElement&&document.documentElement.classList?document.documentElement.classList.contains("dark"):false;
+  applyTheme(!d,true);
+}
+try{applyTheme(localStorage.getItem("pt_theme")==="dark",false)}catch(e){}
+try{window.addEventListener("message",e=>{if(e&&e.data&&e.data.type==="pozzo:theme")applyTheme(!!e.data.dark,false)})}catch(e){}
+try{window.addEventListener("storage",e=>{if(e&&e.key==="pt_theme")applyTheme(e.newValue==="dark",false)})}catch(e){}
+</script>
+</body>
+</html>

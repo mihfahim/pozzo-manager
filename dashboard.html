@@ -7,8 +7,8 @@
 <title>Pozzo Manager – Dashboard</title>
 <meta name="description" content="Pozzo Toys Dashboard: stock value at cost and sale, low and out of stock alerts, period sales, purchases, gross profit, expenses, and net profit.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png?v=17">
+<link rel="apple-touch-icon" href="icon-192.png?v=17">
 <style>
 :root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66}
 html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--badbg:#3b1d19;--amb:#f0b865;--ambbg:#362916;--blue:#4da3e3;--deep:#b8dcf8}
@@ -27,7 +27,7 @@ html.dark .ptr.ready{background:#214563}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
 header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 html.dark header{background:#141c26}
-header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
+header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto;background:transparent}
 .theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .embed .theme-btn{display:none}
 header h1{font-size:22px;color:var(--deep)}
@@ -223,7 +223,7 @@ html.dark .flash{border-color:#28557d}
 <body>
 <script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
 <main id="app"></main>
 <div id="modal" class="modal" hidden onclick="if(event.target===this)closeModal()"></div>
 <script>
@@ -269,8 +269,11 @@ function goTab(tab,extra){
       return;
     }
   }catch(e){}
-  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",sticker:"stickers.html",stickers:"stickers.html"};
-  if(map[tab])window.location.href=map[tab];
+  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",orders:"all-orders.html",sticker:"dispatch.html",stickers:"dispatch.html"};
+  if(map[tab]){
+    const suffix=(tab==="sale"||tab==="sales")&&extra&&extra.orderId?"#order="+encodeURIComponent(extra.orderId):"";
+    window.location.href=map[tab]+suffix;
+  }
 }
 
 const DEFAULT_CATS=["Meta Ads Cost","Packaging","Transportation","Courier & COD Fee","Rent & Utilities","Salary","Other"];
@@ -285,9 +288,8 @@ let state={
   error:"",
   flash:"",
   data:null,
-  monthOrdersCache:{},
   confirmDelExpId:"",
-  modal:null // null | {type:'low'|'out'|'purchases'|'expense'|'allorders', ...}
+  modal:null // null | {type:'low'|'out'|'purchases'|'expense', ...}
 };
 
 function activeDates(){
@@ -411,7 +413,6 @@ function setCachedDash(key,data,mode){
   }catch(e){}
 }
 function clearDashCache(){
-  state.monthOrdersCache={};
   try{
     if(typeof localStorage!=="undefined"){
       Object.keys(localStorage).forEach(k=>{if(k.startsWith(DASH_CACHE_PREFIX)||k.startsWith(DASH_LAST_PREFIX))localStorage.removeItem(k)});
@@ -530,7 +531,6 @@ function render(){
     netProfit:0,netMarginPct:0,
     expenseBreakdown:[],expenses:[],purchases:[]
   };
-  const ords=d&&Array.isArray(d.recentOrders)?d.recentOrders:[];
   const awaitingDispatch=d&&typeof d.awaitingDispatch==="number"?d.awaitingDispatch:0;
   const awaitingPack=d&&typeof d.awaitingPack==="number"?d.awaitingPack:awaitingDispatch;
   const loadingInit=state.loading&&!d;
@@ -718,25 +718,6 @@ function render(){
     </section>
 
     <div>
-      <section class="card" aria-label="Recent orders">
-        <div class="card-head">
-          <h3>Recent orders</h3>
-          <button class="btn sm" type="button" onclick="openAllOrdersModal()">All orders</button>
-        </div>
-        ${state.loading&&!ords.length?`<div class="skel"></div><div class="skel"></div><div class="skel"></div>`
-        :ords.length?`<div class="list">${ords.slice(0,10).map(o=>`<button class="item" type="button" onclick="goTab('sales',{orderId:'${esc(o.id)}'})">
-          <div class="main">
-            <div class="title num">${esc(o.id)} · ${esc(o.name||"Customer")}</div>
-            <div class="meta num">${esc(o.date)} · ${esc(o.phone||"")} · <span class="${statusClass(o.status)}">${esc(o.status||"Active")}</span>${o.exported?" · Exported":" · Ready"}</div>
-          </div>
-          <div class="side">
-            <div class="amt num">${tk(o.total)}</div>
-            <div class="meta num">COD ${tk(o.cod)}</div>
-          </div>
-        </button>`).join("")}</div>`
-        :`<div class="empty">No recent orders in this month or last month.</div>`}
-      </section>
-
       <section class="card" aria-label="Workspace shortcuts">
         <div class="card-head"><h3>Workspace</h3></div>
         <div class="navgrid">
@@ -748,13 +729,13 @@ function render(){
             <b>Sale</b>
             <span>New order, cancel &amp; return</span>
           </button>
-          <button class="navtile" type="button" onclick="goTab('sticker')">
-            <b>Sticker</b>
-            <span>Read courier label PDFs</span>
+          <button class="navtile" type="button" onclick="goTab('orders')">
+            <b>Orders</b>
+            <span>Browse all monthly orders</span>
           </button>
           <button class="navtile" type="button" onclick="goTab('dispatch')">
             <b>Dispatch</b>
-            <span class="num">${awaitingPack} to pack · ${awaitingDispatch} parcel file</span>
+            <span class="num">${awaitingPack} to pack · Stickers</span>
           </button>
           <button class="navtile" type="button" onclick="openBackupModal()">
             <b>Backup &amp; Restore</b>
@@ -1042,104 +1023,6 @@ function openBackupModal(){
       <b>How to restore from Excel:</b> Click <b>Open Stock Google Sheet</b> above, go to <b>File &gt; Import</b>, click the <b>Upload</b> tab, choose your Excel file, and select <i>Replace spreadsheet</i>.
     </div>`:
     `<div class="empty">Connecting to sheet… Please try again in a moment.</div>`}
-  </div>`;
-}
-
-const ALL_MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
-function monthYearKey(m,y){return String(y)+"-"+String(m).padStart(2,"0")}
-async function openAllOrdersModal(){
-  const td=today();
-  const y=Number(td.slice(0,4)),m=Number(td.slice(5,7));
-  const ym=monthYearKey(m,y);
-  const cached=state.monthOrdersCache[ym];
-  state.modal={
-    type:"allorders",
-    month:m,
-    year:y,
-    loading:!cached,
-    err:"",
-    orders:cached||[]
-  };
-  renderAllOrdersModal();
-  await loadAllOrdersModalData(ym,false);
-}
-async function loadAllOrdersModalData(ym,force){
-  if(!state.modal||state.modal.type!=="allorders")return;
-  if(!force&&state.monthOrdersCache[ym]){
-    state.modal.loading=false;
-    state.modal.err="";
-    state.modal.orders=state.monthOrdersCache[ym];
-    renderAllOrdersModal();
-    return;
-  }
-  state.modal.loading=true;
-  state.modal.err="";
-  renderAllOrdersModal();
-  const j=await api({action:"monthorders",month:ym,today:today()});
-  if(!state.modal||state.modal.type!=="allorders")return;
-  if(monthYearKey(state.modal.month,state.modal.year)!==ym)return;
-  state.modal.loading=false;
-  if(!j.ok){
-    state.modal.err=j.error||"Could not load orders for that month.";
-    state.modal.orders=[];
-  }else{
-    const list=Array.isArray(j.orders)?j.orders:[];
-    state.monthOrdersCache[ym]=list;
-    state.modal.orders=list;
-  }
-  renderAllOrdersModal();
-}
-function changeAllOrdersPeriod(month,year){
-  if(!state.modal||state.modal.type!=="allorders")return;
-  state.modal.month=Number(month);
-  state.modal.year=Number(year);
-  const ym=monthYearKey(state.modal.month,state.modal.year);
-  return loadAllOrdersModalData(ym,false);
-}
-function openOrderSummaryFromModal(id){
-  closeModal();
-  goTab("sales",{orderId:id});
-}
-function renderAllOrdersModal(){
-  const st=state.modal;
-  if(!st||st.type!=="allorders")return;
-  const curY=Number(today().slice(0,4));
-  const startY=Math.min(2024,st.year);
-  const years=[];
-  for(let yy=curY+1;yy>=startY;yy--)years.push(yy);
-  const list=st.orders||[];
-  const mName=ALL_MONTH_NAMES[st.month-1]||"";
-  const m=$("#modal");
-  m.hidden=false;
-  m.innerHTML=`<div class="sheet sheet-tall" role="dialog" aria-modal="true" aria-labelledby="allOrdTitle">
-    <div class="sheet-head">
-      <h3 id="allOrdTitle">All orders · ${esc(mName)} ${st.year}</h3>
-      <button class="btn sm" type="button" onclick="closeModal()">Close</button>
-    </div>
-    <p class="sub" style="margin-bottom:10px;flex:none">${st.loading?"Loading orders…":`${list.length} order${list.length===1?"":"s"} in ${esc(mName)} ${st.year}. Tap any order to open its summary.`}</p>
-    <div class="ord-controls">
-      <select id="allOrdMonth" aria-label="Select month" onchange="changeAllOrdersPeriod(this.value,state.modal.year)">
-        ${ALL_MONTH_NAMES.map((nm,idx)=>`<option value="${idx+1}" ${st.month===idx+1?"selected":""}>${esc(nm)}</option>`).join("")}
-      </select>
-      <select id="allOrdYear" aria-label="Select year" onchange="changeAllOrdersPeriod(state.modal.month,this.value)">
-        ${years.map(yy=>`<option value="${yy}" ${st.year===yy?"selected":""}>${yy}</option>`).join("")}
-      </select>
-    </div>
-    ${st.err?`<p class="err" style="flex:none">${esc(st.err)}</p>`:""}
-    <div class="ord-scroll">
-      ${st.loading?`<div class="skel"></div><div class="skel"></div><div class="skel"></div>`
-      :list.length?list.map(o=>`<button class="ord-btn" type="button" onclick="openOrderSummaryFromModal('${esc(o.id)}')">
-        <div class="main">
-          <div class="title num">${esc(o.id)} · ${esc(o.name||"Customer")}</div>
-          <div class="meta num">${esc(o.date)}${o.phone?" · "+esc(o.phone):""} · <span class="${statusClass(o.status)}">${esc(o.status||"Active")}</span></div>
-        </div>
-        <div class="side">
-          <div class="amt num">${tk(o.total)}</div>
-          <div class="meta num">COD ${tk(o.cod)}</div>
-        </div>
-      </button>`).join("")
-      :`<div class="empty">No orders found for ${esc(mName)} ${st.year}.</div>`}
-    </div>
   </div>`;
 }
 

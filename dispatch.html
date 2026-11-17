@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#2b4f48">
 <title>Pozzo Manager – Dispatch</title>
-<meta name="description" content="Pozzo Toys Dispatch: customer packing list, product variants and quantities, and courier parcel export.">
+<meta name="description" content="Pozzo Toys Dispatch: customer packing list, product variants and quantities, courier parcel export, and Steadfast label converter.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png?v=17">
+<link rel="apple-touch-icon" href="icon-192.png?v=17">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
 <style>
 :root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66}
 html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--badbg:#3b1d19;--amb:#f0b865;--ambbg:#362916;--blue:#4da3e3;--deep:#b8dcf8}
@@ -28,7 +30,7 @@ html.dark .ptr.ready{background:#214563}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
 header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 html.dark header{background:#141c26}
-header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto}
+header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto;background:transparent}
 .theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .embed .theme-btn{display:none}
 header h1{font-size:22px;color:var(--deep)}
@@ -140,6 +142,25 @@ html.dark .pack-item.checked .pack-check{color:#0b1926}
 .foot-sub-acts .btn{flex:1}
 
 .empty{padding:26px 8px;text-align:center;color:var(--mut);font-size:15px}
+.stk-card{margin-top:6px}
+.stk-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.stk-actions .btn{width:100%}
+.stk-sum{margin:12px 0;font-size:14.5px;line-height:1.5;color:var(--mut)}
+.stk-item{background:var(--sub);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;max-width:100%;overflow:hidden}
+.stk-item.flag{border-left:5px solid #c99a4b}
+.stk-item.err{border-left:5px solid var(--bad)}
+.stk-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700;font-size:16px;margin-bottom:6px}
+.stk-top small{color:var(--mut);font-weight:400;font-size:13px}
+.stk-top label{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.stk-top input[type=checkbox]{width:20px;height:20px;accent-color:var(--grn)}
+.stk-item input[type=text],.stk-item textarea{width:100%;min-width:0;max-width:100%;padding:11px 13px;margin:5px 0;border:1px solid var(--line);border-radius:14px;background:var(--in);font:inherit;font-size:15px;color:var(--ink)}
+.stk-item textarea{resize:none;overflow:hidden;line-height:1.45;display:block}
+.stk-note{font-size:13.5px;margin:6px 0;padding:9px 11px;border-radius:12px}
+.stk-note.w{background:var(--ambbg);color:var(--amb)}
+.stk-note.b{background:var(--badbg);color:var(--bad);font-weight:600}
+.stk-item img{width:100%;border:1px solid var(--line);border-radius:14px;margin-top:6px;background:#fff}
+.stk-lnk{background:none;border:0;color:var(--grn);text-decoration:underline;font-size:14px;padding:6px 0;cursor:pointer}
+.stk-msg{font-size:14px;margin-top:10px;color:var(--grn);line-height:1.45;font-weight:600}
 [hidden]{display:none!important}
 
 @media (max-width:600px){
@@ -147,14 +168,34 @@ html.dark .pack-item.checked .pack-check{color:#0b1926}
   .search{width:100%}
   .order-btn{padding:13px 14px}
   .cname{font-size:17px}
+  .stk-actions{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 <script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Dispatch</h1></header>
-<main id="app"></main>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Dispatch</h1></header>
+<main>
+  <div id="app"></div>
+  <section id="stickerSec" class="card stk-card" aria-label="Steadfast label converter">
+    <div class="queue-head">
+      <div>
+        <h3>Parcel stickers (PDF &rarr; Excel)</h3>
+        <span class="queue-hint">Steadfast labels &rarr; Parcel tag Excel</span>
+      </div>
+    </div>
+    <input id="stkFile" type="file" accept="application/pdf" multiple hidden>
+    <div class="stk-actions">
+      <button class="btn p" type="button" onclick="document.getElementById('stkFile').click()">Choose label PDF</button>
+      <button class="btn" id="stkGen" type="button" onclick="stkGenerate()" disabled>Download Excel</button>
+    </div>
+    <div id="stkSum" class="stk-sum">No labels loaded.</div>
+    <div id="stkList"></div>
+    <button class="btn" id="stkClr" type="button" onclick="stkClearAll()" hidden style="width:100%;margin-top:8px">Clear all</button>
+    <div id="stkMsg" class="stk-msg"></div>
+  </section>
+</main>
 <div id="packModal" class="modal" hidden onclick="if(event.target===this)closePackWindow()"></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -262,8 +303,11 @@ function goTab(tab,extra){
       return;
     }
   }catch(e){}
-  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",sticker:"stickers.html",stickers:"stickers.html"};
-  if(map[tab])window.location.href=map[tab];
+  const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",orders:"all-orders.html",sticker:"dispatch.html",stickers:"dispatch.html"};
+  if(map[tab]){
+    const suffix=(tab==="sale"||tab==="sales")&&extra&&extra.orderId?"#order="+encodeURIComponent(extra.orderId):"";
+    window.location.href=map[tab]+suffix;
+  }
 }
 function fmtDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())}
 function monthBounds(y,m){
@@ -774,7 +818,298 @@ window.addEventListener("storage",e=>{
   }
   document.addEventListener("touchend",onEnd,{passive:true});
   document.addEventListener("touchcancel",onEnd,{passive:true});
-})(()=>loadDispatch(false));
+})(()=>{if(STK_P.length){stkMark();stkRender();}return loadDispatch(false);});
+
+/* ---------- Steadfast Label PDF -> Parcel Tag Excel (integrated under Dispatch) ---------- */
+try{if(typeof pdfjsLib!=="undefined"&&pdfjsLib.GlobalWorkerOptions)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"}catch(e){}
+const STK_MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let STK_P=[];
+let STK_PAGES=0;
+const STK_BN=/[\u0980-\u09FF]/;
+const stkGrow=t=>{if(t&&t.style){t.style.height="auto";t.style.height=(t.scrollHeight||44)+4+"px"}};
+
+const $id=id=>typeof document==="undefined"?null:(typeof document.getElementById==="function"?document.getElementById(id):typeof document.querySelector==="function"?document.querySelector("#"+id):null);
+
+(function bindStkFile(){
+  const inp=$id("stkFile");
+  if(!inp)return;
+  inp.onchange=async e=>{
+    const files=(e&&e.target&&e.target.files)||[];
+    for(const file of files)await stkReadPdf(file);
+    inp.value="";
+    stkRender();
+  };
+})();
+
+async function stkReadPdf(file){
+  if(typeof pdfjsLib==="undefined"){
+    const m=$id("stkMsg");
+    if(m){m.style.color="var(--bad)";m.textContent="PDF reader failed to load. Check internet connection."}
+    return;
+  }
+  const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  for(let n=1;n<=doc.numPages;n++){
+    STK_PAGES++;
+    const pg=await doc.getPage(n);
+    const tc=await pg.getTextContent();
+    const rows=[];
+    tc.items.filter(i=>i.str.trim()).forEach(i=>{
+      const y=i.transform[5],x=i.transform[4];
+      let r=rows.find(r=>Math.abs(r.y-y)<4);
+      if(!r){r={y,items:[]};rows.push(r)}
+      r.items.push({x,s:i.str,h:i.height||12,w:i.width||0});
+    });
+    rows.sort((a,b)=>b.y-a.y);
+    const joinItems=its=>{
+      its.sort((a,b)=>a.x-b.x);
+      let out="",prev=null;
+      its.forEach(it=>{
+        if(prev){
+          const gap=it.x-(prev.x+prev.w);
+          const need=!/\s$/.test(out)&&!/^\s/.test(it.s)&&(prev.w===0||gap>0.1*Math.max(prev.h,it.h));
+          out+=(need?" ":"")+it.s;
+        }else out=it.s;
+        prev=it;
+      });
+      return out.replace(/\s+/g," ").trim();
+    };
+    const lines=rows.map(r=>joinItems(r.items));
+    const p=stkParse(lines,file.name,n);
+    if(STK_BN.test(p.name+p.addr)){
+      const mEl=$id("stkMsg");
+      if(mEl){mEl.style.color="var(--ink)";mEl.textContent="Reading Bangla from page "+n+" (first run downloads language data)...";}
+      await stkOcrFix(p,pg,rows);
+      if(mEl)mEl.textContent="";
+    }
+    await stkMakeCrop(p,pg,rows);
+    STK_P.push(p);
+  }
+  stkMark();
+}
+
+async function stkMakeCrop(p,pg,rows){
+  try{
+    const has=(r,re)=>r.items.some(i=>re.test(i.s.trim()));
+    const ri=rows.findIndex(r=>has(r,/^NAME$/)),ci=rows.findIndex(r=>has(r,/^CASH/));
+    const ii=rows.findIndex(r=>has(r,/^INVOICE$/)),wi=rows.findIndex(r=>has(r,/^WEIGHT$/));
+    if(ri<0||ci<0)throw new Error("layout");
+    const vp=pg.getViewport({scale:3});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+    await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    const H=r=>Math.max(...r.items.map(i=>i.h));
+    const bi=rows.findIndex(r=>/^(\d\s*){8,}$/.test(r.items.map(i=>i.s).join(" ").trim()));
+    const cut=(a,z,up,dn,x0)=>{
+      const l=Math.max(0,vp.convertToViewportPoint((x0===undefined?rows[a].items[0].x:x0)-14,0)[0]);
+      const t=Math.max(0,vp.convertToViewportPoint(0,rows[a].y+H(rows[a])*up)[1]);
+      const b=Math.min(c.height,vp.convertToViewportPoint(0,rows[z].y-H(rows[z])*dn)[1]);
+      const w=c.width-l-4,h=b-t;
+      if(h<30)throw new Error("size");
+      const o=document.createElement("canvas");o.width=w;o.height=h;
+      const g=o.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(c,l,t,w,h,0,0,w,h);
+      return o;
+    };
+    const parts=[];
+    if(bi>=0&&bi<ri-1){
+      const mx=Math.min(...rows.slice(bi,ri).map(r=>r.items[0].x));
+      try{parts.push(cut(bi,ri-1,.85,.4,mx))}catch(e){}
+    }else if(ii>=0&&wi>ii){try{parts.push(cut(ii,wi,1.1,.4))}catch(e){}}
+    else if(bi>=0){try{parts.push(cut(bi,bi,1.1,.5))}catch(e){}}
+    parts.push(cut(ri,ci,1.1,.9));
+    const W2=Math.max(...parts.map(o=>o.width)),gap=8;
+    const out=document.createElement("canvas");out.width=W2;out.height=parts.reduce((s,o)=>s+o.height+gap,-gap);
+    const g=out.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,out.width,out.height);
+    let y=0;parts.forEach(o=>{g.drawImage(o,0,y);y+=o.height+gap});
+    p.crop=out.toDataURL("image/jpeg",.88);
+  }catch(e){p.crop=await stkSnap(pg)}
+}
+
+function stkBoost(src){
+  const k=1.6,o=document.createElement("canvas");o.width=Math.round(src.width*k);o.height=Math.round(src.height*k);
+  const g=o.getContext("2d");g.imageSmoothingEnabled=true;g.imageSmoothingQuality="high";
+  g.fillStyle="#fff";g.fillRect(0,0,o.width,o.height);g.drawImage(src,0,0,o.width,o.height);
+  const im=g.getImageData(0,0,o.width,o.height),d=im.data;
+  for(let i=0;i<d.length;i+=4){const v=(d[i]+d[i+1]+d[i+2])/3,t=Math.max(0,Math.min(255,(v-70)/(185-70)*255));d[i]=d[i+1]=d[i+2]=t}
+  g.putImageData(im,0,0);return o;
+}
+let STK_W,STK_WN,STK_WB;
+async function stkOcrFix(p,pg,rows){
+  try{
+    const has=(r,re)=>r.items.some(i=>re.test(i.s.trim()));
+    const ri=rows.findIndex(r=>has(r,/^NAME$/)),ai=rows.findIndex(r=>has(r,/^ADDRESS$/));
+    const ei=rows.findIndex((r,k)=>k>ai&&has(r,/^(NOTE|AREA|ITEM|CASH)/));
+    if(ri<0||ai<0)throw new Error("layout");
+    const vp=pg.getViewport({scale:3});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+    await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    const H=r=>Math.max(...r.items.map(i=>i.h));
+    const X=r=>(r.items[1]?r.items[1].x:r.items[0].x+60)-4;
+    const strip=(a,b,up=.9,dn=.35)=>{
+      const x1=X(rows[a]),y1=rows[a].y+H(rows[a])*up,y2=rows[b].y-H(rows[b])*dn;
+      const l=vp.convertToViewportPoint(x1,0)[0],t=vp.convertToViewportPoint(0,y1)[1],bt=vp.convertToViewportPoint(0,y2)[1];
+      const w=c.width-l-8,h=bt-t,o=document.createElement("canvas");
+      o.width=w;o.height=h;const g=o.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);
+      g.drawImage(c,l,t,w,h,0,0,w,h);
+      const q=document.createElement("canvas"),m=30;q.width=w+2*m;q.height=h+2*m;
+      const k=q.getContext("2d");k.fillStyle="#fff";k.fillRect(0,0,q.width,q.height);k.drawImage(o,m,m);return q;
+    };
+    const last=ei<0?ai:ei-1;
+    if(!STK_W)STK_W=await Tesseract.createWorker("ben+eng");
+    const rd=async(o,w)=>((await w.recognize(o)).data.text||"").replace(/\s+/g," ").trim();
+    if(STK_BN.test(p.addr)){
+      const pure=!/[A-Za-z0-9]/.test(p.addr);
+      let w=STK_W;
+      if(pure){if(!STK_WB)STK_WB=await Tesseract.createWorker("ben");w=STK_WB}
+      const sA=strip(ai,last);
+      let ad=await rd(sA,w);
+      const bad=t=>t.split(/\s+/).filter(x=>/\u09CD$/.test(x.replace(/[,.:;\u0964]+$/,""))).length;
+      if(bad(ad)>0){const ad2=await rd(stkBoost(sA),w);if(STK_BN.test(ad2)&&bad(ad2)<bad(ad))ad=ad2}
+      p.dbg={tl:p.addr,ocr:ad};
+      if(STK_BN.test(ad)){p.addr=ad;const sus=ad.match(/[A-Za-z]{3,}/g);if(pure&&sus)p.suspect=sus}else p.addrFail=true;
+    }
+    if(STK_BN.test(p.name)){
+      const o=strip(ri,ri,1.4,.7);
+      let nm=await rd(o,STK_W);
+      if(!STK_BN.test(nm)){
+        if(!STK_WN){STK_WN=await Tesseract.createWorker("ben+eng");await STK_WN.setParameters({tessedit_pageseg_mode:"7"})}
+        nm=await rd(o,STK_WN);
+      }
+      if(STK_BN.test(nm))p.name=nm;else{p.name="";p.nameFail=true}
+    }
+    p.ocr=true;
+  }catch(e){p.ocrFail=true}
+}
+
+function stkParse(lines,file,n){
+  const t=lines.join("\n");
+  const g=re=>{const m=t.match(re);return m?m[1].trim():""};
+  const p={file,page:n,flags:[],inc:true};
+  p.sf=g(/SF-ID\s*(\d{6,})/);
+  if(!p.sf){const bl=lines.find(l=>/^(\d\s*){8,}$/.test(l));if(bl)p.sf=bl.replace(/\s/g,"")}
+  p.name=(lines.find(l=>/^NAME\b/.test(l))||"").replace(/^NAME\s*/,"");
+  p.phone=g(/PHONE\s*(\+?[\d\s-]{10,})/).replace(/[\s-]/g,"").replace(/^\+?88/,"");
+  const a=lines.findIndex(l=>/^ADDRESS\b/.test(l));
+  const e=lines.findIndex((l,i)=>i>a&&/^(NOTE|AREA|ITEM|CASH ON DELIVERY)\b/.test(l));
+  p.addr=a<0?"":lines.slice(a,e<0?a+3:e).join(" ").replace(/^ADDRESS\s*/,"").replace(/\bDh\.(?!\w)/g,"Dhaka").trim();
+  const c=t.match(/CASH ON DELIVERY\s*\D*?([\d,]+)/);
+  p.cod=c?parseInt(c[1].replace(/,/g,""),10):null;
+  const d=t.match(/Printed:\s*(\d{2})\/(\d{2})\/(\d{2})/);
+  p.date=d?{d:+d[1],m:+d[2],y:d[3]}:null;
+  if(!p.sf||!p.name||!p.phone||p.cod===null||!p.addr){p.err=true;p.flags.push(["b","Could not read all fields. Fill in or exclude."]);p.inc=false}
+  if(!p.date)p.flags.push(["w","No print date found."]);
+  return p;
+}
+
+async function stkSnap(pg){
+  const v=pg.getViewport({scale:1});
+  const s=Math.min(1,560/v.width)*1.2;
+  const vp=pg.getViewport({scale:s});
+  const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+  await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  return c.toDataURL("image/jpeg",.7);
+}
+
+function stkMark(){
+  STK_P.forEach(p=>{p.flags=p.flags.filter(f=>!f[2]);});
+  STK_P.forEach((p,i)=>{
+    const add=(k,s)=>p.flags.push([k,s,1]);
+    if(p.nameFail)add("b","Name could not be read. Type it from the picture.");
+    if(p.suspect)add("b","Check these words, they look misread: "+p.suspect.join(", "));
+    if(p.addrFail)add("b","Address could not be read. The text below may be wrong. Fix it from the picture.");
+    if(STK_BN.test(p.name+p.addr))add("w",p.ocr?"Bangla was read from the label picture by OCR. Check it against the picture.":"Bangla could not be read automatically. The PDF text is wrong. Type it from the picture.");
+    if(/[…]|\.\.\.$/.test(p.name+p.addr))add("w","Label text is cut off (…). Complete it from the original order.");
+    if(p.cod===0)add("w","COD is ৳0. Fully prepaid, or a return or exchange?");
+    const same=STK_P.filter((q,j)=>j!==i&&q.sf&&q.sf===p.sf);
+    if(same.length)add("b","Duplicate SF-ID in this session.");
+    const likely=STK_P.filter((q,j)=>j!==i&&q.sf!==p.sf&&q.name&&q.name===p.name&&q.phone===p.phone&&q.cod===p.cod);
+    if(likely.length)add("b","Same name, phone and COD as "+likely.map(q=>q.sf).join(", ")+". Likely duplicate booking.");
+    if(p.dupDecided===undefined)p.dupDecided=false;
+    if((same.length||likely.length)&&!p.dupDecided){p.inc=false;p.dupDecided=true}
+  });
+}
+
+function stkRender(){
+  const L=$id("stkList");
+  if(!L)return;
+  L.innerHTML="";
+  STK_P.forEach((p,i)=>{
+    const d=document.createElement("div");
+    d.className="stk-item"+(p.err?" err":p.flags.length?" flag":"");
+    const fl=p.flags.map(f=>`<div class="stk-note ${f[0]}">${esc(f[1])}</div>`).join("");
+    d.innerHTML=`<div class="stk-top"><span>${esc(p.sf||"No SF-ID")} <small>(page ${p.page})</small></span>
+      <label><input type="checkbox" ${p.inc?"checked":""} onchange="STK_P[${i}].inc=this.checked;stkStat()"> Include</label></div>
+      ${fl}
+      <input type="text" value="${esc(p.sf)}" oninput="STK_P[${i}].sf=this.value.replace(/\\D/g,'')" inputmode="numeric" placeholder="SF-ID">
+      <input type="text" value="${esc(p.name)}" oninput="STK_P[${i}].name=this.value" placeholder="Customer name">
+      <input type="text" value="${esc(p.phone)}" oninput="STK_P[${i}].phone=this.value" inputmode="tel" placeholder="Phone">
+      <textarea rows="2" oninput="STK_P[${i}].addr=this.value;stkGrow(this)" placeholder="Address">${esc(p.addr)}</textarea>
+      <input type="text" value="${p.cod===null?"":p.cod}" oninput="STK_P[${i}].cod=this.value===''?null:+this.value.replace(/[^\\d]/g,'')" inputmode="numeric" placeholder="COD amount">
+      ${p.crop?`<img src="${p.crop}" alt="Label">`:""}
+      ${p.img?`<button class="stk-lnk" type="button" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden">Show label</button><img src="${p.img}" hidden>`:""}`;
+    if(L.appendChild)L.appendChild(d);
+  });
+  if(typeof document!=="undefined"&&typeof document.querySelectorAll==="function"){
+    document.querySelectorAll("#stkList textarea").forEach(stkGrow);
+  }
+  const clr=$id("stkClr");
+  if(clr)clr.hidden=!STK_P.length;
+  stkStat();
+}
+
+function stkStat(){
+  const inc=STK_P.filter(p=>p.inc).length;
+  const flagged=STK_P.filter(p=>p.flags.length).length;
+  const sEl=$id("stkSum");
+  const gEl=$id("stkGen");
+  if(sEl)sEl.innerHTML=STK_P.length?`<b>${STK_PAGES}</b> label pages read, <b>${STK_P.length}</b> parcels found, <b>${inc}</b> included.${flagged?` <span style="color:var(--amb)">${flagged} need a look.</span>`:""}`:"No labels loaded.";
+  if(gEl)gEl.disabled=!inc;
+}
+
+function stkClearAll(){
+  STK_P=[];STK_PAGES=0;
+  const m=$id("stkMsg");
+  if(m)m.textContent="";
+  stkRender();
+}
+
+async function stkGenerate(){
+  const m=$id("stkMsg");
+  if(m)m.textContent="";
+  const inc=STK_P.filter(p=>p.inc);
+  const bad=inc.filter(p=>!p.sf||!p.name||!p.phone||p.cod===null||!p.addr);
+  if(bad.length){if(m){m.style.color="var(--bad)";m.textContent="Some included parcels have empty fields.";}return}
+  if(typeof ExcelJS==="undefined"){if(m){m.style.color="var(--bad)";m.textContent="Excel library did not load. Check internet connection.";}return}
+  const groups={};
+  inc.forEach(p=>{const k=p.date?`${p.date.d} ${STK_MONTHS[p.date.m-1]} ${p.date.y}`:"Unknown date";(groups[k]=groups[k]||[]).push(p)});
+  const done=[],files=[];
+  for(const [k,rows] of Object.entries(groups)){
+    let serial=1;
+    try{serial=(+localStorage.getItem("pt_"+k)||0)+1}catch(e){}
+    const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Sheet1");
+    const W=[23,15,17,16,50];
+    ws.columns=["Parcel ID","COD Amount","Customer Name","Phone Number","Delivery Address"].map((h,i)=>({header:h,width:W[i]}));
+    rows.forEach(p=>ws.addRow([`Parcel ID:${p.sf}`,`COD: ৳${p.cod.toLocaleString("en-US")}`,p.name,p.phone,p.addr]));
+    ws.eachRow((r,n)=>{
+      const ad=n===1?"":String(r.getCell(5).value||"");
+      const per=STK_BN.test(ad)?36:52,lines=Math.max(1,Math.ceil(ad.length/per));
+      r.height=n===1?26:22+(lines-1)*18;
+      r.eachCell(c=>{
+        c.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+        c.numFmt="@";
+        if(n===1){c.font={name:"Segoe UI",bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF001B36"}}}
+        else c.font={name:"Segoe UI"};
+      });
+    });
+    const name=`Parcel tag ${k} PZ ${String(serial).padStart(2,"0")}.xlsx`;
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    files.push({name,blob,k,serial});
+    done.push(`${name} (${rows.length} parcels)`);
+  }
+  const keep=()=>files.forEach(f=>{try{localStorage.setItem("pt_"+f.k,f.serial)}catch(e){}});
+  files.forEach(f=>{const a=document.createElement("a");a.href=URL.createObjectURL(f.blob);a.download=f.name;document.body.appendChild(a);a.click();a.remove()});
+  keep();
+  if(m){m.style.color="var(--grn)";m.textContent="Saved: "+done.join("; ")+". To share it, open it from your Downloads or Files app.";}
+}
 
 loadDispatch(false);
 function applyTheme(dark,save){

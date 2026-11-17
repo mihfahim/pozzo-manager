@@ -7,8 +7,8 @@
 <title>Pozzo Manager – Stock</title>
 <meta name="description" content="Pozzo Toys Stock inventory, purchases, return condition inspection, and stock issues.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png?v=17">
+<link rel="apple-touch-icon" href="icon-192.png?v=17">
 <style>
 :root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--amb:#8a5a14;--blu:#1f6fa8;--deep:#0f3f66}
 html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--amb:#f0b865;--blu:#4da3e3;--deep:#b8dcf8}
@@ -27,7 +27,7 @@ html.dark .ptr.ready{background:#214563}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
 header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blu);text-align:center}
 html.dark header{background:#141c26}
-header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto}
+header img{display:block;margin:0 auto 4px;width:110px;max-width:40%;height:auto;background:transparent}
 .theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .embed .theme-btn{display:none}
 header h1{font-size:22px;color:var(--deep)}
@@ -159,7 +159,7 @@ html.dark .simwarn{background:#362916;color:#f3c87c}
 <body>
 <script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Stock</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Stock</h1></header>
 <main id="app"></main>
 <div class="bar" id="bar"><button class="btn p" onclick="ui.newPurchase()">+ New purchase</button><button class="btn" onclick="ui.more()">More</button></div>
 <div id="modal" class="modal" hidden></div>
@@ -499,9 +499,12 @@ function predCardHtml(a){
 }
 function fastCardHtml(r,idx){
   const p=prod(r.id)||{id:r.id,name:r.name,stock:r.stock,low:r.low||0,price:r.price||0,cost:r.cost||0,prices:[],aliases:[]};
-  const risk=r.stock<=0?"out":(r.daysAt10d!==null&&r.daysAt10d<15)?"low":"";
+  const daysLeft=(r.daysAt10d!==undefined&&r.daysAt10d!==null)?r.daysAt10d:(r.rate10>0?Math.max(0,Math.floor((Number(p.stock)||0)/r.rate10)):null);
+  const risk=p.stock<=0?"out":(daysLeft!==null&&daysLeft<15)?"low":"";
+  const tagCls=risk||"good";
+  const tagTxt=p.stock<=0?"out · ~0d left":(daysLeft!==null?"~"+daysLeft+"d left":"");
   return `<div class="card" id="pc-${esc(p.id)}"><div class="prow" onclick="ui.toggle('${p.id}')">
-    <div><div class="cd">${esc(p.id)}</div><div class="n"><span class="rank">#${idx+1}</span>${esc(r.name)}${risk?`<span class="tag ${risk}">${r.stock<=0?"out":"~"+r.daysAt10d+"d left"}</span>`:""}</div>
+    <div><div class="cd">${esc(p.id)}</div><div class="n"><span class="rank">#${idx+1}</span>${esc(r.name)}${tagTxt?`<span class="tag ${tagCls}">${tagTxt}</span>`:""}</div>
     <div class="s"><b>${r.sold10} sold in 10d</b> (${r.rate10}/day) · Sales ${tk(r.revenue10)} · Sell ${tk(p.price)}</div></div>
     <div class="qty ${risk}">${p.stock}<small>in stock</small></div></div>
     ${openId===p.id?prodDetailHtml(p):""}</div>`;

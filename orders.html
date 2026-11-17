@@ -7,8 +7,8 @@
 <title>Pozzo Manager – Sales</title>
 <meta name="description" content="Pozzo Toys Sales, Order Entry, Cancel, Return, Cash Memo, and Parcel Export.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png?v=17">
+<link rel="apple-touch-icon" href="icon-192.png?v=17">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -29,7 +29,7 @@ html.dark .ptr.ready{background:#214563}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
 header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
 html.dark header{background:#141c26}
-header img{display:block;margin:0 auto 4px;width:110px;max-width:42%;height:auto}
+header img{display:block;margin:0 auto 4px;width:110px;max-width:42%;height:auto;background:transparent}
 .theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .embed .theme-btn{display:none}
 header h1{font-size:24px;color:var(--deep)}
@@ -120,9 +120,8 @@ html.dark .modal{background:rgba(5,10,16,.72)}
 <body>
 <script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
 <main id="app"></main>
-<div id="modal" class="modal" hidden onclick="if(event.target===this)closeOrdersModal()"></div>
 <div class="bar" id="bar" hidden>
   <button class="btn" id="barL" onclick="home()">&larr; Start over</button>
   <button class="btn p" id="barR" onclick="saveOrder()">&#10003; Confirm &amp; save</button>
@@ -148,7 +147,7 @@ function normalizeOrderId(raw){
   return id;
 }
 
-let O=null,DETAIL=null,RSTATE=null,EDIT=null,RECENT_LIST=null,ALL_ORD_MODAL=null,MONTH_ORD_CACHE={},flash="",pvSeq=0;
+let O=null,DETAIL=null,RSTATE=null,EDIT=null,flash="",pvSeq=0;
 const makeReqId=tag=>(tag||"req")+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,8);
 let orders=[];
 try{orders=JSON.parse(localStorage.getItem("pt_orders")||"[]")}catch(e){}
@@ -160,7 +159,6 @@ function postStockDirty(tabName){
   try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"pozzo:stock-dirty",tab:tabName||""},"*")}catch(e){}
 }
 function postOrderDirty(orderId){
-  MONTH_ORD_CACHE={};
   try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"pozzo:order-dirty",orderId:orderId||""},"*")}catch(e){}
   try{if(typeof BroadcastChannel!=="undefined"){const ch=new BroadcastChannel("pozzo_sync");ch.postMessage({type:"pozzo:order-dirty",orderId:orderId||""});ch.close()}}catch(e){}
 }
@@ -172,6 +170,15 @@ function openStockIssues(){
     }
   }catch(e){}
   window.location.href="stock.html#issues";
+}
+function goOrdersTab(){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:"pozzo:switch-tab",tab:"orders"},"*");
+      return;
+    }
+  }catch(e){}
+  window.location.href="all-orders.html";
 }
 function syncLocalOrder(ord,oldId){
   if(!ord||!ord.id)return;
@@ -203,10 +210,6 @@ function removeLocalOrder(orderId){
   orders=orders.filter(x=>String(x.id).toUpperCase()!==up);
   if(orders.length!==prevLen)persist();
   setStockQ(stockQ().filter(x=>String(x.id).toUpperCase()!==up));
-  if(RECENT_LIST){
-    RECENT_LIST=RECENT_LIST.filter(x=>String(x.id).toUpperCase()!==up);
-  }
-  MONTH_ORD_CACHE={};
 }
 window.addEventListener("message",e=>{
   const d=e&&e.data;
@@ -214,7 +217,6 @@ window.addEventListener("message",e=>{
   if(d.type==="pozzo:open-order"&&d.orderId){
     loadOrderDetail(d.orderId);
   }else if(d.type==="pozzo:order-dirty"){
-    MONTH_ORD_CACHE={};
     if(DETAIL&&DETAIL.order&&(!d.orderId||d.orderId===DETAIL.order.id))loadOrderDetail(DETAIL.order.id);
   }
 });
@@ -434,99 +436,6 @@ function saveCfg(){
   const c=cfg();c.url=$("#cu").value.trim();c.key=$("#ck").value.trim();setCfg(c);
   flash="Settings saved.";home();
 }
-const ALL_MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
-const monthYearKey=(m,y)=>String(y)+"-"+String(m).padStart(2,"0");
-function closeOrdersModal(){
-  ALL_ORD_MODAL=null;
-  const m=$("#modal");
-  if(m){m.hidden=true;m.innerHTML=""}
-}
-async function openAllOrdersModal(){
-  const td=today();
-  const y=Number(td.slice(0,4)),m=Number(td.slice(5,7));
-  const ym=monthYearKey(m,y);
-  const cached=MONTH_ORD_CACHE[ym];
-  ALL_ORD_MODAL={month:m,year:y,loading:!cached,err:"",orders:cached||[]};
-  renderAllOrdersModal();
-  await loadAllOrdersModalData(ym,false);
-}
-async function loadAllOrdersModalData(ym,force){
-  if(!ALL_ORD_MODAL)return;
-  if(!force&&MONTH_ORD_CACHE[ym]){
-    ALL_ORD_MODAL.loading=false;
-    ALL_ORD_MODAL.err="";
-    ALL_ORD_MODAL.orders=MONTH_ORD_CACHE[ym];
-    renderAllOrdersModal();
-    return;
-  }
-  ALL_ORD_MODAL.loading=true;
-  ALL_ORD_MODAL.err="";
-  renderAllOrdersModal();
-  const j=await callScript({action:"monthorders",month:ym,today:today()});
-  if(!ALL_ORD_MODAL||monthYearKey(ALL_ORD_MODAL.month,ALL_ORD_MODAL.year)!==ym)return;
-  ALL_ORD_MODAL.loading=false;
-  if(!j.ok){
-    ALL_ORD_MODAL.err=errText(j.error);
-    ALL_ORD_MODAL.orders=[];
-  }else{
-    const list=Array.isArray(j.orders)?j.orders:[];
-    MONTH_ORD_CACHE[ym]=list;
-    ALL_ORD_MODAL.orders=list;
-  }
-  renderAllOrdersModal();
-}
-function changeAllOrdersPeriod(month,year){
-  if(!ALL_ORD_MODAL)return;
-  ALL_ORD_MODAL.month=Number(month);
-  ALL_ORD_MODAL.year=Number(year);
-  return loadAllOrdersModalData(monthYearKey(ALL_ORD_MODAL.month,ALL_ORD_MODAL.year),false);
-}
-function pickOrderFromModal(id){
-  closeOrdersModal();
-  return loadOrderDetail(id);
-}
-function renderAllOrdersModal(){
-  if(!ALL_ORD_MODAL)return;
-  const st=ALL_ORD_MODAL;
-  const curY=Number(today().slice(0,4));
-  const startY=Math.min(2024,st.year);
-  const years=[];
-  for(let yy=curY+1;yy>=startY;yy--)years.push(yy);
-  const list=st.orders||[];
-  const mName=ALL_MONTH_NAMES[st.month-1]||"";
-  const m=$("#modal");if(!m)return;
-  m.hidden=false;
-  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="allOrdTitle">
-    <div class="sheet-head">
-      <h3 id="allOrdTitle">All orders · ${esc(mName)} ${st.year}</h3>
-      <button class="btn sm" type="button" onclick="closeOrdersModal()">Close</button>
-    </div>
-    <p class="hint" style="margin:0 0 10px;flex:none">${st.loading?"Loading orders…":`${list.length} order${list.length===1?"":"s"} in ${esc(mName)} ${st.year}. Tap any order to open its summary.`}</p>
-    <div class="ord-controls">
-      <select id="allOrdMonth" aria-label="Select month" onchange="changeAllOrdersPeriod(this.value,ALL_ORD_MODAL.year)">
-        ${ALL_MONTH_NAMES.map((nm,idx)=>`<option value="${idx+1}" ${st.month===idx+1?"selected":""}>${esc(nm)}</option>`).join("")}
-      </select>
-      <select id="allOrdYear" aria-label="Select year" onchange="changeAllOrdersPeriod(ALL_ORD_MODAL.month,this.value)">
-        ${years.map(yy=>`<option value="${yy}" ${st.year===yy?"selected":""}>${yy}</option>`).join("")}
-      </select>
-    </div>
-    ${st.err?`<p class="err" style="flex:none">${esc(st.err)}</p>`:""}
-    <div class="ord-scroll">
-      ${st.loading?`<p class="hint">Loading…</p>`
-      :list.length?list.map(o=>`<button class="ord-btn" type="button" onclick="pickOrderFromModal('${esc(o.id)}')">
-        <div class="main">
-          <div class="title">${esc(o.id)}${statusTag(o.status)} · ${esc(o.name||"-")}</div>
-          <div class="meta">${esc(o.date)}${o.phone?" · "+esc(o.phone):""}${o.items&&o.items.length?" · "+o.items.length+" item"+(o.items.length===1?"":"s"):""}</div>
-        </div>
-        <div class="side">
-          <div class="amt">${tk(o.total)}</div>
-          <div class="meta">COD ${tk(o.cod)}</div>
-        </div>
-      </button>`).join("")
-      :`<p class="hint">No orders found for ${esc(mName)} ${st.year}.</p>`}
-    </div>
-  </div>`;
-}
 function openOrderById(){
   const m=$("#rmsg");m.textContent="";
   const id=normalizeOrderId($("#rid").value);
@@ -536,7 +445,7 @@ function openOrderById(){
 function home(){
   retryStock();
   O=null;DETAIL=null;RSTATE=null;EDIT=null;pvSeq++;resetBar();
-  const c=cfg(),last=orders.slice(-8).reverse();
+  const c=cfg();
   $("#app").innerHTML=`${flash?`<div class="ok">${esc(flash)}</div>`:""}
   <div class="top"><div><small>New order</small><h2>Paste the message</h2></div></div>
   <div class="card"><label for="msg" style="margin-top:0">Order confirmation message</label>
@@ -545,13 +454,13 @@ function home(){
     <button class="btn p" type="button" onclick="readMsg()">Read message</button></div>
 
   <div class="card"><h3>Manage order · Edit, Cancel, Return &amp; Delete</h3>
-    <p class="hint">Look up any order by ID to edit its details, return items, cancel it, delete it permanently, or rebuild its cash memo.</p>
+    <p class="hint">Look up any order by ID to edit its details, return items, cancel it, delete it permanently, or rebuild its cash memo. You can also browse all orders on the Orders tab.</p>
     <input id="rid" placeholder="Order ID (e.g. PZ26OCT-014 or 14)" onkeydown="if(event.key==='Enter')openOrderById()">
     <div class="row" style="margin-top:10px">
       <button class="btn p" type="button" onclick="openOrderById()">Open order</button>
       <button class="btn" type="button" onclick="regenMemo()">Make memo</button>
     </div>
-    <button class="btn" id="allOrdersBtn" type="button" style="margin-top:10px" onclick="openAllOrdersModal()">All orders (by month)</button>
+    <button class="btn" type="button" style="margin-top:10px" onclick="goOrdersTab()">Browse Orders page &rarr;</button>
     <p id="rmsg" class="hint" style="margin-top:10px"></p>
   </div>
 
@@ -571,13 +480,11 @@ function home(){
       <label>Secret key</label><input id="ck" type="password" value="${esc(c.key||"")}">
       <button class="btn" type="button" style="margin-top:12px" onclick="saveCfg()">Save settings</button></details></div>
 
-  <div class="card"><h3>Saved on this device (${orders.length})</h3>
-    <p class="hint">The sheet has every order from every device. This is only what was saved on this device.</p>
-    ${last.map(o=>`<div class="so">
-      <div class="meta"><b>${esc(o.id)}</b>${statusTag(o.status)} · ${esc(o.name)}<br><small style="color:var(--mut)">${esc(o.date)} · ${tk(o.total)}</small></div>
-      <button class="btn sm" type="button" onclick="loadOrderDetail('${esc(o.id)}')">Manage</button>
-    </div>`).join("")}
-    ${orders.length?`<button class="btn" type="button" style="margin-top:12px" onclick="backup()">Download backup (Excel)</button><button class="btn" type="button" style="margin-top:10px" onclick="clearList()">Clear this list</button>`:""}</div>
+  ${orders.length?`<div class="card"><h3>Device backup (${orders.length})</h3>
+    <p class="hint">Orders are managed in the <b>Orders</b> tab. You can download a backup of this device's saved orders or clear its local cache.</p>
+    <button class="btn" type="button" onclick="backup()">Download backup (Excel)</button>
+    <button class="btn" type="button" style="margin-top:10px" onclick="clearList()">Clear device cache</button>
+  </div>`:""}
   <p class="ver">Pozzo Manager · Sales ${VER}</p>`;
   flash="";
 }
@@ -586,7 +493,6 @@ function home(){
 async function loadOrderDetail(rawId, flashNote){
   const id=normalizeOrderId(rawId);
   if(!id)return;
-  closeOrdersModal();
   const rmsg=$("#rmsg");
   if(rmsg)rmsg.textContent="Opening "+id+"…";
   const j=await callScript({action:"getorder",id:id,today:today()});
@@ -602,10 +508,6 @@ async function loadOrderDetail(rawId, flashNote){
     resolvedReturnIssues:j.resolvedReturnIssues||[]
   };
   syncLocalOrder(j.order);
-  if(RECENT_LIST){
-    const idx=RECENT_LIST.findIndex(x=>x.id===j.order.id);
-    if(idx>=0)RECENT_LIST[idx]=j.order;
-  }
   renderOrderDetail(flashNote||"");
 }
 
@@ -1651,8 +1553,6 @@ if(!bootOrderFromHash())home();
   }
   if(O||RSTATE||EDIT)return;
   await retryStock();
-  MONTH_ORD_CACHE={};
-  if(ALL_ORD_MODAL)await loadAllOrdersModalData(monthYearKey(ALL_ORD_MODAL.month,ALL_ORD_MODAL.year),true);
   flash="Refreshed.";
   home();
 });

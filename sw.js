@@ -1,7 +1,7 @@
-const PREFIX="pm-",C=PREFIX+"v15";
-const FILES=["./","index.html","dashboard.html","dispatch.html","orders.html","stock.html","stickers.html","manifest.webmanifest","icon-192.png","icon-512.png"];
+const PREFIX="pm-",C=PREFIX+"v17";
+const FILES=["./","index.html","dashboard.html","dispatch.html","orders.html","all-orders.html","stock.html","manifest.webmanifest","icon-192.png","icon-192.png?v=17","icon-512.png","icon-512.png?v=17"];
 self.addEventListener("install",e=>{
-  e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)).catch(()=>{}));
+  e.waitUntil(caches.open(C).then(c=>Promise.all(FILES.map(u=>fetch(new Request(u,{cache:"reload"})).then(r=>r.ok?c.put(u,r):null).catch(()=>c.add(u))))).catch(()=>{}));
   self.skipWaiting();
 });
 self.addEventListener("activate",e=>{
