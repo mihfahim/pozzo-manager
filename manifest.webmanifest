@@ -1,7 +1,7 @@
 {
   "id": "pozzo-manager",
-  "name": "Pozzo Manager",
-  "short_name": "Pozzo Manager",
+  "name": "Pozzo Manager v9",
+  "short_name": "Pozzo v9",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

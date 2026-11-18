@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#2b4f48">
-<title>Pozzo Manager – Dispatch</title>
+<title>Pozzo Manager v9 – Dispatch</title>
 <meta name="description" content="Pozzo Toys Dispatch: customer packing list, product variants and quantities, courier parcel export, and Steadfast label converter.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png?v=17">
@@ -13,8 +13,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
 <style>
-:root{--bg:#f4f7fa;--card:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66}
-html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--badbg:#3b1d19;--amb:#f0b865;--ambbg:#362916;--blue:#4da3e3;--deep:#b8dcf8}
+:root{--bg:#f4f7fa;--card:#ffffff;--hdr:#ffffff;--sub:#f5fafe;--in:#ffffff;--line:#dce4ec;--ink:#1c1b1f;--mut:#5f6368;--grn:#1f6fa8;--bd:#deeffb;--bad:#a8431f;--badbg:#f6e4dc;--amb:#8a5a14;--ambbg:#f6ece0;--blue:#1f6fa8;--deep:#0f3f66;--on-acc:#ffffff;--ptr-r:#cde5f7}
+html.dark{color-scheme:dark;--bg:#0f141b;--card:#18212c;--hdr:#141c26;--sub:#1e2936;--in:#121923;--line:#2b3848;--ink:#edf2f7;--mut:#9aa9ba;--grn:#4da3e3;--bd:#17344d;--bad:#f28b75;--badbg:#3b1d19;--amb:#f0b865;--ambbg:#362916;--blue:#4da3e3;--deep:#b8dcf8;--on-acc:#0b1926;--ptr-r:#214563}
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px));-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch}
@@ -22,16 +22,16 @@ h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;te
 .ptr{overflow:hidden;height:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bd);color:var(--deep);font-size:13px;font-weight:700;border-bottom:0 solid var(--line);transition:height .18s ease,opacity .18s ease;opacity:0;user-select:none}
 .ptr.pulling{transition:none}
 .ptr.active{opacity:1;border-bottom-width:1px}
-.ptr.ready{background:#cde5f7}
-html.dark .ptr.ready{background:#214563}
+.ptr.ready{background:var(--ptr-r)}
 .ptr-ic{display:inline-block;transition:transform .15s ease;font-size:15px;line-height:1}
 .ptr.ready .ptr-ic{transform:rotate(180deg)}
 @keyframes ptrSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ptr.busy .ptr-ic{animation:ptrSpin .75s linear infinite}
-header{position:relative;padding:12px 16px 14px;background:#fff;border-bottom:3px solid var(--blue);text-align:center}
-html.dark header{background:#141c26}
+header{position:relative;padding:12px 16px 14px;background:var(--hdr);border-bottom:3px solid var(--blue);text-align:center}
 header img{display:block;margin:0 auto 4px;width:96px;max-width:34%;height:auto;background:transparent}
-.theme-btn{position:absolute;right:10px;top:10px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.theme-btn{position:absolute;right:10px;top:10px;min-height:36px;border:1px solid var(--line);background:var(--bd);color:var(--deep);border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.theme-dots{display:inline-flex;align-items:center;gap:2px}
+.theme-dots i{display:inline-block;width:8px;height:8px;border-radius:999px;border:1px solid rgba(128,128,128,.35);font-style:normal}
 .embed .theme-btn{display:none}
 header h1{font-size:22px;color:var(--deep)}
 .embed header{display:none}
@@ -45,8 +45,7 @@ main{width:100%;max-width:920px;margin:0 auto;padding:14px 12px;overflow-x:hidde
 .head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in);font:inherit;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
-.btn.p{background:var(--grn);border-color:var(--grn);color:#fff}
-html.dark .btn.p{color:#0b1926}
+.btn.p{background:var(--grn);border-color:var(--grn);color:var(--on-acc)}
 .btn.sm{min-height:36px;padding:6px 12px;border-radius:10px;font-size:13px}
 .btn:disabled{opacity:.55;cursor:default}
 .btn:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
@@ -56,19 +55,17 @@ html.dark .btn.p{color:#0b1926}
 .seg{display:flex;flex-wrap:nowrap;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
 .seg button{flex:none;border:0;border-radius:999px;padding:8px 14px;background:transparent;color:var(--mut);font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
-.seg button.on{background:var(--grn);color:#fff}
-html.dark .seg button.on{color:#0b1926}
+.seg button.on{background:var(--grn);color:var(--on-acc)}
 .ctrl-right{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between;flex-wrap:wrap}
-.period-sel{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--grn);border-radius:14px;padding:4px 10px;min-height:44px;box-shadow:0 1px 3px rgba(31,111,168,.1)}
-html.dark .period-sel{background:var(--in);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.period-sel{display:inline-flex;align-items:center;background:var(--in);border:1.5px solid var(--grn);border-radius:14px;padding:4px 10px;min-height:44px;box-shadow:0 1px 3px rgba(31,111,168,.1)}
+html.dark .period-sel{box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .period-sel label{font-size:13px;color:var(--grn);font-weight:700;margin-right:6px;white-space:nowrap}
-.period-sel select{border:0;background:#fff;padding:6px 20px 6px 4px;font:inherit;font-size:14px;font-weight:700;color:var(--deep);cursor:pointer;outline:none;appearance:auto}
-html.dark .period-sel select{background:var(--in);color:var(--deep)}
+.period-sel select{border:0;background:var(--in);padding:6px 20px 6px 4px;font:inherit;font-size:14px;font-weight:700;color:var(--deep);cursor:pointer;outline:none;appearance:auto}
 html.dark .period-sel select option{background:#18212c;color:#edf2f7}
 .custom-dates{display:flex;gap:8px;align-items:center;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-top:6px;flex-wrap:wrap}
 .custom-dates label{font-size:12px;color:var(--mut);font-weight:600}
 .custom-dates input[type="date"]{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:10px;background:var(--in);font:inherit;font-size:13px;color:var(--ink)}
-.custom-dates .date-wrap{position:relative;display:inline-block;min-width:138px}
+.custom-dates .date-wrap{position:relative;display:inline-block;min-width:148px}
 .custom-dates .date-wrap .date-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;padding:4px 10px;border:1px solid var(--line);border-radius:10px;background:var(--in);font:inherit;font-size:13px;color:var(--ink);pointer-events:none;z-index:1;white-space:nowrap}
 .custom-dates .date-wrap input[type="date"]{position:relative;z-index:2;opacity:0;width:100%;cursor:pointer}
 .custom-dates .date-wrap:focus-within .date-face{border-color:var(--grn);outline:2px solid rgba(31,111,168,.18)}
@@ -126,8 +123,7 @@ html.dark .sheet{box-shadow:0 12px 32px rgba(0,0,0,.55)}
 html.dark .pack-item.checked{border-color:#28557d}
 .pack-check{width:28px;height:28px;border-radius:9px;border:2px solid var(--line);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex:none}
 html.dark .pack-check{background:var(--in)}
-.pack-item.checked .pack-check{background:var(--grn);border-color:var(--grn)}
-html.dark .pack-item.checked .pack-check{color:#0b1926}
+.pack-item.checked .pack-check{background:var(--grn);border-color:var(--grn);color:var(--on-acc)}
 .pack-info{min-width:0;flex:1}
 .pack-name{font-size:16px;font-weight:700;color:var(--ink);line-height:1.3}
 .pack-var{margin-top:4px;font-size:13px;color:var(--mut);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -174,12 +170,38 @@ html.dark .pack-item.checked .pack-check{color:#0b1926}
   .cname{font-size:17px}
   .stk-actions{grid-template-columns:1fr}
 }
+.th-modal{position:fixed;inset:0;background:rgba(12,18,28,.55);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;z-index:80;padding:0}
+.th-sheet{background:var(--card);color:var(--ink);width:100%;max-width:520px;border-radius:26px 26px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom,0px));max-height:88dvh;overflow-y:auto;border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.28)}
+.th-handle{width:40px;height:4px;border-radius:999px;background:var(--line);margin:2px auto 12px}
+.th-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.th-head h2{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:21px;color:var(--ink)}
+.th-close{min-width:44px;min-height:44px;border-radius:14px;border:1px solid var(--line);background:var(--sub);color:var(--ink);font:inherit;font-size:20px;font-weight:600;cursor:pointer}
+.th-prev{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.th-prev-badge{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--bd);color:var(--deep);font-size:12px;font-weight:700}
+.th-prev-btn{padding:8px 14px;border-radius:12px;background:var(--grn);color:var(--on-acc);font-size:13px;font-weight:700}
+.th-sec{margin-bottom:14px}
+.th-lbl{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin-bottom:8px}
+.th-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.th-preset{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--sub);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left}
+.th-preset.on{border-color:var(--grn);background:var(--bd);color:var(--deep)}
+.th-swatches{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.th-sub{font-size:11.5px;font-weight:600;color:var(--mut);margin:8px 0 6px}
+.th-sw{width:44px;height:44px;border-radius:14px;border:2px solid rgba(128,128,128,.28);cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.th-sw.on{outline:2.5px solid var(--ink);outline-offset:2px}
+.th-sw.on::after{content:"✓";font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.th-sw.light-sw.on::after{color:#0f172a;text-shadow:none}
+.th-pick{width:44px;height:44px;border-radius:14px;border:1.5px dashed var(--line);background:var(--sub);padding:3px;cursor:pointer}
+.th-foot{display:flex;gap:10px;margin-top:16px}
+.th-foot button{flex:1;min-height:46px;border-radius:14px;border:1px solid var(--line);background:var(--sub);color:var(--ink);font:inherit;font-size:14.5px;font-weight:600;cursor:pointer}
+.th-foot button.p{background:var(--grn);border-color:var(--grn);color:var(--on-acc)}
+@media (min-width:640px){.th-modal{align-items:center;padding:16px}.th-sheet{border-radius:26px;padding:16px 20px 22px}.th-handle{display:none}}
+.ver{text-align:center;color:var(--mut);font-size:13px;margin:14px 0 0}
 </style>
 </head>
 <body>
-<script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{if(localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+<script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{var _p=JSON.parse(localStorage.getItem("pt_palette")||"null");if(_p&&/^(slate|obsidian|carbon|navy|forest|espresso|plum|steel)$/.test(_p.b||""))document.documentElement.classList.add("dark");else if(!_p&&localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">&#127769; Dark</button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Dispatch</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="openThemeModal()" aria-label="Customize theme palette"><span class="theme-dots"><i id="thDot1"></i><i id="thDot2"></i><i id="thDot3"></i></span><span>Theme</span></button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Dispatch v9</h1></header>
 <main>
   <div id="app"></div>
   <section id="stickerSec" class="card stk-card" aria-label="Steadfast label converter">
@@ -199,32 +221,43 @@ html.dark .pack-item.checked .pack-check{color:#0b1926}
     <button class="btn" id="stkClr" type="button" onclick="stkClearAll()" hidden style="width:100%;margin-top:8px">Clear all</button>
     <div id="stkMsg" class="stk-msg"></div>
   </section>
+  <p class="ver" id="dispVer">Pozzo Manager · Dispatch v9</p>
 </main>
 <div id="packModal" class="modal" hidden onclick="if(event.target===this)closePackWindow()"></div>
+<div id="themeModal" class="th-modal" hidden onclick="if(event.target===this)closeThemeModal()"></div>
 <script>
+const VER="v9";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const tk=n=>"৳ "+Math.round(Number(n)||0).toLocaleString("en-US");
 function today(){const t=new Date(),p=n=>String(n).padStart(2,"0");return t.getFullYear()+"-"+p(t.getMonth()+1)+"-"+p(t.getDate())}
 function nowStamp(){const t=new Date(),p=n=>String(n).padStart(2,"0");return today()+" "+p(t.getHours())+":"+p(t.getMinutes())}
+const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function fmtDMY(s){
   const raw=String(s==null?"":s).trim();
   if(!raw)return "";
   const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(iso)return iso[3]+"-"+iso[2]+"-"+iso[1];
-  const dmy=raw.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if(iso){
+    const mi=Number(iso[2])-1;
+    return iso[3]+"-"+(MON3[mi]||iso[2])+"-"+iso[1];
+  }
+  const numDmy=raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if(numDmy){
+    const mi=Number(numDmy[2])-1;
+    if(mi>=0&&mi<12)return String(Number(numDmy[1])).padStart(2,"0")+"-"+MON3[mi]+"-"+numDmy[3];
+  }
+  const dmy=raw.match(/^(\d{1,2})[\s-]+([A-Za-z]{3})[\s-]+(\d{4})$/);
   if(dmy){
-    const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const mi=M.indexOf(dmy[2].toUpperCase());
-    if(mi>-1)return String(Number(dmy[1])).padStart(2,"0")+"-"+String(mi+1).padStart(2,"0")+"-"+dmy[3];
+    const mi=MON3.findIndex(x=>x.toUpperCase()===dmy[2].toUpperCase());
+    if(mi>-1)return String(Number(dmy[1])).padStart(2,"0")+"-"+MON3[mi]+"-"+dmy[3];
   }
   return raw;
 }
 function fmtDMYStamp(s){
   const raw=String(s==null?"":s).trim();
   if(!raw)return "";
-  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{2}:\d{2}))?/);
-  if(m)return m[3]+"-"+m[2]+"-"+m[1]+(m[4]?" "+m[4]:"");
+  const m=raw.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s]+(\d{2}:\d{2}))?/);
+  if(m)return fmtDMY(m[1])+(m[2]?" "+m[2]:"");
   return fmtDMY(raw);
 }
 function syncDateFace(el){
@@ -571,7 +604,7 @@ function renderPackWindow(){
   m.hidden=false;
 }
 
-function fileDate(){const t=new Date(),p=n=>String(n).padStart(2,"0");return p(t.getDate())+"-"+p(t.getMonth()+1)+"-"+t.getFullYear()}
+function fileDate(){return fmtDMY(today())}
 async function exportPending(){
   state.statusMsg="Preparing parcel entry file…";state.isErr=false;state.lastPackedId="";state.exportPrompt=null;render();
   const j=await api({action:"list",mode:"next",today:today()});
@@ -622,21 +655,19 @@ function parseOrderDate(rawDate, rawId){
   if(rawDate){
     const s=String(rawDate).trim();
     if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
-    const m=s.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+    const p=n=>String(n).padStart(2,"0");
+    const numDmy=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    if(numDmy)return numDmy[3]+"-"+p(Number(numDmy[2]))+"-"+p(Number(numDmy[1]));
+    const m=s.match(/^(\d{1,2})[\s-]+([A-Za-z]{3})[\s-]+(\d{4})$/);
     if(m){
-      const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-      const mi=M.indexOf(m[2].toUpperCase());
-      if(mi>-1){
-        const p=n=>String(n).padStart(2,"0");
-        return m[3]+"-"+p(mi+1)+"-"+p(Number(m[1]));
-      }
+      const mi=MON3.findIndex(x=>x.toUpperCase()===m[2].toUpperCase());
+      if(mi>-1)return m[3]+"-"+p(mi+1)+"-"+p(Number(m[1]));
     }
   }
   if(rawId){
     const m=String(rawId).toUpperCase().match(/^PZ(\d{2})([A-Z]{3})/);
     if(m){
-      const M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-      const mi=M.indexOf(m[2]);
+      const mi=MON3.findIndex(x=>x.toUpperCase()===m[2]);
       if(mi>-1){
         const yr="20"+m[1];
         const p=n=>String(n).padStart(2,"0");
@@ -660,7 +691,7 @@ function filteredOrders(){
     }
     if(!ql)return true;
     const itemText=(o.items||[]).map(it=>it.name+" "+it.displayName+" "+it.variant).join(" ");
-    return (o.id+" "+o.name+" "+o.phone+" "+o.address+" "+itemText).toLowerCase().includes(ql);
+    return (o.id+" "+o.name+" "+o.phone+" "+o.address+" "+fmtDMY(o.date)+" "+itemText).toLowerCase().includes(ql);
   });
   if(state.sortOrder==="oldest")list=list.slice().reverse();
   return list;
@@ -1109,7 +1140,7 @@ async function stkGenerate(){
   if(bad.length){if(m){m.style.color="var(--bad)";m.textContent="Some included parcels have empty fields.";}return}
   if(typeof ExcelJS==="undefined"){if(m){m.style.color="var(--bad)";m.textContent="Excel library did not load. Check internet connection.";}return}
   const groups={};
-  inc.forEach(p=>{const k=p.date?`${String(p.date.d).padStart(2,"0")}-${String(p.date.m).padStart(2,"0")}-${String(p.date.y).length===2?"20"+p.date.y:p.date.y}`:"Unknown date";(groups[k]=groups[k]||[]).push(p)});
+  inc.forEach(p=>{const k=p.date?`${String(p.date.d).padStart(2,"0")}-${MON3[p.date.m-1]||String(p.date.m).padStart(2,"0")}-${String(p.date.y).length===2?"20"+p.date.y:p.date.y}`:"Unknown date";(groups[k]=groups[k]||[]).push(p)});
   const done=[],files=[];
   for(const [k,rows] of Object.entries(groups)){
     let serial=1;
@@ -1142,20 +1173,97 @@ async function stkGenerate(){
 }
 
 loadDispatch(false);
-function applyTheme(dark,save){
+const PT_BASES={
+  paper:{id:"paper",name:"Crisp Paper",bg:"#f4f7fa",card:"#ffffff",hdr:"#ffffff",inp:"#ffffff",line:"#dce4ec",ink:"#1c1b1f",mut:"#5f6368",dark:false},
+  snow:{id:"snow",name:"Pure Snow",bg:"#f8f9fb",card:"#ffffff",hdr:"#ffffff",inp:"#ffffff",line:"#e2e6ec",ink:"#161922",mut:"#5b6270",dark:false},
+  linen:{id:"linen",name:"Warm Linen",bg:"#f4efe6",card:"#fffdf8",hdr:"#fffdf8",inp:"#fffdf8",line:"#e2d9c8",ink:"#211e19",mut:"#6d6558",dark:false},
+  sand:{id:"sand",name:"Warm Sand",bg:"#efe6d5",card:"#fdfaf3",hdr:"#fdfaf3",inp:"#fdfaf3",line:"#ddd0b8",ink:"#241d14",mut:"#6d604e",dark:false},
+  mist:{id:"mist",name:"Cool Mint",bg:"#edf5f2",card:"#ffffff",hdr:"#ffffff",inp:"#ffffff",line:"#cfe0d9",ink:"#18221e",mut:"#566860",dark:false},
+  sky:{id:"sky",name:"Powder Sky",bg:"#e8f1fb",card:"#fbfdff",hdr:"#fbfdff",inp:"#fbfdff",line:"#ccddf0",ink:"#152030",mut:"#51647a",dark:false},
+  rose:{id:"rose",name:"Soft Blush",bg:"#f8eff3",card:"#fffdfe",hdr:"#fffdfe",inp:"#fffdfe",line:"#e8d5de",ink:"#24191e",mut:"#6f5963",dark:false},
+  lavender:{id:"lavender",name:"Pale Lilac",bg:"#f1eef9",card:"#fdfcff",hdr:"#fdfcff",inp:"#fdfcff",line:"#dcd5ee",ink:"#1d182b",mut:"#625878",dark:false},
+  slate:{id:"slate",name:"Midnight Slate",bg:"#0f141b",card:"#18212c",hdr:"#141c26",inp:"#121923",line:"#2b3848",ink:"#edf2f7",mut:"#9aa9ba",dark:true},
+  obsidian:{id:"obsidian",name:"Deep Night",bg:"#131114",card:"#1d1920",hdr:"#18141a",inp:"#151217",line:"#322b38",ink:"#f2eef6",mut:"#a59ab0",dark:true},
+  carbon:{id:"carbon",name:"Pure Carbon",bg:"#0c0d0f",card:"#15171b",hdr:"#111216",inp:"#101215",line:"#272b33",ink:"#f1f3f5",mut:"#9ca3af",dark:true},
+  navy:{id:"navy",name:"Deep Marine",bg:"#0c1628",card:"#14223b",hdr:"#101c32",inp:"#0f1b30",line:"#25395c",ink:"#ebf2ff",mut:"#97acc9",dark:true},
+  forest:{id:"forest",name:"Pine Night",bg:"#0d1915",card:"#142620",hdr:"#10201b",inp:"#0f1e19",line:"#264037",ink:"#ebf5f0",mut:"#93ada2",dark:true},
+  espresso:{id:"espresso",name:"Warm Cocoa",bg:"#1a1310",card:"#261c17",hdr:"#201713",inp:"#1d1511",line:"#3d2f27",ink:"#f6eee8",mut:"#b4a094",dark:true},
+  plum:{id:"plum",name:"Velvet Plum",bg:"#191124",card:"#241934",hdr:"#1e142c",inp:"#1b1328",line:"#3a2b52",ink:"#f4eefc",mut:"#aa9ac2",dark:true},
+  steel:{id:"steel",name:"Cool Storm",bg:"#161b22",card:"#21262d",hdr:"#1b2027",inp:"#181d23",line:"#343b45",ink:"#f0f6fc",mut:"#9da7b3",dark:true}
+};
+const PT_ACCENTS=["#1f6fa8","#2563eb","#0284c7","#0ea5a4","#0f766e","#15803d","#2b5f56","#65a30d","#b45309","#d97706","#c2410c","#dc2626","#be123c","#db2777","#7e22ce","#4338ca"];
+const PT_TINTS=["#1f6fa8","#3b82f6","#06b6d4","#0ea5a4","#10b981","#16a34a","#84cc16","#eab308","#f59e0b","#f97316","#c25934","#ef4444","#e11d48","#ec4899","#8b5cf6","#6366f1"];
+const PT_PRESETS=[
+  {id:"classic",name:"Pozzo Blue",b:"paper",p:"#1f6fa8",s:"#1f6fa8"},
+  {id:"sage",name:"Sage & Clay",b:"linen",p:"#2b5f56",s:"#c25934"},
+  {id:"lilac",name:"Soft Lilac",b:"lavender",p:"#4338ca",s:"#ec4899"},
+  {id:"aqua",name:"Midnight Aqua",b:"slate",p:"#4da3e3",s:"#0ea5a4"},
+  {id:"amber",name:"Night Amber",b:"obsidian",p:"#e09f3e",s:"#7c3aed"},
+  {id:"pine",name:"Pine & Gold",b:"forest",p:"#15803d",s:"#f59e0b"}
+];
+const clampC=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+function parseHex(h){const m=String(h||"").trim().match(/^#?([0-9a-f]{6})$/i);if(!m)return[31,111,168];const n=parseInt(m[1],16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function toHex(rgb){return"#"+rgb.map(x=>clampC(Math.round(x),0,255).toString(16).padStart(2,"0")).join("")}
+function mixHex(a,b,t){const c1=parseHex(a),c2=parseHex(b);return toHex([c1[0]+(c2[0]-c1[0])*t,c1[1]+(c2[1]-c1[1])*t,c1[2]+(c2[2]-c1[2])*t])}
+function lumHex(h){const c=parseHex(h).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)});return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]}
+function normPal(raw){
+  const d={b:"paper",p:"#1f6fa8",s:"#1f6fa8"};
+  if(!raw||typeof raw!=="object")return d;
+  return{
+    b:PT_BASES[raw.b]?raw.b:d.b,
+    p:/^#[0-9a-f]{6}$/i.test(raw.p||"")?raw.p.toLowerCase():d.p,
+    s:/^#[0-9a-f]{6}$/i.test(raw.s||"")?raw.s.toLowerCase():(/^#[0-9a-f]{6}$/i.test(raw.p||"")?raw.p.toLowerCase():d.s)
+  };
+}
+function readSavedPalette(){
   try{
-    if(document&&document.documentElement&&document.documentElement.classList)document.documentElement.classList.toggle("dark",!!dark);
-    const tb=document.getElementById("themeBtn");if(tb)tb.textContent=dark?"☀️ Light":"🌙 Dark";
-    if(save)try{localStorage.setItem("pt_theme",dark?"dark":"light")}catch(e){}
+    const raw=localStorage.getItem("pt_palette");
+    if(raw)return normPal(JSON.parse(raw));
+    if(localStorage.getItem("pt_theme")==="dark")return{b:"slate",p:"#4da3e3",s:"#1f6fa8"};
+  }catch(e){}
+  return normPal(null);
+}
+function computeThemeVars(pal){
+  const base=PT_BASES[pal.b]||PT_BASES.paper,dark=!!base.dark,rawP=pal.p,rawS=pal.s;
+  const acc=dark?(lumHex(rawP)<0.24?mixHex(rawP,"#ffffff",0.36):rawP):(lumHex(rawP)>0.38?mixHex(rawP,"#0e1726",0.30):rawP);
+  const deep=dark?(lumHex(rawS)<0.45?mixHex(rawS,"#ffffff",0.60):mixHex(rawS,"#ffffff",0.25)):(lumHex(rawS)>0.22?mixHex(rawS,"#09131d",0.48):mixHex(rawS,"#09131d",0.22));
+  const sub=dark?mixHex(base.card,rawS,0.12):mixHex(base.card,rawS,0.065);
+  const bd=dark?mixHex(base.bg,rawS,0.26):mixHex(base.card,rawS,0.14);
+  const ptrR=dark?mixHex(base.bg,rawS,0.36):mixHex(base.card,rawS,0.24);
+  const onAcc=lumHex(acc)>(dark?0.42:0.44)?"#0b1926":"#ffffff";
+  return{dark,base,acc,vars:{"--bg":base.bg,"--card":base.card,"--hdr":base.hdr,"--sub":sub,"--in":base.inp,"--line":base.line,"--ink":base.ink,"--mut":base.mut,"--grn":acc,"--blue":acc,"--deep":deep,"--bd":bd,"--ptr-r":ptrR,"--on-acc":onAcc,"--bad":dark?"#f28b75":"#a8431f","--badbg":dark?"#3b1d19":"#f6e4dc","--amb":dark?"#f0b865":"#8a5a14","--ambbg":dark?"#362916":"#f6ece0"}};
+}
+let curPalette=readSavedPalette();
+function applyPaletteTheme(pal,save){
+  try{
+    curPalette=normPal(pal);
+    const t=computeThemeVars(curPalette);
+    const root=document&&document.documentElement;
+    if(root&&root.classList)root.classList.toggle("dark",t.dark);
+    if(root&&root.style&&typeof root.style.setProperty==="function")Object.keys(t.vars).forEach(k=>root.style.setProperty(k,t.vars[k]));
+    const d1=document.getElementById("thDot1"),d2=document.getElementById("thDot2"),d3=document.getElementById("thDot3");
+    if(d1)d1.style.background=t.base.bg;if(d2)d2.style.background=t.acc;if(d3)d3.style.background=curPalette.s;
+    if(save){
+      try{localStorage.setItem("pt_palette",JSON.stringify(curPalette))}catch(e){}
+      try{localStorage.setItem("pt_theme",t.dark?"dark":"light")}catch(e){}
+    }
   }catch(e){}
 }
-function toggleTheme(){
-  const d=document&&document.documentElement&&document.documentElement.classList?document.documentElement.classList.contains("dark"):false;
-  applyTheme(!d,true);
+function setPalettePreset(id){const pr=PT_PRESETS.find(x=>x.id===id);if(!pr)return;applyPaletteTheme({b:pr.b,p:pr.p,s:pr.s},true);renderThemeModal()}
+function setPaletteTone(slot,val){const next=Object.assign({},curPalette);next[slot]=val;applyPaletteTheme(next,true);renderThemeModal()}
+function resetPaletteTheme(){applyPaletteTheme({b:"paper",p:"#1f6fa8",s:"#1f6fa8"},true);renderThemeModal()}
+function renderThemeModal(){
+  const m=document.getElementById("themeModal");if(!m||m.hidden)return;
+  const bases=Object.values(PT_BASES),pal=curPalette;
+  m.innerHTML=`<div class="th-sheet" role="dialog" aria-modal="true" aria-labelledby="thTitle"><div class="th-handle" aria-hidden="true"></div><div class="th-head"><h2 id="thTitle">Customize theme</h2><button class="th-close" type="button" onclick="closeThemeModal()" aria-label="Close theme customizer">&times;</button></div><div class="th-prev"><div><div style="font-weight:700;font-size:14.5px">Live preview</div><span class="th-prev-badge">19-Nov-2026</span></div><span class="th-prev-btn">Save order</span></div><div class="th-sec"><div class="th-lbl"><span>Starter combinations</span></div><div class="th-presets">${PT_PRESETS.map(pr=>{const on=pal.b===pr.b&&pal.p===pr.p&&pal.s===pr.s;return`<button type="button" class="th-preset${on?" on":""}" onclick="setPalettePreset('${pr.id}')"><span class="theme-dots"><i style="background:${PT_BASES[pr.b].bg}"></i><i style="background:${pr.p}"></i><i style="background:${pr.s}"></i></span><span>${pr.name}</span></button>`}).join("")}</div></div><div class="th-sec"><div class="th-lbl"><span>1. Surface tone</span><span>${PT_BASES[pal.b].name}</span></div><div class="th-sub">Light surfaces</div><div class="th-swatches">${bases.filter(b=>!b.dark).map(b=>`<button type="button" class="th-sw light-sw${pal.b===b.id?" on":""}" style="background:${b.bg}" title="${b.name}" aria-label="${b.name}" onclick="setPaletteTone('b','${b.id}')"></button>`).join("")}</div><div class="th-sub">Dark surfaces</div><div class="th-swatches">${bases.filter(b=>b.dark).map(b=>`<button type="button" class="th-sw${pal.b===b.id?" on":""}" style="background:${b.bg}" title="${b.name}" aria-label="${b.name}" onclick="setPaletteTone('b','${b.id}')"></button>`).join("")}</div></div><div class="th-sec"><div class="th-lbl"><span>2. Primary accent</span><span>${pal.p.toUpperCase()}</span></div><div class="th-swatches">${PT_ACCENTS.map(c=>`<button type="button" class="th-sw${lumHex(c)>0.45?" light-sw":""}${pal.p===c?" on":""}" style="background:${c}" aria-label="Primary ${c}" onclick="setPaletteTone('p','${c}')"></button>`).join("")}<input class="th-pick" type="color" value="${pal.p}" aria-label="Custom primary color" onchange="setPaletteTone('p',this.value)"></div></div><div class="th-sec"><div class="th-lbl"><span>3. Highlight tint</span><span>${pal.s.toUpperCase()}</span></div><div class="th-swatches">${PT_TINTS.map(c=>`<button type="button" class="th-sw${lumHex(c)>0.45?" light-sw":""}${pal.s===c?" on":""}" style="background:${c}" aria-label="Highlight ${c}" onclick="setPaletteTone('s','${c}')"></button>`).join("")}<input class="th-pick" type="color" value="${pal.s}" aria-label="Custom highlight color" onchange="setPaletteTone('s',this.value)"></div></div><div class="th-foot"><button type="button" onclick="resetPaletteTheme()">Reset</button><button type="button" class="p" onclick="closeThemeModal()">Done</button></div></div>`;
 }
-try{applyTheme(localStorage.getItem("pt_theme")==="dark",false)}catch(e){}
-try{window.addEventListener("message",e=>{if(e&&e.data&&e.data.type==="pozzo:theme")applyTheme(!!e.data.dark,false)})}catch(e){}
-try{window.addEventListener("storage",e=>{if(e&&e.key==="pt_theme")applyTheme(e.newValue==="dark",false)})}catch(e){}
+function openThemeModal(){const m=document.getElementById("themeModal");if(!m)return;m.hidden=false;renderThemeModal()}
+function closeThemeModal(){const m=document.getElementById("themeModal");if(m){m.hidden=true;m.innerHTML=""}}
+function applyTheme(arg,save){if(arg&&typeof arg==="object"){applyPaletteTheme(arg,save);return}applyPaletteTheme({b:arg?"slate":"paper",p:arg?"#4da3e3":"#1f6fa8",s:"#1f6fa8"},save)}
+function toggleTheme(){openThemeModal()}
+try{applyPaletteTheme(readSavedPalette(),false)}catch(e){}
+try{window.addEventListener("message",e=>{if(e&&e.data&&e.data.type==="pozzo:theme")applyPaletteTheme(e.data.palette||{b:e.data.dark?"slate":"paper",p:e.data.dark?"#4da3e3":"#1f6fa8",s:"#1f6fa8"},false)})}catch(e){}
+try{window.addEventListener("storage",e=>{if(e&&(e.key==="pt_palette"||e.key==="pt_theme"))applyPaletteTheme(readSavedPalette(),false)})}catch(e){}
 </script>
 </body>
 </html>
