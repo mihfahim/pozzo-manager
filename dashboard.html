@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#2b4f48">
-<title>Pozzo Manager v9 – Dashboard</title>
+<title>Pozzo Manager – Dashboard</title>
 <meta name="description" content="Pozzo Toys Dashboard: stock value at cost and sale, low and out of stock alerts, period sales, purchases, gross profit, expenses, and net profit.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png?v=17">
@@ -80,6 +80,8 @@ html.dark .kpi.loss{border-color:#69322b}
 /* Current Stock Valuation & Low/Out Alert Buttons */
 .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:16px}
 .card-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.card-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rank{display:inline-block;min-width:22px;text-align:center;font-size:11.5px;font-weight:700;border-radius:7px;padding:2px 6px;margin-right:6px;background:var(--bd);color:var(--deep);vertical-align:middle}
 .card h3{font-size:21px}
 .stock-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .sstat{background:var(--in);border:1px solid var(--line);border-radius:16px;padding:14px}
@@ -252,7 +254,7 @@ html.dark .flash{border-color:#28557d}
 <body>
 <script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{var _p=JSON.parse(localStorage.getItem("pt_palette")||"null");if(_p&&/^(slate|obsidian|carbon|navy|forest|espresso|plum|steel)$/.test(_p.b||""))document.documentElement.classList.add("dark");else if(!_p&&localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="openThemeModal()" aria-label="Customize theme palette"><span class="theme-dots"><i id="thDot1"></i><i id="thDot2"></i><i id="thDot3"></i></span><span>Theme</span></button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Manager v9</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="openThemeModal()" aria-label="Customize theme palette"><span class="theme-dots"><i id="thDot1"></i><i id="thDot2"></i><i id="thDot3"></i></span><span>Theme</span></button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Manager</h1></header>
 <main id="app"></main>
 <div id="modal" class="modal" hidden onclick="if(event.target===this)closeModal()"></div>
 <div id="themeModal" class="th-modal" hidden onclick="if(event.target===this)closeThemeModal()"></div>
@@ -324,7 +326,9 @@ function goTab(tab,extra){
   }catch(e){}
   const map={dashboard:"dashboard.html",dispatch:"dispatch.html",sale:"orders.html",sales:"orders.html",stock:"stock.html",orders:"all-orders.html",sticker:"dispatch.html",stickers:"dispatch.html"};
   if(map[tab]){
-    const suffix=(tab==="sale"||tab==="sales")&&extra&&extra.orderId?"#order="+encodeURIComponent(extra.orderId):"";
+    let suffix="";
+    if((tab==="sale"||tab==="sales")&&extra&&extra.orderId)suffix="#order="+encodeURIComponent(extra.orderId);
+    else if(tab==="stock"&&extra&&(extra.filter||extra.subtab))suffix="#"+encodeURIComponent(extra.filter||extra.subtab);
     window.location.href=map[tab]+suffix;
   }
 }
@@ -438,17 +442,24 @@ function getStockFallback(){
             outCount:outItems.length,outRestockCost:Math.round(outRestock),outUnitSaleValue:Math.round(outUnitSale),outItems:outItems,
             issues:c.issues||0,tocheck:c.tocheck||0
           },
-          predictiveAlerts:Array.isArray(sd.predictiveAlerts)?sd.predictiveAlerts:[]
+          predictiveAlerts:Array.isArray(sd.predictiveAlerts)?sd.predictiveAlerts:[],
+          fastRunners:Array.isArray(sd.fastRunners)?sd.fastRunners:[]
         };
       }
     }
     const pvRaw=localStorage.getItem(STOCK_PREVIEW_KEY);
     if(pvRaw){
       const pv=JSON.parse(pvRaw);
-      if(pv&&pv.stock)return{stock:pv.stock,predictiveAlerts:Array.isArray(pv.predictiveAlerts)?pv.predictiveAlerts:[]};
+      if(pv&&pv.stock)return{stock:pv.stock,predictiveAlerts:Array.isArray(pv.predictiveAlerts)?pv.predictiveAlerts:[],fastRunners:Array.isArray(pv.fastRunners)?pv.fastRunners:[]};
     }
   }catch(e){}
   return null;
+}
+function activeFastRunners(){
+  const d=state.data;
+  if(d&&Array.isArray(d.fastRunners))return d.fastRunners;
+  const fb=getStockFallback();
+  return(fb&&Array.isArray(fb.fastRunners))?fb.fastRunners:[];
 }
 function setCachedDash(key,data,mode){
   const s=JSON.stringify({ts:Date.now(),data:data});
@@ -456,11 +467,14 @@ function setCachedDash(key,data,mode){
   try{if(typeof sessionStorage!=="undefined")sessionStorage.setItem(DASH_CACHE_PREFIX+key,s)}catch(e){}
   try{
     if(data&&data.stock&&typeof localStorage!=="undefined"){
+      let prevFast=[];
+      try{const oldPv=JSON.parse(localStorage.getItem(STOCK_PREVIEW_KEY)||"null");if(oldPv&&Array.isArray(oldPv.fastRunners))prevFast=oldPv.fastRunners}catch(e){}
       localStorage.setItem(STOCK_PREVIEW_KEY,JSON.stringify({
         ts:Date.now(),
         today:today(),
         stock:data.stock,
-        predictiveAlerts:Array.isArray(data.predictiveAlerts)?data.predictiveAlerts:[]
+        predictiveAlerts:Array.isArray(data.predictiveAlerts)?data.predictiveAlerts:[],
+        fastRunners:Array.isArray(data.fastRunners)?data.fastRunners:prevFast
       }));
     }
   }catch(e){}
@@ -575,6 +589,7 @@ function render(){
     issues:0,tocheck:0
   });
   const alerts=d&&Array.isArray(d.predictiveAlerts)?d.predictiveAlerts:(stockFallback&&Array.isArray(stockFallback.predictiveAlerts)?stockFallback.predictiveAlerts:[]);
+  const fast=activeFastRunners();
   const hasStockSeed=!!((d&&d.stock)||(stockFallback&&stockFallback.stock));
   const p=d&&d.period?d.period:{
     salesValue:0,billedSales:0,customerDelivery:0,
@@ -796,6 +811,35 @@ function render(){
             <span>Excel download &amp; sheet</span>
           </button>
         </div>
+      </section>
+
+      <section class="card" aria-label="Fast runners (10-day window)">
+        <div class="card-head">
+          <h3>Fast runners (10d)</h3>
+          <div class="card-actions">
+            ${fast.length?`<button class="btn sm" type="button" onclick="openFastRunnersModal()">See all (${fast.length})</button>`:""}
+            <button class="btn sm" type="button" onclick="goTab('stock',{filter:'fast'})">Stock &rarr;</button>
+          </div>
+        </div>
+        ${loadingInit&&!fast.length
+          ?`<div class="skel"></div><div class="skel"></div><div class="skel sm"></div>`
+          :fast.length
+            ?`<div class="list">${fast.slice(0,5).map((f,idx)=>{
+                const daysLeft=(f.daysAt10d!==undefined&&f.daysAt10d!==null)?f.daysAt10d:(f.rate10>0?Math.max(0,Math.floor((Number(f.stock)||0)/f.rate10)):null);
+                const stCls=f.stock<=0?"st-bad":(daysLeft!==null&&daysLeft<15)?"st-warn":"st-ok";
+                const daysTxt=f.stock<=0?"~0d left":(daysLeft!==null?"~"+daysLeft+"d left":"");
+                return `<button class="item" type="button" onclick="openFastRunnersModal()">
+                  <div class="main">
+                    <div class="title"><span class="rank">#${idx+1}</span>${esc(f.name)}</div>
+                    <div class="meta num">${f.sold10} sold in 10d (${f.rate10}/day) · Sales ${tk(f.revenue10)}</div>
+                  </div>
+                  <div class="side">
+                    <div class="amt num ${stCls}">${f.stock} left</div>
+                    <div class="meta num">${esc(daysTxt)}</div>
+                  </div>
+                </button>`;
+              }).join("")}</div>`
+            :`<div class="empty">No sales recorded in the last 10 days yet.</div>`}
       </section>
 
       <section class="card" aria-label="Sales Trends">
@@ -1031,6 +1075,39 @@ function openStockListModal(kind){
   </div>`;
 }
 
+function openFastRunnersModal(){
+  const fast=activeFastRunners();
+  const m=$("#modal");
+  m.hidden=false;
+  m.innerHTML=`<div class="sheet sheet-tall" role="dialog" aria-modal="true" aria-labelledby="fastModalTitle">
+    <div class="sheet-head">
+      <h3 id="fastModalTitle">Fast runners · 10d window (${fast.length})</h3>
+      <button class="btn sm" type="button" onclick="closeModal()">Close</button>
+    </div>
+    <p class="sub num">Single products with the highest sell rate over the last 10 days.</p>
+    ${fast.length?`<div class="ord-scroll">${fast.map((f,idx)=>{
+      const daysLeft=(f.daysAt10d!==undefined&&f.daysAt10d!==null)?f.daysAt10d:(f.rate10>0?Math.max(0,Math.floor((Number(f.stock)||0)/f.rate10)):null);
+      const stCls=f.stock<=0?"st-bad":(daysLeft!==null&&daysLeft<15)?"st-warn":"st-ok";
+      const daysTxt=f.stock<=0?"out · ~0d left":(daysLeft!==null?"~"+daysLeft+"d left":"");
+      return `<div class="ord-btn" style="cursor:default">
+        <div class="main">
+          <div class="title num"><span class="rank">#${idx+1}</span>${esc(f.name)}</div>
+          <div class="meta num">${esc(f.id)} · ${f.sold10} sold in 10d (${f.rate10}/day) · Sales ${tk(f.revenue10)}</div>
+        </div>
+        <div class="side">
+          <div class="amt num ${stCls}">${f.stock} left</div>
+          <div class="meta num ${stCls}">${esc(daysTxt)}</div>
+        </div>
+      </div>`;
+    }).join("")}</div>`
+    :`<div class="empty">No sales recorded in the last 10 days yet.</div>`}
+    <div class="acts">
+      <button class="btn" type="button" onclick="closeModal()">Close</button>
+      <button class="btn p" type="button" onclick="closeModal();goTab('stock',{filter:'fast'})">Open in Stock &rarr;</button>
+    </div>
+  </div>`;
+}
+
 function openPurchasesModal(){
   const p=state.data&&state.data.period?state.data.period:{purchaseValue:0,purchaseUnits:0,purchaseCount:0,purchases:[]};
   const r=activeDates();
@@ -1086,7 +1163,7 @@ function openBackupModal(){
 
 
 window.addEventListener("message",e=>{
-  if(e&&e.data&&(e.data.type==="pozzo:refresh-dashboard"||e.data.type==="pozzo:order-dirty")){
+  if(e&&e.data&&(e.data.type==="pozzo:refresh-dashboard"||e.data.type==="pozzo:order-dirty"||e.data.type==="pozzo:stock-dirty")){
     clearDashCache();
     loadDashboard(true);
   }

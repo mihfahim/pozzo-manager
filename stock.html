@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#2b4f48">
-<title>Pozzo Manager v9 – Stock</title>
+<title>Pozzo Manager – Stock</title>
 <meta name="description" content="Pozzo Toys Stock inventory, purchases, return condition inspection, and stock issues.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png?v=17">
@@ -184,7 +184,7 @@ html.dark .simwarn{background:#362916;color:#f3c87c}
 <body>
 <script>if(window.self!==window.top)document.documentElement.classList.add("embed");try{var _p=JSON.parse(localStorage.getItem("pt_palette")||"null");if(_p&&/^(slate|obsidian|carbon|navy|forest|espresso|plum|steel)$/.test(_p.b||""))document.documentElement.classList.add("dark");else if(!_p&&localStorage.getItem("pt_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <div id="ptr" class="ptr" aria-live="polite"><span class="ptr-ic" aria-hidden="true">&#8595;</span><span class="ptr-tx">Pull down to refresh</span></div>
-<header><button id="themeBtn" class="theme-btn" type="button" onclick="openThemeModal()" aria-label="Customize theme palette"><span class="theme-dots"><i id="thDot1"></i><i id="thDot2"></i><i id="thDot3"></i></span><span>Theme</span></button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Stock v9</h1></header>
+<header><button id="themeBtn" class="theme-btn" type="button" onclick="openThemeModal()" aria-label="Customize theme palette"><span class="theme-dots"><i id="thDot1"></i><i id="thDot2"></i><i id="thDot3"></i></span><span>Theme</span></button><img src="icon-192.png?v=17" alt="Pozzo Toys"><h1>Pozzo Stock</h1></header>
 <main id="app"></main>
 <div class="bar" id="bar"><button class="btn p" onclick="ui.newPurchase()">+ New purchase</button><button class="btn" onclick="ui.more()">More</button></div>
 <div id="modal" class="modal" hidden></div>
@@ -294,6 +294,7 @@ function seedPreviewIntoState(pv){
   if(!pv||!pv.stock||S.products.length)return false;
   const st=pv.stock;
   const alerts=Array.isArray(pv.predictiveAlerts)?pv.predictiveAlerts:[];
+  const fastR=Array.isArray(pv.fastRunners)?pv.fastRunners:[];
   const lowOnly=Number(st.lowCount)||0;
   const out=Number(st.outCount)||0;
   const mapItem=(x,stockVal)=>({
@@ -331,12 +332,12 @@ function seedPreviewIntoState(pv){
       tocheck:Number(st.tocheck)||0,
       issues:Number(st.issues)||0,
       predictiveCount:alerts.length,
-      fastRunnersCount:0
+      fastRunnersCount:fastR.length
     },
     suppliers:[],
     url:"",
     predictiveAlerts:alerts,
-    fastRunners:[],
+    fastRunners:fastR,
     _previewOnly:true
   };
   return true;
